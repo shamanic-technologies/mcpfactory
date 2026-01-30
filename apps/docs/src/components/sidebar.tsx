@@ -10,15 +10,26 @@ const NAV_ITEMS = [
       { name: "Introduction", href: "/" },
       { name: "Quick Start", href: "/quickstart" },
       { name: "Authentication", href: "/authentication" },
+      { name: "MCP Usage", href: "/mcp" },
     ],
   },
   {
     title: "API Reference",
     items: [
       { name: "Overview", href: "/api" },
-      { name: "Authentication", href: "/api/authentication" },
       { name: "Campaigns", href: "/api/campaigns" },
       { name: "Results", href: "/api/results" },
+      { name: "Webhooks", href: "/api/webhooks" },
+    ],
+  },
+  {
+    title: "Integrations",
+    items: [
+      { name: "Overview", href: "/integrations" },
+      { name: "Cursor Skill", href: "/integrations/cursor-skill" },
+      { name: "n8n", href: "/integrations/n8n" },
+      { name: "Zapier", href: "/integrations/zapier" },
+      { name: "Make.com", href: "/integrations/make" },
     ],
   },
   {
