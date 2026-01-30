@@ -103,7 +103,7 @@ export const emailGenerationService = {
 };
 
 export const postmarkService = {
-  url: process.env.POSTMARK_SERVICE_URL || "http://localhost:3010",
+  url: process.env.POSTMARK_SERVICE_URL || "https://postmark.mcpfactory.org",
   apiKey: process.env.POSTMARK_SERVICE_API_KEY,
   
   /**
@@ -150,7 +150,7 @@ export const postmarkService = {
 };
 
 export const companyService = {
-  url: process.env.COMPANY_SERVICE_URL || "http://localhost:3008",
+  url: process.env.COMPANY_SERVICE_URL || "https://company.mcpfactory.org",
   apiKey: process.env.COMPANY_SERVICE_API_KEY,
   
   async scrape(clerkOrgId: string, url: string) {
