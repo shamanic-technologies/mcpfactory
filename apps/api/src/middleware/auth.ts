@@ -1,13 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import { createClerkClient } from "@clerk/backend";
+import { verifyToken } from "@clerk/backend";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { users } from "../db/schema.js";
 import { generateApiKey } from "../lib/api-key.js";
-
-const clerk = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY,
-});
 
 export interface AuthenticatedRequest extends Request {
   userId?: string; // Internal user ID
@@ -32,7 +28,10 @@ export async function clerkAuth(
     const token = authHeader.slice(7);
 
     // Verify Clerk JWT
-    const { sub: clerkUserId } = await clerk.verifyToken(token);
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY,
+    });
+    const clerkUserId = payload.sub;
 
     if (!clerkUserId) {
       return res.status(401).json({ error: "Invalid token" });
