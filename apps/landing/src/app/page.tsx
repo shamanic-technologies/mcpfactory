@@ -66,6 +66,12 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <a
+              href="https://docs.mcpfactory.org"
+              className="text-gray-600 hover:text-gray-900 text-sm"
+            >
+              Docs
+            </a>
+            <a
               href="https://github.com/shamanic-technologies/mcpfactory"
               target="_blank"
               rel="noopener noreferrer"
@@ -270,8 +276,8 @@ export default function Home() {
             >
               GitHub
             </a>
-            <a href="#" className="hover:text-white transition">
-              Documentation
+            <a href="https://docs.mcpfactory.org" className="hover:text-white transition">
+              Docs
             </a>
             <a href="#" className="hover:text-white transition">
               Privacy
