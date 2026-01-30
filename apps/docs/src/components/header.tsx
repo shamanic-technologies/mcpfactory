@@ -31,7 +31,7 @@ export function Header() {
             GitHub
           </a>
           <a
-            href="https://app.mcpfactory.org/sign-up"
+            href="https://dashboard.mcpfactory.org/sign-up"
             className="text-sm bg-primary-500 text-white px-4 py-2 rounded-full font-medium hover:bg-primary-600 transition shadow-sm"
           >
             Get Started

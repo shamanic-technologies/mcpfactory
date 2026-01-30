@@ -146,7 +146,7 @@ How many emails sent, opened, replied?"`}</code>
         <h3>API key errors</h3>
         <p>
           Verify your <code>MCPFACTORY_API_KEY</code> is valid at{" "}
-          <a href="https://app.mcpfactory.org/settings">app.mcpfactory.org/settings</a>.
+          <a href="https://dashboard.mcpfactory.org/settings">dashboard.mcpfactory.org/settings</a>.
         </p>
 
         <h3>BYOK key missing</h3>

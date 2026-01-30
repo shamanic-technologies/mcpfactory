@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
-const SITE_URL = "https://app.mcpfactory.org";
+const SITE_URL = "https://dashboard.mcpfactory.org";
 const SITE_NAME = "MCP Factory Dashboard";
 
 export const metadata: Metadata = {

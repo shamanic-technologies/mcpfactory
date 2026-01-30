@@ -4,7 +4,7 @@
 
 > From URL to Revenue
 
-[mcpfactory.org](https://mcpfactory.org) | [Dashboard](https://app.mcpfactory.org)
+[mcpfactory.org](https://mcpfactory.org) | [Dashboard](https://dashboard.mcpfactory.org)
 
 ## What is MCP Factory?
 
@@ -126,7 +126,7 @@ This project is 100% open source. MIT License.
 ```
 mcpfactory/
 ├── apps/
-│   ├── dashboard/     # app.mcpfactory.org
+│   ├── dashboard/     # dashboard.mcpfactory.org
 │   └── landing/       # mcpfactory.org
 ├── packages/
 │   ├── mcp-influencer-pitch/

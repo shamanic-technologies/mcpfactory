@@ -16,7 +16,7 @@ export default function DocsHome() {
         <h2>Getting Started</h2>
         <ol>
           <li>
-            <a href="https://app.mcpfactory.org/sign-up">Create an account</a> and get your API key
+            <a href="https://dashboard.mcpfactory.org/sign-up">Create an account</a> and get your API key
           </li>
           <li>Configure your BYOK keys (OpenAI, Apollo, Resend, etc.)</li>
           <li>Install the MCP you want to use</li>

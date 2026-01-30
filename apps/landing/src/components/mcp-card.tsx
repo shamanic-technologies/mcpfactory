@@ -1,4 +1,4 @@
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://app.mcpfactory.org";
+const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://dashboard.mcpfactory.org";
 
 interface McpCardProps {
   name: string;

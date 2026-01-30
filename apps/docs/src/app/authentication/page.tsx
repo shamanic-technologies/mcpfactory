@@ -21,7 +21,7 @@ export default function AuthenticationPage() {
         <h2>1. Create an Account</h2>
         <p>
           Sign up at{" "}
-          <a href="https://app.mcpfactory.org/sign-up">app.mcpfactory.org</a> to
+          <a href="https://dashboard.mcpfactory.org/sign-up">dashboard.mcpfactory.org</a> to
           get started. You can use email or OAuth (Google, GitHub).
         </p>
 

@@ -2,7 +2,7 @@ import Image from "next/image";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { McpCard } from "@/components/mcp-card";
 
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://app.mcpfactory.org";
+const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://dashboard.mcpfactory.org";
 
 const MCPS = [
   {

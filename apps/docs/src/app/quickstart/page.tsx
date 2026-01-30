@@ -20,7 +20,7 @@ export default function QuickstartPage() {
       <div className="prose prose-lg">
         <h2>1. Create an Account</h2>
         <p>
-          Go to <a href="https://app.mcpfactory.org/sign-up">app.mcpfactory.org/sign-up</a> and
+          Go to <a href="https://dashboard.mcpfactory.org/sign-up">dashboard.mcpfactory.org/sign-up</a> and
           create your account.
         </p>
 

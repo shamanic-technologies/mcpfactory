@@ -54,7 +54,7 @@ Authorization: Bearer mcpf_live_xxxx
   "mcp": "sales-outreach",
   "target_url": "acme.com",
   "created_at": "2026-01-30T10:00:00Z",
-  "dashboard_url": "https://app.mcpfactory.org/campaigns/camp_abc123"
+  "dashboard_url": "https://dashboard.mcpfactory.org/campaigns/camp_abc123"
 }`}</code>
         </pre>
 
