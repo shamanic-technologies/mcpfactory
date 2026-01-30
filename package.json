@@ -1,0 +1,33 @@
+{
+  "name": "mcpfactory",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The DFY, BYOK MCP Platform",
+  "author": "MCP Factory",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcpfactory/mcpfactory.git"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "shared/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
+    "publish-packages": "turbo build --filter='./packages/*' && changeset publish"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.0",
+    "@changesets/cli": "^2.27.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
