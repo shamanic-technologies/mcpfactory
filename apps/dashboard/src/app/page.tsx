@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
+import { currentUser } from "@clerk/nextjs/server";
 
-export default function DashboardHome() {
+export default async function DashboardHome() {
+  const user = await currentUser();
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -16,9 +20,7 @@ export default function DashboardHome() {
             <Link href="/settings" className="text-gray-600 hover:text-gray-900">
               Settings
             </Link>
-            <button className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm">
-              Sign Out
-            </button>
+            <UserButton afterSignOutUrl="/sign-in" />
           </div>
         </div>
       </header>
@@ -26,7 +28,9 @@ export default function DashboardHome() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Welcome */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Welcome back{user?.firstName ? `, ${user.firstName}` : ""}
+          </h1>
           <p className="text-gray-600">Manage your MCPs, BYOK keys, and campaigns.</p>
         </div>
 

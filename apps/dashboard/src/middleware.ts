@@ -1,10 +1,15 @@
-// Placeholder for Clerk middleware
-// TODO: Enable when Clerk is configured
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// import { clerkMiddleware } from "@clerk/nextjs/server";
-// export default clerkMiddleware();
+const isPublicRoute = createRouteMatcher([
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+]);
 
-export { };
+export default clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
   matcher: [
