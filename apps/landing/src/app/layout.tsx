@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     description: "The DFY, BYOK MCP Platform. You give us your URL + budget. We give you customers.",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "MCP Factory - From URL to Revenue",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "MCP Factory - From URL to Revenue",
     description: "The DFY, BYOK MCP Platform. Done-For-You automation via MCP.",
-    images: ["/og-image.png"],
+    images: ["/og-image.jpg"],
     creator: "@mcpfactory",
   },
   robots: {
@@ -115,7 +115,7 @@ const jsonLd = {
     "@type": "Organization",
     name: "MCP Factory",
     url: SITE_URL,
-    logo: `${SITE_URL}/logo.png`,
+    logo: `${SITE_URL}/logo.jpg`,
     sameAs: [
       "https://github.com/shamanic-technologies/mcpfactory",
       "https://twitter.com/mcpfactory",
@@ -128,7 +128,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: "MCP Factory",
   url: SITE_URL,
-  logo: `${SITE_URL}/logo.png`,
+  logo: `${SITE_URL}/logo.jpg`,
   description: "The DFY, BYOK MCP Platform",
   sameAs: [
     "https://github.com/shamanic-technologies/mcpfactory",

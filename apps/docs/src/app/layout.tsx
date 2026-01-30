@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     description: "Learn how to use MCP Factory - installation, API reference, and integrations.",
     images: [
       {
-        url: "https://mcpfactory.org/og-image.png",
+        url: "https://mcpfactory.org/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "MCP Factory Documentation",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "MCP Factory Documentation",
     description: "Complete guides and API reference for MCP Factory.",
-    images: ["https://mcpfactory.org/og-image.png"],
+    images: ["https://mcpfactory.org/og-image.jpg"],
   },
   robots: {
     index: true,
@@ -95,7 +95,7 @@ const jsonLd = {
     url: "https://mcpfactory.org",
     logo: {
       "@type": "ImageObject",
-      url: "https://mcpfactory.org/logo.png",
+      url: "https://mcpfactory.org/logo.jpg",
     },
   },
   mainEntityOfPage: {

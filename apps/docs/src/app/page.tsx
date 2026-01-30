@@ -1,13 +1,13 @@
 export default function DocsHome() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">
-      <h1 className="text-4xl font-bold mb-4">MCP Factory Documentation</h1>
+      <h1 className="font-display text-4xl font-bold mb-4 text-gray-800">MCP Factory Documentation</h1>
       <p className="text-xl text-gray-600 mb-8">
         The DFY, BYOK MCP Platform. From URL to Revenue.
       </p>
 
       <div className="prose prose-lg">
-        <h2>What is MCP Factory?</h2>
+        <h2 className="font-display">What is MCP Factory?</h2>
         <p>
           MCP Factory provides Done-For-You (DFY) automation tools via the Model Context Protocol (MCP).
           You provide a URL + budget, we handle everything else.

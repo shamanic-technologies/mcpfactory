@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     description: "Manage your BYOK keys, campaigns, and usage.",
     images: [
       {
-        url: "https://mcpfactory.org/og-image.png",
+        url: "https://mcpfactory.org/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "MCP Factory Dashboard",
