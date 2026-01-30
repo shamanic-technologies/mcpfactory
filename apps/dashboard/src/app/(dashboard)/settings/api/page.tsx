@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { getProfile, regenerateApiKey, UserProfile } from "@/lib/api";
+import { SkeletonApiKey } from "@/components/skeleton";
 
 export default function ApiSettingsPage() {
   const { getToken } = useAuth();
@@ -80,7 +81,7 @@ export default function ApiSettingsPage() {
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading...</div>
+        <SkeletonApiKey />
       ) : profile ? (
         <div className="space-y-6 max-w-2xl">
           <div className="bg-white rounded-xl border border-gray-200 p-5">

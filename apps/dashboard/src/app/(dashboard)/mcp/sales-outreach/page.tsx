@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { getByokKeys, setByokKey, deleteByokKey, ByokKey } from "@/lib/api";
+import { SkeletonKeysList } from "@/components/skeleton";
 
 type Tab = "keys" | "requests" | "results" | "spending";
 
@@ -125,7 +126,7 @@ export default function SalesOutreachPage() {
       {activeTab === "keys" && (
         <div className="space-y-4">
           {loading ? (
-            <div className="text-center py-12 text-gray-500">Loading...</div>
+            <SkeletonKeysList />
           ) : (
             REQUIRED_KEYS.map((provider) => {
               const existingKey = getKeyForProvider(provider.id);

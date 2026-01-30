@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { getByokKeys, setByokKey, deleteByokKey, ByokKey } from "@/lib/api";
+import { SkeletonKeysList } from "@/components/skeleton";
 
 const PROVIDERS = [
   { id: "openai", name: "OpenAI", description: "For email generation (GPT-4)", placeholder: "sk-..." },
@@ -92,7 +93,7 @@ export default function KeysSettingsPage() {
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading...</div>
+        <SkeletonKeysList />
       ) : (
         <div className="space-y-3 max-w-2xl">
           {PROVIDERS.map((provider) => {
