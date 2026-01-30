@@ -14,10 +14,12 @@
     "dev:landing": "pnpm --filter @mcpfactory/landing dev",
     "dev:dashboard": "pnpm --filter @mcpfactory/dashboard dev",
     "dev:docs": "pnpm --filter @mcpfactory/docs dev",
+    "dev:api": "pnpm --filter @mcpfactory/api dev",
     "build": "turbo build",
     "build:landing": "pnpm --filter @mcpfactory/landing build",
     "build:dashboard": "pnpm --filter @mcpfactory/dashboard build",
     "build:docs": "pnpm --filter @mcpfactory/docs build",
+    "build:api": "pnpm --filter @mcpfactory/api build",
     "lint": "turbo lint",
     "clean": "turbo clean",
     "publish-packages": "turbo build --filter='./packages/*' && changeset publish"
