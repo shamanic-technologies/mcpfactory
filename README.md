@@ -2,7 +2,9 @@
 
 **The DFY, BYOK MCP Platform**
 
-> You give us your URL. We give you customers.
+> From URL to Revenue
+
+[mcpfactory.org](https://mcpfactory.org) | [Dashboard](https://app.mcpfactory.org)
 
 ## What is MCP Factory?
 
