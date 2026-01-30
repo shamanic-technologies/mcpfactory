@@ -307,6 +307,9 @@ export default function Home() {
             <a href="https://docs.mcpfactory.org" className="hover:text-primary-400 transition">
               Docs
             </a>
+            <a href="/brand" className="hover:text-primary-400 transition">
+              Brand Assets
+            </a>
             <a href="#" className="hover:text-primary-400 transition">
               Privacy
             </a>
