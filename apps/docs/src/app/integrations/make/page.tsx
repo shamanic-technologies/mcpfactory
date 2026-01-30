@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Make.com Integration",
+  description: "Create visual automation scenarios with MCP Factory and Make.com. HTTP modules, webhooks, and example scenarios.",
+  openGraph: {
+    title: "Make.com Integration | MCP Factory Docs",
+    description: "Automate MCP Factory campaigns with Make.com.",
+  },
+};
+
 export default function MakeIntegrationPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">

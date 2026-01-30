@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Campaigns API",
+  description: "Create, list, pause, and resume campaigns via the MCP Factory REST API. Full endpoint reference with examples.",
+  openGraph: {
+    title: "Campaigns API | MCP Factory Docs",
+    description: "Campaign management endpoints for MCP Factory.",
+  },
+};
+
 export default function CampaignsApiPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">

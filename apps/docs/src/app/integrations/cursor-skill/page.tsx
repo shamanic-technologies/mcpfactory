@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cursor Skill",
+  description: "Use MCP Factory as a Cursor skill for AI-assisted sales and marketing automation. Installation and example prompts.",
+  openGraph: {
+    title: "Cursor Skill | MCP Factory Docs",
+    description: "Install MCP Factory as a Cursor skill.",
+  },
+};
+
 export default function CursorSkillPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">

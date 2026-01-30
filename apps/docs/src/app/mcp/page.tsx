@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "MCP Usage Guide",
+  description: "Learn how to use MCP Factory tools from Claude, Cursor, Cline, or any MCP-compatible client. Configuration, parameters, and best practices.",
+  openGraph: {
+    title: "MCP Usage Guide | MCP Factory Docs",
+    description: "Complete guide to using MCP Factory from any MCP client.",
+  },
+};
+
 export default function McpUsagePage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">

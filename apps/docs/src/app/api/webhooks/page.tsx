@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Webhooks",
+  description: "Receive real-time notifications for campaign events. Webhook events, payload structure, and signature verification.",
+  openGraph: {
+    title: "Webhooks | MCP Factory Docs",
+    description: "Real-time webhook notifications for MCP Factory.",
+  },
+};
+
 export default function WebhooksApiPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">

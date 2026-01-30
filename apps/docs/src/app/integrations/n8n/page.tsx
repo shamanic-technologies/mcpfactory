@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "n8n Integration",
+  description: "Build automated workflows with MCP Factory and n8n. HTTP requests, webhooks, and example workflows.",
+  openGraph: {
+    title: "n8n Integration | MCP Factory Docs",
+    description: "Automate MCP Factory campaigns with n8n workflows.",
+  },
+};
+
 export default function N8nIntegrationPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">

@@ -1,4 +1,14 @@
+import { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Integrations",
+  description: "Connect MCP Factory to Cursor, n8n, Zapier, Make.com, and more. Automate workflows with webhooks and REST API.",
+  openGraph: {
+    title: "Integrations | MCP Factory Docs",
+    description: "Connect MCP Factory to your favorite tools.",
+  },
+};
 
 const INTEGRATIONS = [
   {

@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Sales Outreach MCP",
+  description: "Cold email campaigns from your URL. Find leads, generate emails, send & optimize automatically with the Sales Outreach MCP.",
+  openGraph: {
+    title: "Sales Outreach MCP | MCP Factory",
+    description: "Automate cold email campaigns with AI. Just provide your URL and budget.",
+  },
+};
+
 export default function SalesOutreachDocs() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">

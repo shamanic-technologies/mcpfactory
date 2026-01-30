@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Authentication",
+  description: "Set up your MCP Factory API keys and configure BYOK credentials for OpenAI, Apollo, Resend, and more.",
+  openGraph: {
+    title: "Authentication | MCP Factory Docs",
+    description: "Configure API keys and BYOK credentials.",
+  },
+};
+
 export default function AuthenticationPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">

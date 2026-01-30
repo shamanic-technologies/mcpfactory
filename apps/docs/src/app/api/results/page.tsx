@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Results API",
+  description: "Retrieve campaign statistics, replies, usage data, and community benchmarks via the MCP Factory API.",
+  openGraph: {
+    title: "Results API | MCP Factory Docs",
+    description: "Campaign results and statistics endpoints.",
+  },
+};
+
 export default function ResultsApiPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">

@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "API Reference",
+  description: "Complete REST API reference for MCP Factory. Endpoints for campaigns, results, usage, and BYOK key management.",
+  openGraph: {
+    title: "API Reference | MCP Factory Docs",
+    description: "REST API documentation for MCP Factory.",
+  },
+};
+
 export default function ApiOverviewPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">

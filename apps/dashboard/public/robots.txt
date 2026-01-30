@@ -1,0 +1,3 @@
+# MCP Factory Dashboard - https://app.mcpfactory.org
+User-agent: *
+Disallow: /

@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Zapier Integration",
+  description: "Connect MCP Factory to 5,000+ apps with Zapier. Triggers, actions, and example Zaps for campaign automation.",
+  openGraph: {
+    title: "Zapier Integration | MCP Factory Docs",
+    description: "Automate MCP Factory campaigns with Zapier.",
+  },
+};
+
 export default function ZapierIntegrationPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">

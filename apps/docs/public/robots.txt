@@ -1,0 +1,5 @@
+# MCP Factory Docs - https://docs.mcpfactory.org
+User-agent: *
+Allow: /
+
+Sitemap: https://docs.mcpfactory.org/sitemap.xml

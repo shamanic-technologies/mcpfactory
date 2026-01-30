@@ -1,3 +1,14 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Quick Start",
+  description: "Get started with MCP Factory in 5 minutes. Install your first MCP and launch an automated campaign.",
+  openGraph: {
+    title: "Quick Start | MCP Factory Docs",
+    description: "Get started with MCP Factory in 5 minutes.",
+  },
+};
+
 export default function QuickstartPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">
