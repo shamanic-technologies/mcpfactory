@@ -1,0 +1,119 @@
+import { pgTable, uuid, text, timestamp, uniqueIndex, date, decimal, jsonb } from "drizzle-orm/pg-core";
+
+// Local users table (maps to Clerk)
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clerkUserId: text("clerk_user_id").notNull().unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_users_clerk_id").on(table.clerkUserId),
+  ]
+);
+
+// Local orgs table (maps to Clerk)
+export const orgs = pgTable(
+  "orgs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clerkOrgId: text("clerk_org_id").notNull().unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_orgs_clerk_id").on(table.clerkOrgId),
+  ]
+);
+
+// Campaigns table
+export const campaigns = pgTable(
+  "campaigns",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => orgs.id, { onDelete: "cascade" }),
+    createdByUserId: uuid("created_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    
+    name: text("name").notNull(),
+    
+    // Apollo targeting criteria (using Apollo API naming)
+    personTitles: text("person_titles").array(),           // ["CEO", "CTO", "Founder"]
+    qOrganizationKeywordTags: text("q_organization_keyword_tags").array(), // ["SaaS", "fintech"]
+    organizationLocations: text("organization_locations").array(),   // ["United States", "California, US"]
+    organizationNumEmployeesRanges: text("organization_num_employees_ranges").array(), // ["1,10", "11,50"]
+    qOrganizationIndustryTagIds: text("q_organization_industry_tag_ids").array(),
+    qKeywords: text("q_keywords"),                         // Full-text search
+    
+    // Store full Apollo request for transparency
+    requestRaw: jsonb("request_raw"),
+    
+    // Budget limits per campaign
+    maxBudgetDailyUsd: decimal("max_budget_daily_usd", { precision: 10, scale: 2 }),
+    maxBudgetWeeklyUsd: decimal("max_budget_weekly_usd", { precision: 10, scale: 2 }),
+    maxBudgetMonthlyUsd: decimal("max_budget_monthly_usd", { precision: 10, scale: 2 }),
+    
+    // Scheduling
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    recurrence: text("recurrence"),  // 'daily', 'weekly', 'once'
+    
+    // Status
+    status: text("status").notNull().default("draft"),  // draft, active, paused, completed
+    toResumeAt: timestamp("to_resume_at", { withTimezone: true }),
+    
+    // Notifications
+    notifyFrequency: text("notify_frequency"),  // 'daily', 'weekly', 'per_reply'
+    notifyChannel: text("notify_channel"),      // 'email', 'webhook'
+    notifyDestination: text("notify_destination"),  // email address or webhook URL
+    
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_campaigns_org").on(table.orgId),
+  ]
+);
+
+// Campaign runs table (each execution of a campaign)
+export const campaignRuns = pgTable(
+  "campaign_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    campaignId: uuid("campaign_id")
+      .notNull()
+      .references(() => campaigns.id, { onDelete: "cascade" }),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    
+    runStartedAt: timestamp("run_started_at", { withTimezone: true }).notNull(),
+    runEndedAt: timestamp("run_ended_at", { withTimezone: true }),
+    
+    status: text("status").notNull().default("running"),  // running, completed, failed, stopped
+    errorMessage: text("error_message"),
+    
+    // Stats are computed from apollo-service, emailgeneration-service, postmark-service tables
+    // No denormalized stats here
+    
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_campaign_runs_campaign").on(table.campaignId),
+    uniqueIndex("idx_campaign_runs_org").on(table.orgId),
+  ]
+);
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type Org = typeof orgs.$inferSelect;
+export type NewOrg = typeof orgs.$inferInsert;
+export type Campaign = typeof campaigns.$inferSelect;
+export type NewCampaign = typeof campaigns.$inferInsert;
+export type CampaignRun = typeof campaignRuns.$inferSelect;
+export type NewCampaignRun = typeof campaignRuns.$inferInsert;
