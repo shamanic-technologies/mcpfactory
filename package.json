@@ -7,16 +7,15 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mcpfactory/mcpfactory.git"
+    "url": "https://github.com/shamanic-technologies/mcpfactory.git"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*",
-    "shared/*"
-  ],
   "scripts": {
     "dev": "turbo dev",
+    "dev:landing": "pnpm --filter @mcpfactory/landing dev",
+    "dev:dashboard": "pnpm --filter @mcpfactory/dashboard dev",
     "build": "turbo build",
+    "build:landing": "pnpm --filter @mcpfactory/landing build",
+    "build:dashboard": "pnpm --filter @mcpfactory/dashboard build",
     "lint": "turbo lint",
     "clean": "turbo clean",
     "publish-packages": "turbo build --filter='./packages/*' && changeset publish"
