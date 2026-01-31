@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { CopyForLLM } from "@/components/copy-for-llm";
 
 export const metadata: Metadata = {
   title: "Sales Outreach MCP",
@@ -9,12 +10,54 @@ export const metadata: Metadata = {
   },
 };
 
+const LLM_INSTRUCTIONS = `# Sales Outreach MCP
+
+Cold email campaigns from your URL. Find leads, generate emails, send & optimize.
+
+## Installation
+npx @mcpfactory/sales-outreach
+
+Or add to MCP config:
+{
+  "mcpServers": {
+    "sales-outreach": {
+      "command": "npx",
+      "args": ["@mcpfactory/sales-outreach"],
+      "env": {
+        "MCPFACTORY_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+
+## BYOK Keys Required
+- OpenAI or Anthropic: Email generation
+- Apollo: Lead finding & enrichment
+- Resend: Email sending
+
+## Usage
+"Launch a cold email campaign for acme.com targeting CTOs at tech startups, $10/day budget, 5 days trial"
+
+## Available Tools
+- launch_campaign: Start new outreach campaign
+- get_campaign_results: Get campaign stats
+- pause_campaign / resume_campaign: Control execution
+- get_stats: Usage and community benchmarks
+
+## Pricing
+- Free: $0 + BYOK costs, 1,000 emails
+- Pro: $20/mo + BYOK costs, 10,000 emails
+- Estimated BYOK cost: ~$0.02/email`;
+
 export default function SalesOutreachDocs() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">
-      <div className="flex items-center gap-3 mb-4">
-        <span className="w-3 h-3 rounded-full bg-primary-500" />
-        <span className="text-sm text-primary-600 font-medium">Available</span>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <span className="w-3 h-3 rounded-full bg-primary-500" />
+          <span className="text-sm text-primary-600 font-medium">Available</span>
+        </div>
+        <CopyForLLM content={LLM_INSTRUCTIONS} />
       </div>
       
       <h1 className="text-4xl font-bold mb-4">Sales Outreach MCP</h1>

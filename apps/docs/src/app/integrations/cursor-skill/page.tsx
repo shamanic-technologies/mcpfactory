@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { CopyForLLM } from "@/components/copy-for-llm";
 
 export const metadata: Metadata = {
   title: "Cursor Skill",
@@ -9,10 +10,49 @@ export const metadata: Metadata = {
   },
 };
 
+const LLM_INSTRUCTIONS = `# MCP Factory Cursor Skill
+
+## What is a Cursor Skill?
+Cursor Skills extend AI assistant capabilities. MCP Factory skill enables launching and managing automated campaigns from Cursor IDE.
+
+## Installation
+
+### Global Skill
+Create: ~/.cursor/skills/mcpfactory/SKILL.md
+
+### MCP Configuration
+Add to .cursor/mcp.json:
+{
+  "mcpServers": {
+    "sales-outreach": {
+      "command": "npx",
+      "args": ["@mcpfactory/sales-outreach"],
+      "env": {
+        "MCPFACTORY_API_KEY": "mcpf_live_xxxx"
+      }
+    }
+  }
+}
+
+## Example Prompts
+- "Launch a cold email campaign for acme.com targeting CTOs at SaaS companies"
+- "Find fitness influencers with 10k-100k followers and pitch them"
+- "What's the status of my sales campaign?"
+- "Pause my sales outreach campaign"
+
+## Best Practices
+1. Be specific about target audience
+2. Always set budget limits
+3. Start with 3-5 day trial
+4. Check stats regularly`;
+
 export default function CursorSkillPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">
-      <h1 className="text-4xl font-bold mb-4">Cursor Skill</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-4xl font-bold">Cursor Skill</h1>
+        <CopyForLLM content={LLM_INSTRUCTIONS} />
+      </div>
       <p className="text-xl text-gray-600 mb-8">
         Use MCP Factory as a Cursor skill for AI-assisted sales and marketing automation.
       </p>

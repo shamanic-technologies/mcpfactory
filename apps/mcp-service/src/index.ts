@@ -186,7 +186,8 @@ app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });
 });
 
-app.listen(PORT, () => {
+// Listen on :: for Railway private networking (IPv4 & IPv6 support)
+app.listen(Number(PORT), "::", () => {
   console.log(`MCPFactory MCP Server running on port ${PORT}`);
   console.log(`MCP endpoint: http://localhost:${PORT}/mcp`);
 });

@@ -27,6 +27,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   res.status(500).json({ error: "Internal server error" });
 });
 
-app.listen(PORT, () => {
+// Listen on :: for Railway private networking (IPv4 & IPv6 support)
+app.listen(Number(PORT), "::", () => {
   console.log(`Apollo service running on port ${PORT}`);
 });

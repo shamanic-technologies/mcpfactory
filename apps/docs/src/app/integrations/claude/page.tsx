@@ -1,0 +1,208 @@
+import { Metadata } from "next";
+import { CopyForLLM } from "@/components/copy-for-llm";
+
+export const metadata: Metadata = {
+  title: "Claude Integration",
+  description: "Connect MCP Factory to Claude. Use Claude.ai, Claude Desktop, or Claude Code to launch sales campaigns and automate outreach.",
+  openGraph: {
+    title: "Claude Integration | MCP Factory",
+    description: "Use MCP Factory tools directly in Claude.",
+  },
+  keywords: ["Claude", "Anthropic", "MCP", "sales automation", "lead generation", "cold email", "Claude Desktop"],
+};
+
+const LLM_INSTRUCTIONS = `# MCP Factory + Claude Integration
+
+## Supported Claude Clients
+- Claude.ai (web)
+- Claude Desktop
+- Claude Code
+
+## Claude.ai Setup
+1. Go to Settings → Integrations
+2. Click "Add more"
+3. Enter:
+   - Name: MCP Factory
+   - URL: https://mcp.mcpfactory.org/mcp
+4. Enable tools in chat
+
+## Claude Desktop Setup
+Edit ~/Library/Application Support/Claude/claude_desktop_config.json:
+{
+  "mcpServers": {
+    "mcpfactory": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.mcpfactory.org/mcp"],
+      "env": {
+        "MCP_HEADERS": "Authorization:Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}
+
+## Claude Code Setup
+claude mcp add mcpfactory --transport http https://mcp.mcpfactory.org/mcp
+
+## Available Tools
+- mcpfactory_status: Check connection
+- mcpfactory_scrape_company: Extract company info
+- mcpfactory_search_leads: Find leads via Apollo
+- mcpfactory_create_campaign: Launch campaign
+- mcpfactory_campaign_stats: Get performance
+
+## Get API Key
+https://dashboard.mcpfactory.org/settings/api`;
+
+export default function ClaudeIntegrationPage() {
+  return (
+    <div className="max-w-3xl mx-auto px-8 py-12">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-4xl font-bold">Claude Integration</h1>
+        <CopyForLLM content={LLM_INSTRUCTIONS} />
+      </div>
+      <p className="text-xl text-gray-600 mb-8">
+        Connect MCP Factory to Claude and launch campaigns from Anthropic&apos;s AI assistant.
+      </p>
+
+      <div className="prose prose-lg">
+        <h2>Supported Claude Clients</h2>
+        <ul>
+          <li><strong>Claude.ai</strong> - Anthropic&apos;s web interface</li>
+          <li><strong>Claude Desktop</strong> - Desktop application</li>
+          <li><strong>Claude Code</strong> - Coding assistant CLI</li>
+        </ul>
+
+        <h2>Claude.ai Setup</h2>
+        <ol>
+          <li>Open <strong>Settings</strong> (bottom of sidebar)</li>
+          <li>Scroll to <strong>Integrations</strong></li>
+          <li>Click <strong>Add more</strong></li>
+          <li>
+            Enter the integration details:
+            <ul>
+              <li><strong>Integration name:</strong> MCP Factory</li>
+              <li><strong>Integration URL:</strong> <code>https://mcp.mcpfactory.org/mcp</code></li>
+            </ul>
+          </li>
+          <li>Save and enable the integration</li>
+          <li>In new chats, make sure to enable the MCP Factory tools</li>
+        </ol>
+
+        <h2>Claude Desktop Setup</h2>
+        <p>
+          Edit the configuration file at{" "}
+          <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>:
+        </p>
+        <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
+          <code>{`{
+  "mcpServers": {
+    "mcpfactory": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.mcpfactory.org/mcp"],
+      "env": {
+        "MCP_HEADERS": "Authorization:Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}`}</code>
+        </pre>
+        <p>Restart Claude Desktop after saving.</p>
+
+        <h2>Claude Code Setup</h2>
+        <p>Add MCP Factory using the CLI:</p>
+        <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
+          <code>claude mcp add mcpfactory --transport http https://mcp.mcpfactory.org/mcp</code>
+        </pre>
+        <p>
+          Then configure your API key, or set the <code>MCPFACTORY_API_KEY</code> environment variable.
+        </p>
+
+        <h2>Test Your Connection</h2>
+        <p>Ask Claude:</p>
+        <pre className="bg-gray-100 p-4 rounded-lg">
+          <code className="text-gray-800">&quot;Check my MCPFactory connection status&quot;</code>
+        </pre>
+
+        <h2>Available Tools</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>mcpfactory_status</code></td>
+              <td>Check connection and configuration</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_scrape_company</code></td>
+              <td>Extract company info from a URL</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_search_leads</code></td>
+              <td>Find leads matching your criteria</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_create_campaign</code></td>
+              <td>Launch a cold email campaign</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_list_campaigns</code></td>
+              <td>List all your campaigns</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_campaign_stats</code></td>
+              <td>Get campaign performance metrics</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Example Prompts</h2>
+
+        <h3>Launch a Campaign</h3>
+        <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+          <code className="text-gray-800">{`"Launch a cold email campaign for mybrand.com
+targeting CTOs at SaaS companies with 50-200 employees.
+Budget: $10/day max. Run for 5 days as a trial."`}</code>
+        </pre>
+
+        <h3>Find Leads</h3>
+        <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+          <code className="text-gray-800">{`"Find 50 marketing directors at e-commerce 
+companies in the United States"`}</code>
+        </pre>
+
+        <h3>Analyze Company</h3>
+        <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+          <code className="text-gray-800">{`"Scrape acme.com and tell me about their 
+business, products, and target audience"`}</code>
+        </pre>
+
+        <h2>Troubleshooting</h2>
+
+        <h3>MCP tools not appearing</h3>
+        <ul>
+          <li>For Claude.ai: Make sure you enabled the tools in the chat</li>
+          <li>For Claude Desktop: Restart the app after config changes</li>
+          <li>Verify the MCP URL is correct</li>
+        </ul>
+
+        <h3>Authorization errors</h3>
+        <ul>
+          <li>Check your API key is valid</li>
+          <li>Ensure the Bearer token format is correct</li>
+          <li>Verify at <a href="https://dashboard.mcpfactory.org/settings/api">dashboard.mcpfactory.org</a></li>
+        </ul>
+
+        <h2>Next Steps</h2>
+        <ul>
+          <li><a href="/quickstart">Quick Start Guide</a></li>
+          <li><a href="/sales-outreach">Sales Outreach MCP</a></li>
+          <li><a href="/authentication">Authentication & API Keys</a></li>
+        </ul>
+      </div>
+    </div>
+  );
+}
