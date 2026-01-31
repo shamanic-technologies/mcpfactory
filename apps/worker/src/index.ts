@@ -7,20 +7,33 @@ import { startEmailSendWorker } from "./workers/email-send.js";
 import { startCampaignScheduler } from "./schedulers/campaign-scheduler.js";
 import { closeRedis } from "./lib/redis.js";
 
-console.log("Starting MCP Factory Worker...");
+console.log("=== MCP Factory Worker Starting ===");
+console.log("Environment check:");
+console.log("  REDIS_URL:", process.env.REDIS_URL ? "✓ configured" : "✗ MISSING");
+console.log("  CAMPAIGN_SERVICE_URL:", process.env.CAMPAIGN_SERVICE_URL ? "✓ configured" : "✗ MISSING");
 
-// Start the scheduler to poll for ongoing campaigns
-const schedulerInterval = startCampaignScheduler(30000); // Every 30 seconds
+let schedulerInterval: NodeJS.Timeout;
+let workers: ReturnType<typeof startCampaignRunWorker>[] = [];
 
-// Start all workers
-const workers = [
-  startCampaignRunWorker(),
-  startLeadSearchWorker(),
-  startEmailGenerateWorker(),
-  startEmailSendWorker(),
-];
+try {
+  // Start the scheduler to poll for ongoing campaigns
+  console.log("Starting scheduler...");
+  schedulerInterval = startCampaignScheduler(30000); // Every 30 seconds
+  console.log("Scheduler started");
 
-console.log(`Started ${workers.length} workers + scheduler`);
+  // Start all workers
+  console.log("Starting workers...");
+  workers = [
+    startCampaignRunWorker(),
+    startLeadSearchWorker(),
+    startEmailGenerateWorker(),
+    startEmailSendWorker(),
+  ];
+  console.log(`=== ${workers.length} workers + scheduler ready ===`);
+} catch (error) {
+  console.error("=== FATAL: Worker startup failed ===", error);
+  process.exit(1);
+}
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {

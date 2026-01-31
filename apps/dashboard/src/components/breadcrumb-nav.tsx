@@ -59,19 +59,20 @@ export function BreadcrumbNav() {
       return;
     }
 
+    const currentCampaignId = campaignId; // Capture for closure
     async function fetchCampaignName() {
       setCampaignLoading(true);
       try {
         const token = await getToken();
         if (!token) return;
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "https://api.mcpfactory.org"}/v1/campaigns/${campaignId}`,
+          `${process.env.NEXT_PUBLIC_API_URL || "https://api.mcpfactory.org"}/v1/campaigns/${currentCampaignId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (response.ok) {
           const data = await response.json();
           const name = data.campaign?.name || "Campaign";
-          campaignNameCache[campaignId] = name;
+          campaignNameCache[currentCampaignId] = name;
           setCampaignName(name);
         }
       } catch (err) {
