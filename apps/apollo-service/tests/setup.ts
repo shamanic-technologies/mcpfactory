@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, vi } from "vitest";
 
-process.env.DATABASE_URL = process.env.APOLLO_SERVICE_DATABASE_URL || "postgresql://test:test@localhost/test";
+process.env.APOLLO_SERVICE_DATABASE_URL = process.env.APOLLO_SERVICE_DATABASE_URL || "postgresql://test:test@localhost/test";
 process.env.SERVICE_SECRET_KEY = "test-service-secret";
 
 beforeAll(() => console.log("Test suite starting..."));

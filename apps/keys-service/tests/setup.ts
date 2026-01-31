@@ -6,7 +6,7 @@ vi.mock("@clerk/backend", () => ({
 }));
 
 process.env.CLERK_SECRET_KEY = "test_clerk_secret_key";
-process.env.DATABASE_URL = process.env.KEYS_SERVICE_DATABASE_URL || "postgresql://test:test@localhost/test";
+process.env.KEYS_SERVICE_DATABASE_URL = process.env.KEYS_SERVICE_DATABASE_URL || "postgresql://test:test@localhost/test";
 process.env.ENCRYPTION_KEY = "0123456789abcdef0123456789abcdef";
 
 beforeAll(() => console.log("Test suite starting..."));
