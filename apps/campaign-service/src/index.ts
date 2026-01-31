@@ -44,7 +44,12 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   res.status(500).json({ error: "Internal server error" });
 });
 
-// Listen on :: for Railway private networking (IPv4 & IPv6 support)
-app.listen(Number(PORT), "::", () => {
-  console.log(`Campaign service running on port ${PORT}`);
-});
+// Only start server if not in test environment
+if (process.env.NODE_ENV !== "test") {
+  // Listen on :: for Railway private networking (IPv4 & IPv6 support)
+  app.listen(Number(PORT), "::", () => {
+    console.log(`Campaign service running on port ${PORT}`);
+  });
+}
+
+export default app;

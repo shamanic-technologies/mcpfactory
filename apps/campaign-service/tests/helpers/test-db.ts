@@ -42,14 +42,23 @@ export async function insertTestUser(data: { clerkUserId?: string } = {}) {
  */
 export async function insertTestCampaign(
   orgId: string,
-  data: { name?: string; status?: string } = {}
+  data: { 
+    name?: string; 
+    status?: string; 
+    recurrence?: string;
+    personTitles?: string[];
+    organizationLocations?: string[];
+  } = {}
 ) {
   const [campaign] = await db
     .insert(campaigns)
     .values({
       orgId,
       name: data.name || `Test Campaign ${Date.now()}`,
-      status: data.status || "draft",
+      status: data.status || "ongoing",
+      recurrence: data.recurrence || "oneoff",
+      personTitles: data.personTitles,
+      organizationLocations: data.organizationLocations,
     })
     .returning();
   return campaign;
