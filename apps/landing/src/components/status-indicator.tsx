@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const STATUS_PAGE_URL = "https://mcpfactory.betterstack.com";
+const STATUS_PAGE_URL = "https://status.mcpfactory.org";
 
 interface StatusResponse {
   status: string;
