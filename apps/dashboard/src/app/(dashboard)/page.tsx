@@ -1,6 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { LinkButton } from "@/components/link-button";
+import { ApiKeyPreview } from "@/components/api-key-preview";
 
 export default async function DashboardHome() {
   const user = await currentUser();
@@ -12,6 +13,11 @@ export default async function DashboardHome() {
           Welcome{user?.firstName ? `, ${user.firstName}` : ""} 👋
         </h1>
         <p className="text-gray-600">Select an MCP from the sidebar to get started.</p>
+      </div>
+
+      {/* API Key Section */}
+      <div className="mb-8 max-w-md">
+        <ApiKeyPreview />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -57,11 +63,11 @@ export default async function DashboardHome() {
         <ol className="space-y-2 text-sm text-primary-700">
           <li className="flex items-start gap-2">
             <span className="bg-primary-200 text-primary-800 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
-            <span>Configure your BYOK keys in <Link href="/settings/keys" className="underline">Settings → BYOK Keys</Link></span>
+            <span>Create your API key above or in <Link href="/api-keys" className="underline">API Keys</Link></span>
           </li>
           <li className="flex items-start gap-2">
             <span className="bg-primary-200 text-primary-800 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
-            <span>Copy your API key from <Link href="/settings/api" className="underline">Settings → API Key</Link></span>
+            <span>Configure BYOK keys in <Link href="/settings/keys" className="underline">Settings → BYOK Keys</Link> (optional)</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="bg-primary-200 text-primary-800 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>

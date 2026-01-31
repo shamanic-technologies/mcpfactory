@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { listApiKeys, createApiKey, deleteApiKey, ApiKey, NewApiKey } from "@/lib/api";
 import { SkeletonApiKey } from "@/components/skeleton";
 
-export default function ApiSettingsPage() {
+export default function ApiKeysPage() {
   const { getToken } = useAuth();
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [newKey, setNewKey] = useState<NewApiKey | null>(null);
@@ -42,7 +41,6 @@ export default function ApiSettingsPage() {
       if (!token) throw new Error("Not authenticated");
       const data = await createApiKey(token, "Dashboard Key");
       setNewKey(data);
-      // Reload keys to show the new one
       await loadKeys();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create key");
@@ -72,11 +70,6 @@ export default function ApiSettingsPage() {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <Link href="/settings" className="hover:text-primary-600">Settings</Link>
-          <span>/</span>
-          <span className="text-gray-700">API Keys</span>
-        </div>
         <h1 className="font-display text-2xl font-bold text-gray-800">API Keys</h1>
         <p className="text-gray-600">Manage API keys for MCP and REST API access.</p>
       </div>
@@ -87,7 +80,6 @@ export default function ApiSettingsPage() {
         </div>
       )}
 
-      {/* New key notification */}
       {newKey && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-5 mb-6">
           <div className="flex items-start justify-between">
@@ -116,7 +108,6 @@ export default function ApiSettingsPage() {
         <SkeletonApiKey />
       ) : (
         <div className="space-y-6 max-w-2xl">
-          {/* Create new key */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center justify-between">
               <div>
@@ -133,7 +124,6 @@ export default function ApiSettingsPage() {
             </div>
           </div>
 
-          {/* Existing keys */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <h3 className="font-medium text-gray-800 mb-4">Your API Keys</h3>
             
@@ -169,7 +159,6 @@ export default function ApiSettingsPage() {
             )}
           </div>
 
-          {/* Usage instructions */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <h3 className="font-medium text-gray-800 mb-4">How to Use</h3>
             <div className="space-y-4 text-sm">
