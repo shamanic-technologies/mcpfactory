@@ -3,11 +3,21 @@
  */
 
 const API_BASE_URL = process.env.MCPFACTORY_API_URL || "https://api.mcpfactory.org";
-const API_KEY = process.env.MCPFACTORY_API_KEY;
 
 interface ApiResponse<T> {
   data?: T;
   error?: string;
+}
+
+// Store the current API key (set from request context)
+let currentApiKey: string | null = null;
+
+export function setApiKey(key: string | null): void {
+  currentApiKey = key;
+}
+
+export function getApiKey(): string | null {
+  return currentApiKey;
 }
 
 export async function callApi<T>(
@@ -15,12 +25,14 @@ export async function callApi<T>(
   options: {
     method?: "GET" | "POST" | "PUT" | "DELETE";
     body?: unknown;
+    apiKey?: string;
   } = {}
 ): Promise<ApiResponse<T>> {
-  const { method = "GET", body } = options;
+  const { method = "GET", body, apiKey } = options;
+  const key = apiKey || currentApiKey;
 
-  if (!API_KEY) {
-    return { error: "MCPFACTORY_API_KEY not configured. Get your API key at https://dashboard.mcpfactory.org" };
+  if (!key) {
+    return { error: "API key not provided. Include your API key in the Authorization header." };
   }
 
   try {
@@ -28,7 +40,7 @@ export async function callApi<T>(
       method,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${API_KEY}`,
+        "X-API-Key": key,
       },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -46,12 +58,12 @@ export async function callApi<T>(
 }
 
 export function isConfigured(): boolean {
-  return !!API_KEY;
+  return !!currentApiKey;
 }
 
 export function getConfigStatus(): { configured: boolean; apiUrl: string } {
   return {
-    configured: !!API_KEY,
+    configured: !!currentApiKey,
     apiUrl: API_BASE_URL,
   };
 }
