@@ -26,7 +26,7 @@ export function Header() {
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.jpg" alt="MCP Factory" width={32} height={32} className="rounded-md" />
+            <Image src="/logo-head.jpg" alt="MCP Factory" width={32} height={32} className="rounded-md" />
             <span className="font-display font-bold text-xl text-primary-600">MCP Factory</span>
           </Link>
         </div>

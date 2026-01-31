@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -16,7 +16,7 @@ body {
 }
 
 h1, h2, h3, .font-display {
-  font-family: "Fredoka", "Comic Sans MS", cursive, system-ui;
+  font-family: "Fredoka", system-ui, -apple-system, sans-serif;
 }
 
 @layer utilities {

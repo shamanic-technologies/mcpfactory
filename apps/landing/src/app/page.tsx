@@ -64,7 +64,7 @@ export default function Home() {
       <nav className="bg-white/80 backdrop-blur-sm border-b border-secondary-100 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Image src="/logo.jpg" alt="MCP Factory" width={36} height={36} className="rounded-lg" />
+            <Image src="/logo-head.jpg" alt="MCP Factory" width={36} height={36} className="rounded-lg" />
             <span className="font-display font-bold text-xl text-primary-600">MCP Factory</span>
           </div>
           <div className="flex items-center gap-4">
@@ -292,7 +292,7 @@ export default function Home() {
       <footer className="bg-gray-900 text-gray-400 py-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Image src="/logo.jpg" alt="MCP Factory" width={32} height={32} className="rounded-md" />
+            <Image src="/logo-head.jpg" alt="MCP Factory" width={32} height={32} className="rounded-md" />
             <span className="font-display font-bold text-white text-lg">MCP Factory</span>
           </div>
           <p className="text-sm mb-4">The DFY, BYOK MCP Platform</p>
