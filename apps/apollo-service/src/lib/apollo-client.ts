@@ -33,7 +33,9 @@ export interface ApolloPerson {
 
 export interface ApolloSearchResponse {
   people: ApolloPerson[];
-  pagination: {
+  total_entries: number;
+  // Legacy format (deprecated endpoint)
+  pagination?: {
     page: number;
     per_page: number;
     total_entries: number;

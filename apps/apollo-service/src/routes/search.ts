@@ -32,6 +32,9 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
 
     const result = await searchPeople(apolloApiKey, apolloParams);
 
+    // Get total entries (new API format has it at root level)
+    const totalEntries = result.total_entries ?? result.pagination?.total_entries ?? 0;
+
     // Only store records if campaignRunId is provided (campaign workflow)
     let searchId: string | null = null;
     if (campaignRunId) {
@@ -43,7 +46,7 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
           campaignRunId,
           requestParams: apolloParams,
           peopleCount: result.people.length,
-          totalEntries: result.pagination.total_entries,
+          totalEntries,
           costUsd: "0", // Apollo search is usually free
           responseRaw: result,
         })
@@ -80,7 +83,7 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
     res.json({
       searchId,
       peopleCount: result.people.length,
-      totalEntries: result.pagination.total_entries,
+      totalEntries,
       people: result.people,
     });
   } catch (error) {
