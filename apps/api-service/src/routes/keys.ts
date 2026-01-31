@@ -69,6 +69,34 @@ router.delete("/keys/:provider", authenticate, requireOrg, async (req: Authentic
 });
 
 /**
+ * GET /internal/keys/:provider/decrypt
+ * Get decrypted BYOK key (for internal service-to-service use)
+ * Requires X-API-Key header for service auth
+ */
+router.get("/internal/keys/:provider/decrypt", async (req, res) => {
+  try {
+    const { provider } = req.params;
+    const clerkOrgId = req.query.clerkOrgId as string;
+
+    if (!clerkOrgId) {
+      return res.status(400).json({ error: "clerkOrgId required" });
+    }
+
+    const result = await callService(
+      services.keys,
+      `/internal/keys/${provider}/decrypt?clerkOrgId=${clerkOrgId}`
+    );
+    res.json(result);
+  } catch (error: any) {
+    if (error.message?.includes("404")) {
+      return res.status(404).json({ error: `${req.params.provider} key not configured` });
+    }
+    console.error("Decrypt key error:", error);
+    res.status(500).json({ error: error.message || "Failed to decrypt key" });
+  }
+});
+
+/**
  * POST /v1/api-keys
  * Generate a new API key for the organization
  */
