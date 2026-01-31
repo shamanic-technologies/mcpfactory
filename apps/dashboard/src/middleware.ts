@@ -6,13 +6,22 @@ const isPublicRoute = createRouteMatcher([
   "/sso-callback(.*)",
 ]);
 
+const isAuthRoute = createRouteMatcher([
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+]);
+
 export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    const { userId } = await auth();
-    if (!userId) {
-      const signInUrl = new URL("/sign-in", req.url);
-      return Response.redirect(signInUrl);
-    }
+  const { userId } = await auth();
+
+  // Redirect authenticated users away from auth pages
+  if (isAuthRoute(req) && userId) {
+    return Response.redirect(new URL("/", req.url));
+  }
+
+  // Protect non-public routes
+  if (!isPublicRoute(req) && !userId) {
+    return Response.redirect(new URL("/sign-in", req.url));
   }
 });
 

@@ -2,15 +2,25 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useSignIn } from "@clerk/nextjs";
-import { useState } from "react";
+import { useSignIn, useAuth } from "@clerk/nextjs";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
   const { signIn, isLoaded } = useSignIn();
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  // Redirect if already signed in
+  useEffect(() => {
+    if (isSignedIn) {
+      router.replace("/");
+    }
+  }, [isSignedIn, router]);
+
   const handleGoogleSignIn = async () => {
-    if (!isLoaded) return;
+    if (!isLoaded || isSignedIn) return;
     setLoading(true);
     try {
       await signIn.authenticateWithRedirect({
@@ -23,6 +33,11 @@ export default function SignInPage() {
       setLoading(false);
     }
   };
+
+  // Show nothing while redirecting
+  if (isSignedIn) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-secondary-50/30">
