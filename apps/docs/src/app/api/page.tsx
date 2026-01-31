@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { CopyForLLM } from "@/components/copy-for-llm";
 
 export const metadata: Metadata = {
   title: "API Reference",
@@ -9,10 +10,48 @@ export const metadata: Metadata = {
   },
 };
 
+const LLM_INSTRUCTIONS = `# MCP Factory REST API Reference
+
+## Base URL
+https://api.mcpfactory.org/v1
+
+## Authentication
+All requests require X-API-Key header:
+curl https://api.mcpfactory.org/v1/me -H "X-API-Key: YOUR_API_KEY"
+
+## Endpoints
+
+### Account
+GET /v1/me - Get account info
+
+### Company Scraping  
+POST /v1/company/scrape - Scrape company from URL
+Body: { "url": "https://acme.com" }
+
+### Lead Search
+POST /v1/leads/search - Search leads via Apollo
+Body: { "person_titles": ["CEO"], "organization_locations": ["US"] }
+
+POST /v1/leads/enrich - Enrich lead data
+
+### Reply Qualification
+POST /v1/qualify - Qualify email reply with AI
+Body: { "emailContent": "...", "context": "..." }
+
+### Campaigns
+POST /v1/campaigns - Create campaign
+GET /v1/campaigns - List campaigns
+GET /v1/campaigns/:id/stats - Get campaign stats
+
+Get API key at: https://dashboard.mcpfactory.org/settings/api`;
+
 export default function ApiOverviewPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">
-      <h1 className="text-4xl font-bold mb-4">API Reference</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-4xl font-bold">API Reference</h1>
+        <CopyForLLM content={LLM_INSTRUCTIONS} />
+      </div>
       <p className="text-xl text-gray-600 mb-8">
         Direct REST API access to MCP Factory services.
       </p>

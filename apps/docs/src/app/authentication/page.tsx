@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { CopyForLLM } from "@/components/copy-for-llm";
 
 export const metadata: Metadata = {
   title: "Authentication",
@@ -9,10 +10,39 @@ export const metadata: Metadata = {
   },
 };
 
+const LLM_INSTRUCTIONS = `# MCP Factory Authentication
+
+## 1. Create Account
+Sign up at: https://dashboard.mcpfactory.org/sign-up
+
+## 2. Get API Key
+Dashboard → Settings → API Key
+Format: mcpf_xxxxxxxxxxxxxxxxxxxx
+
+## 3. Using the API Key
+
+### For MCP (ChatGPT, Claude, Cursor):
+Authorization: Bearer mcpf_YOUR_KEY
+
+### For REST API:
+X-API-Key: mcpf_YOUR_KEY
+
+## 4. BYOK Keys (Optional)
+Dashboard → Settings → Keys
+
+Supported providers:
+- Apollo: For lead search (get key at apollo.io)
+- Anthropic: For AI email generation (get key at console.anthropic.com)
+
+BYOK keys are encrypted with AES-256-GCM.`;
+
 export default function AuthenticationPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">
-      <h1 className="text-4xl font-bold mb-4">Authentication</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-4xl font-bold">Authentication</h1>
+        <CopyForLLM content={LLM_INSTRUCTIONS} />
+      </div>
       <p className="text-xl text-gray-600 mb-8">
         Set up your API keys and BYOK credentials to start using MCP Factory.
       </p>

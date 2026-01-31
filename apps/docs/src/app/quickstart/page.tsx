@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { CopyForLLM } from "@/components/copy-for-llm";
 
 export const metadata: Metadata = {
   title: "Quick Start",
@@ -9,10 +10,49 @@ export const metadata: Metadata = {
   },
 };
 
+const LLM_INSTRUCTIONS = `# MCP Factory Quick Start
+
+## 1. Create Account
+Sign up at: https://dashboard.mcpfactory.org/sign-up
+
+## 2. Get API Key
+Dashboard → Settings → API Key
+
+## 3. Configure BYOK Keys (Optional)
+Dashboard → Settings → Keys:
+- Apollo: For lead search
+- Anthropic: For AI email generation
+
+## 4. Connect Your AI Client
+
+### Cursor (.cursor/mcp.json):
+{
+  "mcpServers": {
+    "mcpfactory-sales": {
+      "url": "https://mcp.mcpfactory.org/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}
+
+### ChatGPT/Claude:
+Settings → Connectors → Add: https://mcp.mcpfactory.org/mcp
+
+## 5. Test Connection
+Ask: "Check my MCPFactory connection status"
+
+## 6. Launch Campaign
+Example prompt: "Launch a cold email campaign for mybrand.com, targeting CTOs at SaaS companies. $10/day budget, 5 days trial."`;
+
 export default function QuickstartPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">
-      <h1 className="text-4xl font-bold mb-4">Quick Start</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-4xl font-bold">Quick Start</h1>
+        <CopyForLLM content={LLM_INSTRUCTIONS} />
+      </div>
       <p className="text-xl text-gray-600 mb-8">
         Get up and running with MCP Factory in 5 minutes.
       </p>

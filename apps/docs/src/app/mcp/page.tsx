@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { CopyForLLM } from "@/components/copy-for-llm";
 
 export const metadata: Metadata = {
   title: "MCP Usage Guide",
@@ -9,10 +10,52 @@ export const metadata: Metadata = {
   },
 };
 
+const LLM_INSTRUCTIONS = `# MCP Factory - MCP Usage Guide
+
+## MCP Endpoint
+https://mcp.mcpfactory.org/mcp
+
+## Supported Clients
+- ChatGPT (Pro, Plus, Team, Enterprise)
+- Claude.ai, Claude Desktop, Claude Code
+- Cursor IDE
+- Any MCP-compatible client
+
+## Cursor Configuration
+Add to .cursor/mcp.json:
+{
+  "mcpServers": {
+    "mcpfactory-sales": {
+      "url": "https://mcp.mcpfactory.org/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}
+
+## Available Tools
+- mcpfactory_status: Check connection status
+- mcpfactory_scrape_company: Extract company info from URL
+- mcpfactory_search_leads: Find leads via Apollo
+- mcpfactory_qualify_reply: Classify email replies with AI
+- mcpfactory_create_campaign: Create cold email campaign
+- mcpfactory_list_campaigns: List campaigns
+- mcpfactory_campaign_stats: Get campaign stats
+
+## Authentication
+Include API key as Bearer token:
+Authorization: Bearer YOUR_API_KEY
+
+Get your API key at: https://dashboard.mcpfactory.org/settings/api`;
+
 export default function McpUsagePage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">
-      <h1 className="text-4xl font-bold mb-4">MCP Usage</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-4xl font-bold">MCP Usage</h1>
+        <CopyForLLM content={LLM_INSTRUCTIONS} />
+      </div>
       <p className="text-xl text-gray-600 mb-8">
         How to use MCP Factory tools from any MCP-compatible client.
       </p>
