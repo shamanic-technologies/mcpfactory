@@ -55,7 +55,7 @@ router.get("/campaigns/:id", serviceAuth, async (req: AuthenticatedRequest, res)
 
 /**
  * POST /internal/campaigns - Create a new campaign
- * Note: For service-to-service calls, we need a placeholder user since createdByUserId is required
+ * createdByUserId is optional - MCP API key auth may not have user context
  */
 router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
@@ -76,22 +76,17 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       notifyFrequency,
       notifyChannel,
       notifyDestination,
-      createdByUserId,
     } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: "Campaign name is required" });
     }
 
-    if (!createdByUserId) {
-      return res.status(400).json({ error: "createdByUserId is required" });
-    }
-
     const [campaign] = await db
       .insert(campaigns)
       .values({
         orgId: req.orgId!,
-        createdByUserId,
+        createdByUserId: req.userId || null, // From x-clerk-user-id header
         name,
         personTitles,
         qOrganizationKeywordTags,

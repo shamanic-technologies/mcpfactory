@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
 import { callService, services } from "../lib/service-client.js";
+import { buildInternalHeaders } from "../lib/internal-headers.js";
 
 const router = Router();
 
@@ -14,7 +15,7 @@ router.get("/campaigns", authenticate, requireOrg, async (req: AuthenticatedRequ
       services.campaign,
       `/internal/campaigns`,
       {
-        headers: { "x-clerk-org-id": req.orgId! },
+        headers: buildInternalHeaders(req),
       }
     );
     res.json(result);
@@ -35,7 +36,7 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
       "/internal/campaigns",
       {
         method: "POST",
-        headers: { "x-clerk-org-id": req.orgId! },
+        headers: buildInternalHeaders(req),
         body: req.body,
       }
     );

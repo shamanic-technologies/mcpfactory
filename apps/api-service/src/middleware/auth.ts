@@ -26,7 +26,7 @@ export async function authenticate(
     if (apiKey) {
       const validation = await validateApiKey(apiKey);
       if (validation) {
-        req.userId = validation.userId;
+        req.userId = validation.userId || undefined; // null -> undefined for optional field
         req.orgId = validation.orgId;
         req.authType = "api_key";
         return next();
@@ -62,11 +62,16 @@ export async function authenticate(
 
 /**
  * Validate API key against keys-service
- * Returns clerkOrgId for consistency with JWT auth
+ * Returns clerkOrgId and clerkUserId (if org has single member)
  */
-async function validateApiKey(apiKey: string): Promise<{ userId: string; orgId: string } | null> {
+async function validateApiKey(apiKey: string): Promise<{ userId: string | null; orgId: string } | null> {
   try {
-    const result = await callService<{ valid: boolean; orgId?: string; clerkOrgId?: string }>(
+    const result = await callService<{
+      valid: boolean;
+      orgId?: string;
+      clerkOrgId?: string;
+      clerkUserId?: string | null;
+    }>(
       services.keys,
       "/validate",
       {
@@ -77,8 +82,10 @@ async function validateApiKey(apiKey: string): Promise<{ userId: string; orgId: 
     );
 
     if (result.valid && result.clerkOrgId) {
-      // Return clerkOrgId as orgId for consistency
-      return { userId: "", orgId: result.clerkOrgId };
+      return {
+        userId: result.clerkUserId || null,
+        orgId: result.clerkOrgId,
+      };
     }
     return null;
   } catch (error) {

@@ -1,11 +1,44 @@
 import { Router } from "express";
 import { eq, and } from "drizzle-orm";
+import { createClerkClient } from "@clerk/backend";
 import { db } from "../db/index.js";
 import { orgs, byokKeys } from "../db/schema.js";
 import { apiKeyAuth, AuthenticatedRequest } from "../middleware/auth.js";
 import { decrypt } from "../lib/crypto.js";
 
 const router = Router();
+
+// Lazy init Clerk client
+let clerkClient: ReturnType<typeof createClerkClient> | null = null;
+function getClerkClient() {
+  if (!clerkClient) {
+    clerkClient = createClerkClient({
+      secretKey: process.env.CLERK_SECRET_KEY!,
+    });
+  }
+  return clerkClient;
+}
+
+/**
+ * Get the single user's clerkUserId if org has exactly 1 member, otherwise null
+ */
+async function getSingleUserIdForOrg(clerkOrgId: string): Promise<string | null> {
+  try {
+    const clerk = getClerkClient();
+    const memberships = await clerk.organizations.getOrganizationMembershipList({
+      organizationId: clerkOrgId,
+      limit: 2, // We only need to know if there's 1 or more
+    });
+
+    if (memberships.data.length === 1) {
+      return memberships.data[0].publicUserData?.userId || null;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching org members from Clerk:", error);
+    return null;
+  }
+}
 
 /**
  * GET /validate - Validate API key and return org info (for MCP)
@@ -27,10 +60,14 @@ router.get("/validate", apiKeyAuth, async (req: AuthenticatedRequest, res) => {
 
     const configuredProviders = keys.map((k) => k.provider);
 
+    // Get userId if org has single member
+    const clerkUserId = await getSingleUserIdForOrg(org.clerkOrgId);
+
     res.json({
       valid: true,
       orgId: org.id,
       clerkOrgId: org.clerkOrgId,
+      clerkUserId, // null if org has 0 or >1 members
       configuredProviders,
     });
   } catch (error) {

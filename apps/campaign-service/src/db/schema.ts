@@ -37,8 +37,7 @@ export const campaigns = pgTable(
       .notNull()
       .references(() => orgs.id, { onDelete: "cascade" }),
     createdByUserId: uuid("created_by_user_id")
-      .notNull()
-      .references(() => users.id),
+      .references(() => users.id),  // Optional - MCP calls don't have user context
     
     name: text("name").notNull(),
     

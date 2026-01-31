@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
 import { callService, services } from "../lib/service-client.js";
+import { buildInternalHeaders } from "../lib/internal-headers.js";
 
 const router = Router();
 
@@ -28,9 +29,7 @@ router.post("/leads/search", authenticate, requireOrg, async (req: Authenticated
       "/search",
       {
         method: "POST",
-        headers: {
-          "x-clerk-org-id": req.orgId!,
-        },
+        headers: buildInternalHeaders(req),
         body: {
           personTitles: person_titles,
           organizationLocations: organization_locations,
@@ -65,9 +64,7 @@ router.post("/leads/enrich", authenticate, requireOrg, async (req: Authenticated
       "/enrich",
       {
         method: "POST",
-        headers: {
-          "x-clerk-org-id": req.orgId!,
-        },
+        headers: buildInternalHeaders(req),
         body: {
           email,
           linkedinUrl: linkedin_url,
