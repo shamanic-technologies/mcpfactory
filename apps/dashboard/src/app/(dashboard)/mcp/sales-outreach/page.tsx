@@ -126,6 +126,7 @@ export default function SalesOutreachPage() {
   const totals = Object.values(campaignStats).reduce(
     (acc, s) => ({
       leadsFound: acc.leadsFound + (s.leadsFound || 0),
+      emailsGenerated: acc.emailsGenerated + (s.emailsGenerated || 0),
       emailsSent: acc.emailsSent + (s.emailsSent || 0),
       emailsOpened: acc.emailsOpened + (s.emailsOpened || 0),
       emailsClicked: acc.emailsClicked + (s.emailsClicked || 0),
@@ -136,7 +137,7 @@ export default function SalesOutreachPage() {
       outOfOffice: acc.outOfOffice + (s.repliesOutOfOffice || 0),
       unsubscribe: acc.unsubscribe + (s.repliesUnsubscribe || 0),
     }),
-    { leadsFound: 0, emailsSent: 0, emailsOpened: 0, emailsClicked: 0, emailsReplied: 0,
+    { leadsFound: 0, emailsGenerated: 0, emailsSent: 0, emailsOpened: 0, emailsClicked: 0, emailsReplied: 0,
       willingToMeet: 0, interested: 0, notInterested: 0, outOfOffice: 0, unsubscribe: 0 }
   );
 
@@ -165,6 +166,7 @@ export default function SalesOutreachPage() {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <FunnelMetrics 
             leadsFound={totals.leadsFound}
+            emailsGenerated={totals.emailsGenerated}
             emailsSent={totals.emailsSent}
             emailsOpened={totals.emailsOpened}
             emailsClicked={totals.emailsClicked}

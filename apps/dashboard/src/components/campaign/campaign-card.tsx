@@ -26,6 +26,7 @@ export function CampaignCard({ campaign, stats }: CampaignCardProps) {
     }
   }
 
+  const emailsReady = stats?.emailsGenerated || stats?.emailsSent || 0;
   const openRate = stats && stats.emailsSent > 0 
     ? ((stats.emailsOpened || 0) / stats.emailsSent * 100).toFixed(1) 
     : null;
@@ -69,25 +70,18 @@ export function CampaignCard({ campaign, stats }: CampaignCardProps) {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-5 gap-3 pt-3 border-t border-gray-100">
+      <div className="grid grid-cols-4 gap-3 pt-3 border-t border-gray-100">
         <div>
           <p className="text-xs text-gray-500">Leads</p>
           <p className="font-medium text-gray-800">{stats?.leadsFound || 0}</p>
         </div>
         <div>
+          <p className="text-xs text-gray-500">Generated</p>
+          <p className="font-medium text-gray-800">{stats?.emailsGenerated || 0}</p>
+        </div>
+        <div>
           <p className="text-xs text-gray-500">Sent</p>
           <p className="font-medium text-gray-800">{stats?.emailsSent || 0}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Opened</p>
-          <p className="font-medium text-gray-800">
-            {stats?.emailsOpened || 0}
-            {openRate && <span className="text-xs text-gray-400 ml-1">({openRate}%)</span>}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Clicked</p>
-          <p className="font-medium text-gray-800">{stats?.emailsClicked || 0}</p>
         </div>
         <div>
           <p className="text-xs text-gray-500">Replied</p>

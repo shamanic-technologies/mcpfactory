@@ -2,6 +2,7 @@
 
 interface FunnelMetricsProps {
   leadsFound: number;
+  emailsGenerated: number;
   emailsSent: number;
   emailsOpened: number;
   emailsClicked: number;
@@ -10,16 +11,20 @@ interface FunnelMetricsProps {
 
 export function FunnelMetrics({ 
   leadsFound, 
+  emailsGenerated,
   emailsSent, 
   emailsOpened, 
   emailsClicked, 
   emailsReplied 
 }: FunnelMetricsProps) {
+  // Use generated count, fallback to sent if sending is actually happening
+  const emailsReady = emailsGenerated || emailsSent;
+  
   const steps = [
     { label: "Leads", value: leadsFound, rate: null },
-    { label: "Sent", value: emailsSent, rate: leadsFound > 0 ? (emailsSent / leadsFound * 100) : 0 },
+    { label: "Generated", value: emailsGenerated, rate: leadsFound > 0 ? (emailsGenerated / leadsFound * 100) : 0 },
+    { label: "Sent", value: emailsSent, rate: emailsReady > 0 ? (emailsSent / emailsReady * 100) : 0 },
     { label: "Opened", value: emailsOpened, rate: emailsSent > 0 ? (emailsOpened / emailsSent * 100) : 0 },
-    { label: "Clicked", value: emailsClicked, rate: emailsOpened > 0 ? (emailsClicked / emailsOpened * 100) : 0 },
     { label: "Replied", value: emailsReplied, rate: emailsSent > 0 ? (emailsReplied / emailsSent * 100) : 0 },
   ];
 
