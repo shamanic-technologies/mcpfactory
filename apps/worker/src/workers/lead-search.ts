@@ -2,6 +2,7 @@ import { Worker, Job } from "bullmq";
 import { getRedis } from "../lib/redis.js";
 import { getQueues, QUEUE_NAMES, LeadSearchJobData, EmailGenerateJobData } from "../queues/index.js";
 import { apolloService } from "../lib/service-client.js";
+import { initRunTracking, finalizeRun } from "../lib/run-tracker.js";
 
 interface ApolloEnrichment {
   id: string;
@@ -59,7 +60,12 @@ export function startLeadSearchWorker(): Worker {
         }));
         
         if (jobs.length > 0) {
+          // Initialize run tracking with expected job count
+          await initRunTracking(campaignRunId, jobs.length);
           await queues[QUEUE_NAMES.EMAIL_GENERATE].addBulk(jobs);
+        } else {
+          // No leads found - finalize run immediately
+          await finalizeRun(campaignRunId, { total: 0, done: 0, failed: 0 });
         }
         
         return { leadsFound: result.people?.length || 0 };

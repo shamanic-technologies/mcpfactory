@@ -21,6 +21,9 @@ interface CampaignRun {
   createdAt: string;
 }
 
+// Runs older than this are considered stale and will be marked failed
+const STALE_RUN_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
 /**
  * Campaign Scheduler
  * Polls for ongoing campaigns that need to be executed and queues them
@@ -91,34 +94,52 @@ async function shouldRunCampaign(campaign: Campaign): Promise<ShouldRunResult> {
     const runsResult = await campaignService.getCampaignRuns(campaign.id) as { runs: CampaignRun[] };
     const runs = runsResult.runs || [];
     
-    // Check if any run is currently in progress
-    const hasRunningRun = runs.some(r => r.status === "running" || r.status === "pending");
+    // Cleanup stale runs (running for too long = probably crashed)
+    const now = Date.now();
+    for (const run of runs) {
+      if ((run.status === "running" || run.status === "pending") && 
+          now - new Date(run.createdAt).getTime() > STALE_RUN_TIMEOUT_MS) {
+        console.log(`[scheduler] Run ${run.id} is stale (>${STALE_RUN_TIMEOUT_MS / 60000} min), marking as failed`);
+        try {
+          await campaignService.updateRun(run.id, { status: "failed", errorMessage: "Timed out - run was stale" });
+        } catch (err) {
+          console.error(`[scheduler] Failed to mark stale run ${run.id} as failed:`, err);
+        }
+      }
+    }
     
-    console.log(`[scheduler] Campaign ${campaign.id} has ${runs.length} runs (${runs.filter(r => r.status === "running").length} running), recurrence=${campaign.recurrence}`);
+    // Re-fetch runs after cleanup
+    const freshRunsResult = await campaignService.getCampaignRuns(campaign.id) as { runs: CampaignRun[] };
+    const freshRuns = freshRunsResult.runs || [];
+    
+    // Check if any run is currently in progress
+    const hasRunningRun = freshRuns.some(r => r.status === "running" || r.status === "pending");
+    
+    console.log(`[scheduler] Campaign ${campaign.id} has ${freshRuns.length} runs (${freshRuns.filter(r => r.status === "running").length} running), recurrence=${campaign.recurrence}`);
     
     // Check based on recurrence
     let shouldRun = false;
     switch (campaign.recurrence) {
       case "oneoff":
         // Only run if no completed/failed runs exist yet
-        const completedOrFailed = runs.filter(r => r.status === "completed" || r.status === "failed");
+        const completedOrFailed = freshRuns.filter(r => r.status === "completed" || r.status === "failed");
         shouldRun = completedOrFailed.length === 0;
         console.log(`[scheduler] oneoff check: completedOrFailed=${completedOrFailed.length}, shouldRun=${shouldRun}`);
         break;
         
       case "daily":
         // Run if no run today
-        shouldRun = !hasRunToday(runs);
+        shouldRun = !hasRunToday(freshRuns);
         break;
         
       case "weekly":
         // Run if no run this week
-        shouldRun = !hasRunThisWeek(runs);
+        shouldRun = !hasRunThisWeek(freshRuns);
         break;
         
       case "monthly":
         // Run if no run this month
-        shouldRun = !hasRunThisMonth(runs);
+        shouldRun = !hasRunThisMonth(freshRuns);
         break;
         
       default:

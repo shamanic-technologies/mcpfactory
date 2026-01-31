@@ -2,6 +2,7 @@ import { Worker, Job } from "bullmq";
 import { getRedis } from "../lib/redis.js";
 import { getQueues, QUEUE_NAMES, EmailGenerateJobData, EmailSendJobData } from "../queues/index.js";
 import { emailGenerationService } from "../lib/service-client.js";
+import { markJobDone, finalizeRun } from "../lib/run-tracker.js";
 
 interface GenerationResult {
   id: string;
@@ -73,12 +74,30 @@ export function startEmailGenerateWorker(): Worker {
     }
   );
   
-  worker.on("completed", (job) => {
+  worker.on("completed", async (job) => {
     console.log(`[email-generate] Job ${job.id} completed`);
+    
+    // Track completion and check if this was the last job
+    const { campaignRunId } = job.data;
+    const result = await markJobDone(campaignRunId, true);
+    
+    if (result.isLast) {
+      await finalizeRun(campaignRunId, result);
+    }
   });
   
-  worker.on("failed", (job, err) => {
+  worker.on("failed", async (job, err) => {
     console.error(`[email-generate] Job ${job?.id} failed:`, err);
+    
+    if (job) {
+      // Track failure and check if this was the last job
+      const { campaignRunId } = job.data;
+      const result = await markJobDone(campaignRunId, false);
+      
+      if (result.isLast) {
+        await finalizeRun(campaignRunId, result);
+      }
+    }
   });
   
   return worker;
