@@ -1,170 +1,64 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
 import { getConfigStatus, callApi } from "../lib/api-client.js";
 
-// Tool definitions
-export const tools: Tool[] = [
-  {
-    name: "mcpfactory_status",
+// Tool definitions with Zod schemas
+export const toolDefinitions = {
+  mcpfactory_status: {
     description: "Check MCPFactory connection status and configuration",
-    inputSchema: {
-      type: "object",
-      properties: {},
-      required: [],
-    },
+    schema: z.object({}),
   },
-  {
-    name: "mcpfactory_qualify_reply",
+  mcpfactory_qualify_reply: {
     description: "Qualify an email reply using AI. Classifies the reply as interested, not_interested, out_of_office, etc.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        from_email: {
-          type: "string",
-          description: "Email address of the sender",
-        },
-        to_email: {
-          type: "string",
-          description: "Email address of the recipient",
-        },
-        subject: {
-          type: "string",
-          description: "Email subject line",
-        },
-        body: {
-          type: "string",
-          description: "Email body text",
-        },
-        campaign_id: {
-          type: "string",
-          description: "Optional campaign ID for tracking",
-        },
-      },
-      required: ["from_email", "to_email", "body"],
-    },
+    schema: z.object({
+      from_email: z.string().describe("Email address of the sender"),
+      to_email: z.string().describe("Email address of the recipient"),
+      subject: z.string().optional().describe("Email subject line"),
+      body: z.string().describe("Email body text"),
+      campaign_id: z.string().optional().describe("Optional campaign ID for tracking"),
+    }),
   },
-  {
-    name: "mcpfactory_scrape_company",
+  mcpfactory_scrape_company: {
     description: "Scrape company information from a URL. Extracts company name, description, industry, size, etc.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        url: {
-          type: "string",
-          description: "Company website URL to scrape",
-        },
-      },
-      required: ["url"],
-    },
+    schema: z.object({
+      url: z.string().describe("Company website URL to scrape"),
+    }),
   },
-  {
-    name: "mcpfactory_search_leads",
+  mcpfactory_search_leads: {
     description: "Search for leads using Apollo.io. Find people matching specific criteria.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        person_titles: {
-          type: "array",
-          items: { type: "string" },
-          description: "Job titles to search for (e.g., ['CEO', 'CTO', 'Founder'])",
-        },
-        organization_locations: {
-          type: "array",
-          items: { type: "string" },
-          description: "Locations to search in (e.g., ['United States', 'California'])",
-        },
-        organization_industries: {
-          type: "array",
-          items: { type: "string" },
-          description: "Industries to target (e.g., ['Software', 'SaaS'])",
-        },
-        organization_num_employees_ranges: {
-          type: "array",
-          items: { type: "string" },
-          description: "Employee count ranges (e.g., ['11,50', '51,200'])",
-        },
-        per_page: {
-          type: "number",
-          description: "Number of results per page (default: 10, max: 100)",
-        },
-      },
-      required: ["person_titles"],
-    },
+    schema: z.object({
+      person_titles: z.array(z.string()).describe("Job titles to search for (e.g., ['CEO', 'CTO', 'Founder'])"),
+      organization_locations: z.array(z.string()).optional().describe("Locations to search in"),
+      organization_industries: z.array(z.string()).optional().describe("Industries to target"),
+      organization_num_employees_ranges: z.array(z.string()).optional().describe("Employee count ranges"),
+      per_page: z.number().optional().describe("Number of results per page (default: 10, max: 100)"),
+    }),
   },
-  {
-    name: "mcpfactory_create_campaign",
+  mcpfactory_create_campaign: {
     description: "Create a new cold email campaign targeting specific leads",
-    inputSchema: {
-      type: "object",
-      properties: {
-        name: {
-          type: "string",
-          description: "Campaign name",
-        },
-        client_url: {
-          type: "string",
-          description: "Your company URL (for context in emails)",
-        },
-        target_titles: {
-          type: "array",
-          items: { type: "string" },
-          description: "Job titles to target",
-        },
-        target_industries: {
-          type: "array",
-          items: { type: "string" },
-          description: "Industries to target",
-        },
-        target_locations: {
-          type: "array",
-          items: { type: "string" },
-          description: "Locations to target",
-        },
-        max_daily_budget_usd: {
-          type: "number",
-          description: "Maximum daily spend in USD",
-        },
-        start_date: {
-          type: "string",
-          description: "Campaign start date (ISO format)",
-        },
-        end_date: {
-          type: "string",
-          description: "Optional campaign end date (ISO format)",
-        },
-      },
-      required: ["name", "client_url", "target_titles"],
-    },
+    schema: z.object({
+      name: z.string().describe("Campaign name"),
+      client_url: z.string().describe("Your company URL (for context in emails)"),
+      target_titles: z.array(z.string()).describe("Job titles to target"),
+      target_industries: z.array(z.string()).optional().describe("Industries to target"),
+      target_locations: z.array(z.string()).optional().describe("Locations to target"),
+      max_daily_budget_usd: z.number().optional().describe("Maximum daily spend in USD"),
+      start_date: z.string().optional().describe("Campaign start date (ISO format)"),
+      end_date: z.string().optional().describe("Optional campaign end date (ISO format)"),
+    }),
   },
-  {
-    name: "mcpfactory_list_campaigns",
+  mcpfactory_list_campaigns: {
     description: "List all your cold email campaigns",
-    inputSchema: {
-      type: "object",
-      properties: {
-        status: {
-          type: "string",
-          enum: ["active", "paused", "completed", "all"],
-          description: "Filter by campaign status",
-        },
-      },
-      required: [],
-    },
+    schema: z.object({
+      status: z.enum(["active", "paused", "completed", "all"]).optional().describe("Filter by campaign status"),
+    }),
   },
-  {
-    name: "mcpfactory_campaign_stats",
+  mcpfactory_campaign_stats: {
     description: "Get statistics for a specific campaign",
-    inputSchema: {
-      type: "object",
-      properties: {
-        campaign_id: {
-          type: "string",
-          description: "Campaign ID to get stats for",
-        },
-      },
-      required: ["campaign_id"],
-    },
+    schema: z.object({
+      campaign_id: z.string().describe("Campaign ID to get stats for"),
+    }),
   },
-];
+};
 
 // Tool handlers
 export async function handleToolCall(

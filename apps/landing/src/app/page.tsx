@@ -2,6 +2,7 @@ import Image from "next/image";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { McpCard } from "@/components/mcp-card";
 import { LinkButton } from "@/components/link-button";
+import { StatusIndicator } from "@/components/status-indicator";
 
 const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://dashboard.mcpfactory.org";
 
@@ -315,7 +316,10 @@ export default function Home() {
               Privacy
             </a>
           </div>
-          <p className="text-xs mt-8">MIT License. 100% Open Source.</p>
+          <div className="flex justify-center mt-6">
+            <StatusIndicator />
+          </div>
+          <p className="text-xs mt-6">MIT License. 100% Open Source.</p>
         </div>
       </footer>
     </main>

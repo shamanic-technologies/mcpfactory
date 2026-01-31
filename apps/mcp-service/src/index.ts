@@ -1,9 +1,20 @@
+import * as Sentry from "@sentry/node";
 import express, { Request, Response, Express } from "express";
 import cors from "cors";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { tools, handleToolCall } from "./tools/index.js";
+import { toolDefinitions, handleToolCall } from "./tools/index.js";
 import { setApiKey } from "./lib/api-client.js";
+
+// Initialize Sentry
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || "development",
+    tracesSampleRate: 0.1,
+  });
+  Sentry.setTag("service", "mcp-service");
+}
 
 const PORT = process.env.PORT || 3000;
 
@@ -66,11 +77,11 @@ app.post("/mcp", async (req: Request, res: Response) => {
       });
 
       // Register tools - each tool will use the session's API key
-      for (const tool of tools) {
+      for (const [name, def] of Object.entries(toolDefinitions)) {
         mcpServer.tool(
-          tool.name,
-          tool.description || "",
-          tool.inputSchema as Record<string, unknown>,
+          name,
+          def.description,
+          def.schema.shape,
           async (args: Record<string, unknown>) => {
             // Set the API key for this request context
             const session = sessions.get(sessionId!);
@@ -78,7 +89,7 @@ app.post("/mcp", async (req: Request, res: Response) => {
               setApiKey(session.apiKey);
             }
             
-            const result = await handleToolCall(tool.name, args);
+            const result = await handleToolCall(name, args);
             return {
               content: [
                 {
@@ -125,6 +136,7 @@ app.post("/mcp", async (req: Request, res: Response) => {
     // Handle the request
     await sessionData.transport.handleRequest(req, res, req.body);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("MCP request error:", error);
     res.status(500).json({
       jsonrpc: "2.0",

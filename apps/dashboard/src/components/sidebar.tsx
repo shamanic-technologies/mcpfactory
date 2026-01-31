@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { StatusIndicator } from "./status-indicator";
 
 const MCPS = [
   {
@@ -152,6 +153,7 @@ export function Sidebar() {
           </svg>
           Settings
         </Link>
+        <StatusIndicator />
       </div>
     </aside>
   );

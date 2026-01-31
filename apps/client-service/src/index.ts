@@ -1,8 +1,19 @@
+import * as Sentry from "@sentry/node";
 import express from "express";
 import cors from "cors";
 import healthRoutes from "./routes/health.js";
 import usersRoutes from "./routes/users.js";
 import orgsRoutes from "./routes/orgs.js";
+
+// Initialize Sentry
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || "development",
+    tracesSampleRate: 0.1,
+  });
+  Sentry.setTag("service", "client-service");
+}
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -32,6 +43,7 @@ app.use((req, res) => {
 
 // Error handler
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  Sentry.captureException(err);
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
