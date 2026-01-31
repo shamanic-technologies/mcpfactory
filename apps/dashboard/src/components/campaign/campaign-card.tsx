@@ -5,11 +5,9 @@ import { Campaign, CampaignStats } from "@/lib/api";
 interface CampaignCardProps {
   campaign: Campaign;
   stats?: CampaignStats;
-  onStop?: (id: string) => void;
-  onResume?: (id: string) => void;
 }
 
-export function CampaignCard({ campaign, stats, onStop, onResume }: CampaignCardProps) {
+export function CampaignCard({ campaign, stats }: CampaignCardProps) {
   function formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",
@@ -47,27 +45,9 @@ export function CampaignCard({ campaign, stats, onStop, onResume }: CampaignCard
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(campaign.status)}`}>
-            {campaign.status}
-          </span>
-          {campaign.status === "ongoing" && onStop && (
-            <button
-              onClick={() => onStop(campaign.id)}
-              className="text-xs px-2 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
-            >
-              Stop
-            </button>
-          )}
-          {campaign.status === "stopped" && onResume && (
-            <button
-              onClick={() => onResume(campaign.id)}
-              className="text-xs px-2 py-1 rounded border border-primary-200 text-primary-600 hover:bg-primary-50"
-            >
-              Resume
-            </button>
-          )}
-        </div>
+        <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(campaign.status)}`}>
+          {campaign.status}
+        </span>
       </div>
       
       {/* Targeting tags */}

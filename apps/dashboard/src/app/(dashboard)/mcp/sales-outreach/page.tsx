@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { 
   listByokKeys, setByokKey, deleteByokKey, ByokKey,
-  listCampaigns, getCampaignStats, stopCampaign, resumeCampaign,
-  Campaign, CampaignStats
+  listCampaigns, getCampaignStats, Campaign, CampaignStats
 } from "@/lib/api";
 import { SkeletonKeysList } from "@/components/skeleton";
 import { FunnelMetrics } from "@/components/campaign/funnel-metrics";
@@ -84,28 +83,6 @@ export default function SalesOutreachPage() {
       console.error("Failed to load campaigns:", err);
     } finally {
       setCampaignsLoading(false);
-    }
-  }
-
-  async function handleStopCampaign(id: string) {
-    try {
-      const token = await getToken();
-      if (!token) return;
-      await stopCampaign(token, id);
-      await loadCampaigns();
-    } catch (err) {
-      console.error("Failed to stop campaign:", err);
-    }
-  }
-
-  async function handleResumeCampaign(id: string) {
-    try {
-      const token = await getToken();
-      if (!token) return;
-      await resumeCampaign(token, id);
-      await loadCampaigns();
-    } catch (err) {
-      console.error("Failed to resume campaign:", err);
     }
   }
 
@@ -250,8 +227,6 @@ $10/day budget, run daily"`}
                 key={campaign.id}
                 campaign={campaign}
                 stats={campaignStats[campaign.id]}
-                onStop={handleStopCampaign}
-                onResume={handleResumeCampaign}
               />
             ))
           )}
