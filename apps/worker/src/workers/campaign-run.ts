@@ -23,7 +23,7 @@ export function startCampaignRunWorker(): Worker {
       
       try {
         // 1. Create a campaign run
-        const runResult = await campaignService.createRun(campaignId) as { run: { id: string } };
+        const runResult = await campaignService.createRun(campaignId, clerkOrgId) as { run: { id: string } };
         const campaignRunId = runResult.run.id;
         
         // 2. Get campaign details (we'd need to add this endpoint)

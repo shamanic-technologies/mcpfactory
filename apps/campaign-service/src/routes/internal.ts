@@ -365,7 +365,6 @@ router.patch("/runs/:id", async (req, res) => {
       .set({
         status,
         errorMessage,
-        updatedAt: new Date(),
         ...(status === "completed" || status === "failed" ? { runEndedAt: new Date() } : {}),
       })
       .where(eq(campaignRuns.id, id))
