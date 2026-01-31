@@ -9,6 +9,11 @@ interface SalesProfile {
   valueProposition: string;
   companyOverview: string;
   targetAudience: string;
+  callToAction: string;
+  customerPainPoints: string[];
+  competitors: string[];
+  productDifferentiators: string[];
+  keyFeatures: string[];
   extractedAt: string;
   url: string;
 }
@@ -143,18 +148,83 @@ export default function CompanyInfoPage() {
                   <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">
                     Overview
                   </h4>
-                  <p className="text-sm text-gray-700 line-clamp-3">
+                  <p className="text-sm text-gray-700">
                     {profile.companyOverview}
                   </p>
                 </div>
               )}
 
               {profile.targetAudience && (
-                <div>
+                <div className="mb-3">
                   <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">
                     Target Audience
                   </h4>
                   <p className="text-sm text-gray-700">{profile.targetAudience}</p>
+                </div>
+              )}
+
+              {profile.callToAction && (
+                <div className="mb-3">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">
+                    Call to Action
+                  </h4>
+                  <p className="text-sm text-gray-700">{profile.callToAction}</p>
+                </div>
+              )}
+
+              {profile.customerPainPoints && profile.customerPainPoints.length > 0 && (
+                <div className="mb-3">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">
+                    Customer Pain Points
+                  </h4>
+                  <ul className="text-sm text-gray-700 list-disc list-inside">
+                    {profile.customerPainPoints.map((point, i) => (
+                      <li key={i}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {profile.productDifferentiators && profile.productDifferentiators.length > 0 && (
+                <div className="mb-3">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">
+                    Product Differentiators
+                  </h4>
+                  <ul className="text-sm text-gray-700 list-disc list-inside">
+                    {profile.productDifferentiators.map((diff, i) => (
+                      <li key={i}>{diff}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {profile.keyFeatures && profile.keyFeatures.length > 0 && (
+                <div className="mb-3">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">
+                    Key Features
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
+                    {profile.keyFeatures.map((feature, i) => (
+                      <span key={i} className="text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded">
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {profile.competitors && profile.competitors.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">
+                    Competitors
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
+                    {profile.competitors.map((comp, i) => (
+                      <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                        {comp}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
