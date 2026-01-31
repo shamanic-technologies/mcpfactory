@@ -21,7 +21,11 @@ jobs:
           node-version: "20"
       - run: npm install -g pnpm
       - run: pnpm install
-      - run: pnpm --filter @mcpfactory/emailgeneration-service test
+      - name: Run unit tests
+        run: pnpm --filter @mcpfactory/emailgeneration-service test:unit
+      
+      - name: Run integration tests
+        run: pnpm --filter @mcpfactory/emailgeneration-service test:integration
         env:
-          EMAILGENERATION_SERVICE_DATABASE_URL: ${{ secrets.EMAILGENERATION_SERVICE_DATABASE_URL }}
+          EMAILGENERATION_SERVICE_DATABASE_URL: ${{ secrets.EMAILGENERATION_SERVICE_DATABASE_URL_DEV }}
           SERVICE_SECRET_KEY: test-secret

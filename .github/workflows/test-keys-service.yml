@@ -21,8 +21,14 @@ jobs:
           node-version: "20"
       - run: npm install -g pnpm
       - run: pnpm install
-      - run: pnpm --filter @mcpfactory/keys-service test
+      - name: Run unit tests
+        run: pnpm --filter @mcpfactory/keys-service test:unit
         env:
-          KEYS_SERVICE_DATABASE_URL: ${{ secrets.KEYS_SERVICE_DATABASE_URL }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+      
+      - name: Run integration tests
+        run: pnpm --filter @mcpfactory/keys-service test:integration
+        env:
+          KEYS_SERVICE_DATABASE_URL: ${{ secrets.KEYS_SERVICE_DATABASE_URL_DEV }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}

@@ -36,5 +36,5 @@ jobs:
       - name: Run integration tests
         run: pnpm --filter @mcpfactory/client-service test:integration
         env:
-          CLIENT_SERVICE_DATABASE_URL: ${{ secrets.CLIENT_SERVICE_DATABASE_URL }}
+          CLIENT_SERVICE_DATABASE_URL: ${{ secrets.CLIENT_SERVICE_DATABASE_URL_DEV }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}

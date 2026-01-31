@@ -21,7 +21,11 @@ jobs:
           node-version: "20"
       - run: npm install -g pnpm
       - run: pnpm install
-      - run: pnpm --filter @mcpfactory/apollo-service test
+      - name: Run unit tests
+        run: pnpm --filter @mcpfactory/apollo-service test:unit
+      
+      - name: Run integration tests
+        run: pnpm --filter @mcpfactory/apollo-service test:integration
         env:
-          APOLLO_SERVICE_DATABASE_URL: ${{ secrets.APOLLO_SERVICE_DATABASE_URL }}
+          APOLLO_SERVICE_DATABASE_URL: ${{ secrets.APOLLO_SERVICE_DATABASE_URL_DEV }}
           SERVICE_SECRET_KEY: test-secret
