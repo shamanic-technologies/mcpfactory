@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "mcpfactory-sales": {
+    "MCP Factory": {
       "url": "https://mcp.mcpfactory.org/mcp",
       "headers": {
         "Authorization": "Bearer mcpf_b115b675a04990bb67df57833dcd8af39a5c6881"
