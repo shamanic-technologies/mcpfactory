@@ -208,13 +208,79 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Works With Section */}
+      <section className="py-12 px-4 bg-gradient-to-b from-secondary-50 to-white border-t border-b border-secondary-100">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-sm text-gray-500 uppercase tracking-wider mb-6">Works with your favorite AI</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <a 
+              href="https://docs.mcpfactory.org/integrations/chatgpt"
+              className="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary-300 hover:shadow-lg transition"
+            >
+              <div className="text-4xl mb-2">🤖</div>
+              <h3 className="font-semibold text-gray-800 group-hover:text-primary-600">ChatGPT</h3>
+              <p className="text-xs text-gray-500 mt-1">Plus, Pro, Team</p>
+            </a>
+            <a 
+              href="https://docs.mcpfactory.org/integrations/claude"
+              className="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary-300 hover:shadow-lg transition"
+            >
+              <div className="text-4xl mb-2">🧠</div>
+              <h3 className="font-semibold text-gray-800 group-hover:text-primary-600">Claude</h3>
+              <p className="text-xs text-gray-500 mt-1">Web, Desktop, Code</p>
+            </a>
+            <a 
+              href="https://docs.mcpfactory.org/integrations/cursor"
+              className="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary-300 hover:shadow-lg transition"
+            >
+              <div className="text-4xl mb-2">🖥️</div>
+              <h3 className="font-semibold text-gray-800 group-hover:text-primary-600">Cursor</h3>
+              <p className="text-xs text-gray-500 mt-1">IDE Integration</p>
+            </a>
+            <a 
+              href="https://docs.mcpfactory.org/integrations"
+              className="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary-300 hover:shadow-lg transition"
+            >
+              <div className="text-4xl mb-2">✨</div>
+              <h3 className="font-semibold text-gray-800 group-hover:text-primary-600">+ More</h3>
+              <p className="text-xs text-gray-500 mt-1">Any MCP Client</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* MCPs Grid */}
       <section className="py-16 px-4 bg-gradient-to-b from-white to-secondary-50">
         <div className="max-w-6xl mx-auto">
           <h2 className="font-display text-3xl font-bold text-center mb-4 text-gray-800">Available MCPs</h2>
-          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
-            Install any MCP and start automating. All work via Claude, Cursor, or any MCP-compatible client.
+          <p className="text-gray-600 text-center mb-8 max-w-2xl mx-auto">
+            Install any MCP and start automating. Works with all major AI clients.
           </p>
+          
+          {/* Supported AI clients */}
+          <div className="flex flex-wrap justify-center gap-4 mb-12">
+            <a 
+              href="https://docs.mcpfactory.org/integrations/chatgpt" 
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50 transition shadow-sm"
+            >
+              <span>🤖</span> ChatGPT
+            </a>
+            <a 
+              href="https://docs.mcpfactory.org/integrations/claude" 
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50 transition shadow-sm"
+            >
+              <span>🧠</span> Claude
+            </a>
+            <a 
+              href="https://docs.mcpfactory.org/integrations/cursor" 
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50 transition shadow-sm"
+            >
+              <span>🖥️</span> Cursor
+            </a>
+            <span className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-full px-4 py-2 text-sm text-gray-500">
+              <span>✨</span> Any MCP Client
+            </span>
+          </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {MCPS.map((mcp) => (
@@ -257,7 +323,7 @@ export default function Home() {
                 3
               </div>
               <div>
-                <h3 className="font-display font-bold text-lg text-gray-800">Launch from Claude/Cursor</h3>
+                <h3 className="font-display font-bold text-lg text-gray-800">Launch from ChatGPT, Claude, or Cursor</h3>
                 <p className="text-gray-600 italic bg-secondary-50 px-4 py-2 rounded-lg border border-secondary-100">
                   &quot;Launch a cold email campaign for acme.com, $10/day, 5 days trial, report to ceo@acme.com&quot;
                 </p>

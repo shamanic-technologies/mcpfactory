@@ -14,10 +14,10 @@ router.get("/health", (req, res) => {
 // Debug endpoint to check config (temporary)
 router.get("/debug/config", (req, res) => {
   res.json({
-    company: {
-      url: externalServices.company.url,
-      hasApiKey: !!externalServices.company.apiKey,
-      apiKeyLength: externalServices.company.apiKey?.length || 0,
+    scraping: {
+      url: externalServices.scraping.url,
+      hasApiKey: !!externalServices.scraping.apiKey,
+      apiKeyLength: externalServices.scraping.apiKey?.length || 0,
     },
     replyQualification: {
       url: externalServices.replyQualification.url,

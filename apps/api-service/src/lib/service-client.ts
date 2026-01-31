@@ -18,9 +18,9 @@ export const externalServices = {
     url: process.env.REPLY_QUALIFICATION_SERVICE_URL || "http://localhost:3006",
     apiKey: process.env.REPLY_QUALIFICATION_SERVICE_API_KEY || "",
   },
-  company: {
-    url: process.env.COMPANY_SERVICE_URL || "http://localhost:3008",
-    apiKey: process.env.COMPANY_SERVICE_API_KEY || "",
+  scraping: {
+    url: process.env.SCRAPING_SERVICE_URL || "http://localhost:3010",
+    apiKey: process.env.SCRAPING_SERVICE_API_KEY || "",
   },
   postmark: {
     url: process.env.POSTMARK_SERVICE_URL || "http://localhost:3009",
