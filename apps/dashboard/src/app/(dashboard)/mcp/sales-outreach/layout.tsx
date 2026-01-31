@@ -54,7 +54,16 @@ export default function SalesOutreachLayout({
     <div className="flex h-full">
       <aside className="w-56 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
         <div className="px-4 py-3 border-b border-gray-100">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <Link 
+            href="/" 
+            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 mb-2 transition"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            All MCPs
+          </Link>
+          <h3 className="text-sm font-semibold text-gray-800">
             Sales Cold Emails
           </h3>
         </div>
