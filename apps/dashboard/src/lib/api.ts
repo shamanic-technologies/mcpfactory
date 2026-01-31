@@ -119,7 +119,10 @@ export interface Campaign {
   status: string;
   personTitles: string[] | null;
   organizationLocations: string[] | null;
+  recurrence: string | null;
   maxBudgetDailyUsd: string | null;
+  maxBudgetWeeklyUsd: string | null;
+  maxBudgetMonthlyUsd: string | null;
   startDate: string | null;
   endDate: string | null;
   createdAt: string;
@@ -135,6 +138,12 @@ export interface CampaignStats {
   emailsClicked: number;
   emailsReplied: number;
   emailsBounced: number;
+  // Reply classifications
+  repliesWillingToMeet?: number;
+  repliesInterested?: number;
+  repliesNotInterested?: number;
+  repliesOutOfOffice?: number;
+  repliesUnsubscribe?: number;
 }
 
 export async function listCampaigns(token: string): Promise<{ campaigns: Campaign[] }> {
@@ -143,4 +152,12 @@ export async function listCampaigns(token: string): Promise<{ campaigns: Campaig
 
 export async function getCampaignStats(token: string, campaignId: string): Promise<CampaignStats> {
   return apiCall<CampaignStats>(`/campaigns/${campaignId}/stats`, { token });
+}
+
+export async function stopCampaign(token: string, campaignId: string): Promise<{ campaign: Campaign }> {
+  return apiCall<{ campaign: Campaign }>(`/campaigns/${campaignId}/stop`, { token, method: "POST" });
+}
+
+export async function resumeCampaign(token: string, campaignId: string): Promise<{ campaign: Campaign }> {
+  return apiCall<{ campaign: Campaign }>(`/campaigns/${campaignId}/resume`, { token, method: "POST" });
 }

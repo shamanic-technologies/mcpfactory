@@ -136,4 +136,55 @@ router.get("/enrichments/:campaignRunId", serviceAuth, async (req: Authenticated
   }
 });
 
+/**
+ * POST /stats - Get aggregated stats for multiple campaign run IDs
+ * Body: { campaignRunIds: string[] }
+ */
+router.post("/stats", serviceAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { campaignRunIds } = req.body as { campaignRunIds: string[] };
+
+    if (!campaignRunIds || !Array.isArray(campaignRunIds)) {
+      return res.status(400).json({ error: "campaignRunIds array required" });
+    }
+
+    if (campaignRunIds.length === 0) {
+      return res.json({ stats: { leadsFound: 0, searchesCount: 0 } });
+    }
+
+    // Count enrichments (leads found)
+    const enrichments = await db.query.apolloPeopleEnrichments.findMany({
+      where: (e, { and, eq, inArray }) =>
+        and(
+          inArray(e.campaignRunId, campaignRunIds),
+          eq(e.orgId, req.orgId!)
+        ),
+      columns: { id: true },
+    });
+
+    // Count searches
+    const searches = await db.query.apolloPeopleSearches.findMany({
+      where: (s, { and, eq, inArray }) =>
+        and(
+          inArray(s.campaignRunId, campaignRunIds),
+          eq(s.orgId, req.orgId!)
+        ),
+      columns: { id: true, peopleCount: true },
+    });
+
+    const totalPeopleFromSearches = searches.reduce((sum, s) => sum + (s.peopleCount || 0), 0);
+
+    res.json({
+      stats: {
+        leadsFound: enrichments.length,
+        searchesCount: searches.length,
+        totalPeopleFromSearches,
+      },
+    });
+  } catch (error) {
+    console.error("Get stats error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

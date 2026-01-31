@@ -8,6 +8,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { campaigns, campaignRuns } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
+import { getAggregatedStats } from "../lib/service-client.js";
 
 const router = Router();
 
@@ -263,6 +264,7 @@ router.get("/campaigns/:id/runs", serviceAuth, async (req: AuthenticatedRequest,
 
 /**
  * GET /internal/campaigns/:id/stats - Get campaign statistics
+ * Aggregates stats from all services (apollo, emailgen, postmark)
  */
 router.get("/campaigns/:id/stats", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
@@ -280,20 +282,40 @@ router.get("/campaigns/:id/stats", serviceAuth, async (req: AuthenticatedRequest
       return res.status(404).json({ error: "Campaign not found" });
     }
 
-    // Get all runs for stats
+    // Get all runs for this campaign
     const runs = await db.query.campaignRuns.findMany({
       where: eq(campaignRuns.campaignId, id),
     });
 
-    // Calculate aggregate stats (detailed stats come from other services)
+    const campaignRunIds = runs.map(r => r.id);
+
+    // Aggregate stats from other services
+    const aggregated = await getAggregatedStats(campaignRunIds, req.clerkOrgId!);
+
+    // Build response with run stats + aggregated stats
     const stats = {
+      campaignId: id,
       totalRuns: runs.length,
       completedRuns: runs.filter(r => r.status === "completed").length,
       failedRuns: runs.filter(r => r.status === "failed").length,
       runningRuns: runs.filter(r => r.status === "running").length,
+      // Aggregated from other services
+      leadsFound: aggregated.leadsFound,
+      emailsGenerated: aggregated.emailsGenerated,
+      emailsSent: aggregated.emailsSent,
+      emailsOpened: aggregated.emailsOpened,
+      emailsClicked: aggregated.emailsClicked,
+      emailsReplied: aggregated.emailsReplied,
+      emailsBounced: aggregated.emailsBounced,
+      // Reply classifications
+      repliesWillingToMeet: aggregated.repliesWillingToMeet,
+      repliesInterested: aggregated.repliesInterested,
+      repliesNotInterested: aggregated.repliesNotInterested,
+      repliesOutOfOffice: aggregated.repliesOutOfOffice,
+      repliesUnsubscribe: aggregated.repliesUnsubscribe,
     };
 
-    res.json({ stats, campaign });
+    res.json(stats);
   } catch (error) {
     console.error("Get campaign stats error:", error);
     res.status(500).json({ error: "Internal server error" });

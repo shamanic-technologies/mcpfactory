@@ -143,4 +143,44 @@ router.get("/generations/by-enrichment/:apolloEnrichmentId", serviceAuth, async 
   }
 });
 
+/**
+ * POST /stats - Get aggregated stats for multiple campaign run IDs
+ * Body: { campaignRunIds: string[] }
+ */
+router.post("/stats", serviceAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { campaignRunIds } = req.body as { campaignRunIds: string[] };
+
+    if (!campaignRunIds || !Array.isArray(campaignRunIds)) {
+      return res.status(400).json({ error: "campaignRunIds array required" });
+    }
+
+    if (campaignRunIds.length === 0) {
+      return res.json({ stats: { emailsGenerated: 0, totalCostUsd: 0 } });
+    }
+
+    // Count email generations
+    const generations = await db.query.emailGenerations.findMany({
+      where: (g, { and, eq, inArray }) =>
+        and(
+          inArray(g.campaignRunId, campaignRunIds),
+          eq(g.orgId, req.orgId!)
+        ),
+      columns: { id: true, costUsd: true },
+    });
+
+    const totalCostUsd = generations.reduce((sum, g) => sum + parseFloat(g.costUsd || "0"), 0);
+
+    res.json({
+      stats: {
+        emailsGenerated: generations.length,
+        totalCostUsd: totalCostUsd.toFixed(4),
+      },
+    });
+  } catch (error) {
+    console.error("Get stats error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;
