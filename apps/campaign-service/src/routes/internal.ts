@@ -55,6 +55,7 @@ router.get("/campaigns/:id", serviceAuth, async (req: AuthenticatedRequest, res)
 
 /**
  * POST /internal/campaigns - Create a new campaign
+ * Note: For service-to-service calls, we need a placeholder user since createdByUserId is required
  */
 router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
@@ -75,16 +76,22 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       notifyFrequency,
       notifyChannel,
       notifyDestination,
+      createdByUserId,
     } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: "Campaign name is required" });
     }
 
+    if (!createdByUserId) {
+      return res.status(400).json({ error: "createdByUserId is required" });
+    }
+
     const [campaign] = await db
       .insert(campaigns)
       .values({
         orgId: req.orgId!,
+        createdByUserId,
         name,
         personTitles,
         qOrganizationKeywordTags,
@@ -262,15 +269,12 @@ router.get("/campaigns/:id/stats", serviceAuth, async (req: AuthenticatedRequest
       where: eq(campaignRuns.campaignId, id),
     });
 
-    // Calculate aggregate stats
+    // Calculate aggregate stats (detailed stats come from other services)
     const stats = {
       totalRuns: runs.length,
       completedRuns: runs.filter(r => r.status === "completed").length,
       failedRuns: runs.filter(r => r.status === "failed").length,
-      totalLeadsFound: runs.reduce((sum, r) => sum + (r.leadsFound || 0), 0),
-      totalEmailsSent: runs.reduce((sum, r) => sum + (r.emailsSent || 0), 0),
-      totalReplies: runs.reduce((sum, r) => sum + (r.repliesReceived || 0), 0),
-      totalCostUsd: runs.reduce((sum, r) => sum + parseFloat(r.totalCostUsd || "0"), 0),
+      runningRuns: runs.filter(r => r.status === "running").length,
     };
 
     res.json({ stats, campaign });
