@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { LinkButton } from "./link-button";
 
 export function Header() {
   return (
@@ -30,12 +31,13 @@ export function Header() {
           >
             GitHub
           </a>
-          <a
+          <LinkButton
             href="https://dashboard.mcpfactory.org/sign-up"
-            className="text-sm bg-primary-500 text-white px-4 py-2 rounded-full font-medium hover:bg-primary-600 transition shadow-sm"
+            external
+            className="text-sm bg-primary-500 text-white px-4 py-2 rounded-full font-medium hover:bg-primary-600 shadow-sm"
           >
             Get Started
-          </a>
+          </LinkButton>
         </div>
       </div>
     </header>

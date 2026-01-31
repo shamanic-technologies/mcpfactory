@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { McpCard } from "@/components/mcp-card";
+import { LinkButton } from "@/components/link-button";
 
 const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://dashboard.mcpfactory.org";
 
@@ -87,12 +88,12 @@ export default function Home() {
             >
               Sign In
             </a>
-            <a
+            <LinkButton
               href={`${DASHBOARD_URL}/sign-up`}
-              className="bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-600 transition shadow-md hover:shadow-lg"
+              className="bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-600 shadow-md hover:shadow-lg"
             >
               Get Started
-            </a>
+            </LinkButton>
           </div>
         </div>
       </nav>
@@ -120,12 +121,12 @@ export default function Home() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start mb-8">
-                <a
+                <LinkButton
                   href={`${DASHBOARD_URL}/sign-up`}
-                  className="inline-flex items-center justify-center px-8 py-4 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition font-medium text-lg shadow-lg hover:shadow-xl"
+                  className="px-8 py-4 bg-primary-500 text-white rounded-full hover:bg-primary-600 font-medium text-lg shadow-lg hover:shadow-xl"
                 >
                   Get Started Free
-                </a>
+                </LinkButton>
                 <a
                   href="https://github.com/shamanic-technologies/mcpfactory"
                   target="_blank"

@@ -1,3 +1,5 @@
+import { LinkButton } from "./link-button";
+
 const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://dashboard.mcpfactory.org";
 
 interface McpCardProps {
@@ -36,12 +38,12 @@ export function McpCard({ name, package: pkg, description, freeQuota, isAvailabl
           Free: {freeQuota}
         </span>
         {isAvailable ? (
-          <a
+          <LinkButton
             href={`${DASHBOARD_URL}/sign-up`}
-            className="text-sm bg-primary-500 text-white px-4 py-1.5 rounded-full hover:bg-primary-600 transition font-medium shadow-sm hover:shadow-md"
+            className="text-sm bg-primary-500 text-white px-4 py-1.5 rounded-full hover:bg-primary-600 font-medium shadow-sm hover:shadow-md"
           >
             Get Started
-          </a>
+          </LinkButton>
         ) : (
           <a
             href="#waitlist"

@@ -1,5 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { LinkButton } from "@/components/link-button";
 
 export default async function DashboardHome() {
   const user = await currentUser();
@@ -20,12 +21,12 @@ export default async function DashboardHome() {
           <p className="text-sm text-gray-600 mb-4">
             Generate and send personalized cold emails from any URL.
           </p>
-          <Link
+          <LinkButton
             href="/mcp/sales-outreach"
-            className="inline-flex items-center gap-2 text-primary-500 hover:text-primary-600 font-medium text-sm"
+            className="text-primary-500 hover:text-primary-600 font-medium text-sm"
           >
             Get Started →
-          </Link>
+          </LinkButton>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-6 opacity-60">
