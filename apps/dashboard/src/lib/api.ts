@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.mcpfactory.org";
 
 interface ApiOptions {
   token: string;
@@ -9,7 +9,7 @@ interface ApiOptions {
 async function apiCall<T>(endpoint: string, options: ApiOptions): Promise<T> {
   const { token, method = "GET", body } = options;
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  const response = await fetch(`${API_URL}/v1${endpoint}`, {
     method,
     headers: {
       "Content-Type": "application/json",
@@ -27,12 +27,37 @@ async function apiCall<T>(endpoint: string, options: ApiOptions): Promise<T> {
 }
 
 // Types
-export interface UserProfile {
+export interface UserInfo {
+  userId: string;
+  orgId: string;
+  authType: string;
+  user: {
+    id: string;
+    clerkUserId: string;
+    createdAt: string;
+  } | null;
+  org: {
+    id: string;
+    clerkOrgId: string;
+    plan: string;
+    createdAt: string;
+  } | null;
+}
+
+export interface ApiKey {
   id: string;
-  clerkUserId: string;
-  apiKey: string;
-  plan: string;
+  keyPrefix: string;
+  name: string | null;
   createdAt: string;
+  lastUsedAt: string | null;
+}
+
+export interface NewApiKey {
+  id: string;
+  key: string; // Full key, only shown once
+  keyPrefix: string;
+  name: string | null;
+  message: string;
 }
 
 export interface ByokKey {
@@ -42,28 +67,38 @@ export interface ByokKey {
   updatedAt: string;
 }
 
-// API functions
-export async function getProfile(token: string): Promise<UserProfile> {
-  return apiCall<UserProfile>("/me", { token });
+// User/Org info
+export async function getMe(token: string): Promise<UserInfo> {
+  return apiCall<UserInfo>("/me", { token });
 }
 
-export async function regenerateApiKey(token: string): Promise<{ apiKey: string }> {
-  return apiCall<{ apiKey: string }>("/me/regenerate-key", { token, method: "POST" });
+// API Keys
+export async function listApiKeys(token: string): Promise<{ keys: ApiKey[] }> {
+  return apiCall<{ keys: ApiKey[] }>("/api-keys", { token });
 }
 
-export async function getByokKeys(token: string): Promise<{ keys: ByokKey[] }> {
+export async function createApiKey(token: string, name?: string): Promise<NewApiKey> {
+  return apiCall<NewApiKey>("/api-keys", { token, method: "POST", body: { name } });
+}
+
+export async function deleteApiKey(token: string, id: string): Promise<{ message: string }> {
+  return apiCall<{ message: string }>(`/api-keys/${id}`, { token, method: "DELETE" });
+}
+
+// BYOK Keys
+export async function listByokKeys(token: string): Promise<{ keys: ByokKey[] }> {
   return apiCall<{ keys: ByokKey[] }>("/keys", { token });
 }
 
 export async function setByokKey(
   token: string,
   provider: string,
-  key: string
+  apiKey: string
 ): Promise<{ provider: string; maskedKey: string }> {
-  return apiCall<{ provider: string; maskedKey: string }>(`/keys/${provider}`, {
+  return apiCall<{ provider: string; maskedKey: string }>("/keys", {
     token,
-    method: "PUT",
-    body: { key },
+    method: "POST",
+    body: { provider, apiKey },
   });
 }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-import { getByokKeys, setByokKey, deleteByokKey, ByokKey } from "@/lib/api";
+import { listByokKeys, setByokKey, deleteByokKey, ByokKey } from "@/lib/api";
 import { SkeletonKeysList } from "@/components/skeleton";
 
 const PROVIDERS = [
@@ -31,7 +31,7 @@ export default function KeysSettingsPage() {
     try {
       const token = await getToken();
       if (!token) return;
-      const data = await getByokKeys(token);
+      const data = await listByokKeys(token);
       setKeys(data.keys);
     } catch (err) {
       console.error("Failed to load keys:", err);
