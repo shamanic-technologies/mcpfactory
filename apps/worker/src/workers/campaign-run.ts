@@ -58,10 +58,11 @@ export function startCampaignRunWorker(): Worker {
             console.log(`[campaign-run] Getting sales profile for: ${clientUrl}`);
             
             // Company-service handles fetching the API key internally
+            // Use platform key for now - TODO: check if org has BYOK configured
             const profileResult = await companyService.getSalesProfile(
               clerkOrgId, 
               clientUrl, 
-              "byok"  // Use user's own Anthropic key
+              "platform"
             ) as SalesProfileResponse;
             
             if (profileResult?.profile) {
