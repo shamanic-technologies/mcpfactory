@@ -277,4 +277,55 @@ router.get("/campaigns/:id/companies", authenticate, requireOrg, async (req: Aut
   }
 });
 
+/**
+ * GET /v1/campaigns/:id/emails
+ * Get all generated emails for a campaign (across all runs)
+ */
+router.get("/campaigns/:id/emails", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Get all runs for this campaign
+    const runsResult = await callService(
+      services.campaign,
+      `/internal/campaigns/${id}/runs`,
+      {
+        headers: { "x-clerk-org-id": req.orgId! },
+      }
+    ) as { runs: Array<{ id: string }> };
+
+    const runs = runsResult.runs || [];
+    
+    if (runs.length === 0) {
+      return res.json({ emails: [] });
+    }
+
+    // 2. Get emails for each run from emailgeneration-service
+    const allEmails: unknown[] = [];
+    for (const run of runs) {
+      try {
+        const emailsResult = await callService(
+          services.emailgen,
+          `/generations/${run.id}`,
+          {
+            headers: { "x-clerk-org-id": req.orgId! },
+          }
+        ) as { generations: unknown[] };
+        
+        if (emailsResult.generations) {
+          allEmails.push(...emailsResult.generations);
+        }
+      } catch (err) {
+        // Continue if one run fails
+        console.warn(`Failed to get emails for run ${run.id}:`, err);
+      }
+    }
+
+    res.json({ emails: allEmails });
+  } catch (error: any) {
+    console.error("Get campaign emails error:", error);
+    res.status(500).json({ error: error.message || "Failed to get campaign emails" });
+  }
+});
+
 export default router;
