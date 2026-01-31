@@ -2,10 +2,11 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "./Dockerfile",
+    "dockerfilePath": "./apps/worker/Dockerfile",
     "watchPatterns": [
       "/apps/worker/**",
-      "/packages/shared/**"
+      "/packages/shared/**",
+      "/pnpm-lock.yaml"
     ]
   }
 }
