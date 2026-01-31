@@ -46,6 +46,8 @@ export const toolDefinitions = {
       max_weekly_budget_usd: z.number().optional().describe("Maximum weekly spend in USD"),
       max_monthly_budget_usd: z.number().optional().describe("Maximum monthly spend in USD"),
       end_date: z.string().optional().describe("Optional campaign end date (ISO format)"),
+      // Coming soon: reporting frequency
+      // reporting: z.enum(["none", "daily", "weekly", "monthly"]).describe("How often to receive campaign reports"),
     }),
   },
   mcpfactory_list_campaigns: {

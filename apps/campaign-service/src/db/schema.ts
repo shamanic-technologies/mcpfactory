@@ -66,7 +66,10 @@ export const campaigns = pgTable(
     status: text("status").notNull().default("ongoing"),
     toResumeAt: timestamp("to_resume_at", { withTimezone: true }),
     
-    // Notifications
+    // Reporting (coming soon - will be required: 'none', 'daily', 'weekly', 'monthly')
+    // reportingFrequency: text("reporting_frequency").notNull(),
+    
+    // Notifications (legacy - to be replaced by reportingFrequency)
     notifyFrequency: text("notify_frequency"),  // 'daily', 'weekly', 'per_reply'
     notifyChannel: text("notify_channel"),      // 'email', 'webhook'
     notifyDestination: text("notify_destination"),  // email address or webhook URL
