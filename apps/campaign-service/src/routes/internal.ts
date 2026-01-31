@@ -59,6 +59,8 @@ router.get("/campaigns/:id", serviceAuth, async (req: AuthenticatedRequest, res)
  */
 router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
+    console.log("POST /internal/campaigns - orgId:", req.orgId, "userId:", req.userId, "body:", JSON.stringify(req.body));
+    
     const {
       name,
       personTitles,
@@ -82,36 +84,40 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       return res.status(400).json({ error: "Campaign name is required" });
     }
 
+    const insertData = {
+      orgId: req.orgId!,
+      createdByUserId: req.userId || null, // From x-clerk-user-id header
+      name,
+      personTitles,
+      qOrganizationKeywordTags,
+      organizationLocations,
+      organizationNumEmployeesRanges,
+      qOrganizationIndustryTagIds,
+      qKeywords,
+      requestRaw: req.body,
+      maxBudgetDailyUsd,
+      maxBudgetWeeklyUsd,
+      maxBudgetMonthlyUsd,
+      startDate,
+      endDate,
+      recurrence,
+      notifyFrequency,
+      notifyChannel,
+      notifyDestination,
+      status: "draft",
+    };
+    
+    console.log("Insert data:", JSON.stringify(insertData));
+
     const [campaign] = await db
       .insert(campaigns)
-      .values({
-        orgId: req.orgId!,
-        createdByUserId: req.userId || null, // From x-clerk-user-id header
-        name,
-        personTitles,
-        qOrganizationKeywordTags,
-        organizationLocations,
-        organizationNumEmployeesRanges,
-        qOrganizationIndustryTagIds,
-        qKeywords,
-        requestRaw: req.body,
-        maxBudgetDailyUsd,
-        maxBudgetWeeklyUsd,
-        maxBudgetMonthlyUsd,
-        startDate,
-        endDate,
-        recurrence,
-        notifyFrequency,
-        notifyChannel,
-        notifyDestination,
-        status: "draft",
-      })
+      .values(insertData)
       .returning();
 
     res.status(201).json({ campaign });
-  } catch (error) {
-    console.error("Create campaign error:", error);
-    res.status(500).json({ error: "Internal server error" });
+  } catch (error: any) {
+    console.error("Create campaign error:", error.message, error.stack);
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 });
 

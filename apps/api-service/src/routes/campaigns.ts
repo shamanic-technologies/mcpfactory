@@ -31,6 +31,7 @@ router.get("/campaigns", authenticate, requireOrg, async (req: AuthenticatedRequ
  */
 router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
+    console.log("Create campaign - orgId:", req.orgId, "headers:", buildInternalHeaders(req));
     const result = await callService(
       services.campaign,
       "/internal/campaigns",
@@ -42,7 +43,7 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
     );
     res.json(result);
   } catch (error: any) {
-    console.error("Create campaign error:", error);
+    console.error("Create campaign error:", error.message, error.stack);
     res.status(500).json({ error: error.message || "Failed to create campaign" });
   }
 });
