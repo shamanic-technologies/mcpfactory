@@ -60,10 +60,10 @@ export const campaigns = pgTable(
     // Scheduling
     startDate: date("start_date"),
     endDate: date("end_date"),
-    recurrence: text("recurrence"),  // 'daily', 'weekly', 'once'
+    recurrence: text("recurrence").notNull(),  // 'oneoff', 'daily', 'weekly', 'monthly'
     
-    // Status
-    status: text("status").notNull().default("draft"),  // draft, active, paused, completed
+    // Status: 'ongoing' or 'stopped'
+    status: text("status").notNull().default("ongoing")
     toResumeAt: timestamp("to_resume_at", { withTimezone: true }),
     
     // Notifications

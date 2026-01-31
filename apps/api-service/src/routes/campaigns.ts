@@ -95,16 +95,16 @@ router.patch("/campaigns/:id", authenticate, requireOrg, async (req: Authenticat
 });
 
 /**
- * POST /v1/campaigns/:id/start
- * Start a campaign
+ * POST /v1/campaigns/:id/stop
+ * Stop a running campaign
  */
-router.post("/campaigns/:id/start", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+router.post("/campaigns/:id/stop", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
 
     const result = await callService(
       services.campaign,
-      `/internal/campaigns/${id}/activate`,
+      `/internal/campaigns/${id}/stop`,
       {
         method: "POST",
         headers: { "x-clerk-org-id": req.orgId! },
@@ -112,22 +112,22 @@ router.post("/campaigns/:id/start", authenticate, requireOrg, async (req: Authen
     );
     res.json(result);
   } catch (error: any) {
-    console.error("Start campaign error:", error);
-    res.status(500).json({ error: error.message || "Failed to start campaign" });
+    console.error("Stop campaign error:", error);
+    res.status(500).json({ error: error.message || "Failed to stop campaign" });
   }
 });
 
 /**
- * POST /v1/campaigns/:id/pause
- * Pause a campaign
+ * POST /v1/campaigns/:id/resume
+ * Resume a stopped campaign
  */
-router.post("/campaigns/:id/pause", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+router.post("/campaigns/:id/resume", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
 
     const result = await callService(
       services.campaign,
-      `/internal/campaigns/${id}/pause`,
+      `/internal/campaigns/${id}/resume`,
       {
         method: "POST",
         headers: { "x-clerk-org-id": req.orgId! },
@@ -135,8 +135,8 @@ router.post("/campaigns/:id/pause", authenticate, requireOrg, async (req: Authen
     );
     res.json(result);
   } catch (error: any) {
-    console.error("Pause campaign error:", error);
-    res.status(500).json({ error: error.message || "Failed to pause campaign" });
+    console.error("Resume campaign error:", error);
+    res.status(500).json({ error: error.message || "Failed to resume campaign" });
   }
 });
 

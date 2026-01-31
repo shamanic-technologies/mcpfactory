@@ -44,6 +44,13 @@ export default function SalesOutreachPage() {
   useEffect(() => {
     loadKeys();
     loadCampaigns();
+    
+    // Poll campaigns every 5 seconds
+    const interval = setInterval(() => {
+      loadCampaigns();
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   async function loadKeys() {
@@ -128,10 +135,8 @@ export default function SalesOutreachPage() {
 
   function getStatusColor(status: string): string {
     switch (status) {
-      case "active": return "bg-green-100 text-green-700 border-green-200";
-      case "completed": return "bg-blue-100 text-blue-700 border-blue-200";
-      case "paused": return "bg-yellow-100 text-yellow-700 border-yellow-200";
-      case "failed": return "bg-red-100 text-red-700 border-red-200";
+      case "ongoing": return "bg-green-100 text-green-700 border-green-200";
+      case "stopped": return "bg-gray-100 text-gray-500 border-gray-200";
       default: return "bg-gray-100 text-gray-700 border-gray-200";
     }
   }

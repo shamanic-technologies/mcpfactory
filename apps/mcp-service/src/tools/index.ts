@@ -34,22 +34,36 @@ export const toolDefinitions = {
     }),
   },
   mcpfactory_create_campaign: {
-    description: "Create a new cold email campaign targeting specific leads",
+    description: "Create and immediately start a cold email campaign targeting specific leads. Campaign starts in 'ongoing' status.",
     schema: z.object({
       name: z.string().describe("Campaign name"),
       client_url: z.string().describe("Your company URL (for context in emails)"),
       target_titles: z.array(z.string()).describe("Job titles to target"),
       target_industries: z.array(z.string()).optional().describe("Industries to target"),
       target_locations: z.array(z.string()).optional().describe("Locations to target"),
-      max_daily_budget_usd: z.number().optional().describe("Maximum daily spend in USD"),
-      start_date: z.string().optional().describe("Campaign start date (ISO format)"),
+      recurrence: z.enum(["oneoff", "daily", "weekly", "monthly"]).describe("How often to run: oneoff (single run), daily, weekly, or monthly"),
+      max_daily_budget_usd: z.number().optional().describe("Maximum daily spend in USD (at least one budget required)"),
+      max_weekly_budget_usd: z.number().optional().describe("Maximum weekly spend in USD"),
+      max_monthly_budget_usd: z.number().optional().describe("Maximum monthly spend in USD"),
       end_date: z.string().optional().describe("Optional campaign end date (ISO format)"),
     }),
   },
   mcpfactory_list_campaigns: {
     description: "List all your cold email campaigns",
     schema: z.object({
-      status: z.enum(["active", "paused", "completed", "all"]).optional().describe("Filter by campaign status"),
+      status: z.enum(["ongoing", "stopped", "all"]).optional().describe("Filter by campaign status"),
+    }),
+  },
+  mcpfactory_stop_campaign: {
+    description: "Stop a running campaign",
+    schema: z.object({
+      campaign_id: z.string().describe("Campaign ID to stop"),
+    }),
+  },
+  mcpfactory_resume_campaign: {
+    description: "Resume a stopped campaign",
+    schema: z.object({
+      campaign_id: z.string().describe("Campaign ID to resume"),
     }),
   },
   mcpfactory_campaign_stats: {
@@ -86,6 +100,12 @@ export async function handleToolCall(
 
     case "mcpfactory_campaign_stats":
       return handleCampaignStats(args);
+
+    case "mcpfactory_stop_campaign":
+      return handleStopCampaign(args);
+
+    case "mcpfactory_resume_campaign":
+      return handleResumeCampaign(args);
 
     default:
       throw new Error(`Unknown tool: ${name}`);
@@ -182,16 +202,23 @@ async function handleSearchLeads(args: Record<string, unknown>) {
 }
 
 async function handleCreateCampaign(args: Record<string, unknown>) {
+  // Validate at least one budget is provided
+  if (!args.max_daily_budget_usd && !args.max_weekly_budget_usd && !args.max_monthly_budget_usd) {
+    throw new Error("At least one budget is required (max_daily_budget_usd, max_weekly_budget_usd, or max_monthly_budget_usd)");
+  }
+
   const result = await callApi("/v1/campaigns", {
     method: "POST",
     body: {
       name: args.name,
       clientUrl: args.client_url,
-      targetTitles: args.target_titles,
-      targetIndustries: args.target_industries,
-      targetLocations: args.target_locations,
-      maxDailyBudgetUsd: args.max_daily_budget_usd,
-      startDate: args.start_date,
+      personTitles: args.target_titles,
+      organizationLocations: args.target_locations,
+      qOrganizationKeywordTags: args.target_industries,
+      recurrence: args.recurrence,
+      maxBudgetDailyUsd: args.max_daily_budget_usd,
+      maxBudgetWeeklyUsd: args.max_weekly_budget_usd,
+      maxBudgetMonthlyUsd: args.max_monthly_budget_usd,
       endDate: args.end_date,
     },
   });
@@ -216,6 +243,30 @@ async function handleListCampaigns(args: Record<string, unknown>) {
 
 async function handleCampaignStats(args: Record<string, unknown>) {
   const result = await callApi(`/v1/campaigns/${args.campaign_id}/stats`);
+
+  if (result.error) {
+    throw new Error(result.error);
+  }
+
+  return result.data;
+}
+
+async function handleStopCampaign(args: Record<string, unknown>) {
+  const result = await callApi(`/v1/campaigns/${args.campaign_id}/stop`, {
+    method: "POST",
+  });
+
+  if (result.error) {
+    throw new Error(result.error);
+  }
+
+  return result.data;
+}
+
+async function handleResumeCampaign(args: Record<string, unknown>) {
+  const result = await callApi(`/v1/campaigns/${args.campaign_id}/resume`, {
+    method: "POST",
+  });
 
   if (result.error) {
     throw new Error(result.error);

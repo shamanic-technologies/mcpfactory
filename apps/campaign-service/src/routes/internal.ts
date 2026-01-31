@@ -84,6 +84,21 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       return res.status(400).json({ error: "Campaign name is required" });
     }
 
+    // Validate recurrence
+    const validRecurrences = ["oneoff", "daily", "weekly", "monthly"];
+    if (!recurrence || !validRecurrences.includes(recurrence)) {
+      return res.status(400).json({ 
+        error: `recurrence is required. Valid values: ${validRecurrences.join(", ")}` 
+      });
+    }
+
+    // Validate at least one budget is set
+    if (!maxBudgetDailyUsd && !maxBudgetWeeklyUsd && !maxBudgetMonthlyUsd) {
+      return res.status(400).json({ 
+        error: "At least one budget must be set (maxBudgetDailyUsd, maxBudgetWeeklyUsd, or maxBudgetMonthlyUsd)" 
+      });
+    }
+
     const insertData = {
       orgId: req.orgId!,
       createdByUserId: req.userId || null, // From x-clerk-user-id header
@@ -104,7 +119,7 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       notifyFrequency,
       notifyChannel,
       notifyDestination,
-      status: "draft",
+      status: "ongoing",  // Campaigns start immediately
     };
     
     console.log("Insert data:", JSON.stringify(insertData));
@@ -156,16 +171,16 @@ router.patch("/campaigns/:id", serviceAuth, async (req: AuthenticatedRequest, re
 });
 
 /**
- * POST /internal/campaigns/:id/activate - Activate a campaign
+ * POST /internal/campaigns/:id/stop - Stop a campaign
  */
-router.post("/campaigns/:id/activate", serviceAuth, async (req: AuthenticatedRequest, res) => {
+router.post("/campaigns/:id/stop", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
 
     const [updated] = await db
       .update(campaigns)
       .set({
-        status: "active",
+        status: "stopped",
         updatedAt: new Date(),
       })
       .where(and(
@@ -180,22 +195,22 @@ router.post("/campaigns/:id/activate", serviceAuth, async (req: AuthenticatedReq
 
     res.json({ campaign: updated });
   } catch (error) {
-    console.error("Activate campaign error:", error);
+    console.error("Stop campaign error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 /**
- * POST /internal/campaigns/:id/pause - Pause a campaign
+ * POST /internal/campaigns/:id/resume - Resume a stopped campaign
  */
-router.post("/campaigns/:id/pause", serviceAuth, async (req: AuthenticatedRequest, res) => {
+router.post("/campaigns/:id/resume", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
 
     const [updated] = await db
       .update(campaigns)
       .set({
-        status: "paused",
+        status: "ongoing",
         updatedAt: new Date(),
       })
       .where(and(
@@ -210,7 +225,7 @@ router.post("/campaigns/:id/pause", serviceAuth, async (req: AuthenticatedReques
 
     res.json({ campaign: updated });
   } catch (error) {
-    console.error("Pause campaign error:", error);
+    console.error("Resume campaign error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
