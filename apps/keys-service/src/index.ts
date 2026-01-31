@@ -5,6 +5,7 @@ import meRoutes from "./routes/me.js";
 import keysRoutes from "./routes/keys.js";
 import apiKeysRoutes from "./routes/api-keys.js";
 import validateRoutes from "./routes/validate.js";
+import internalRoutes from "./routes/internal.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -14,6 +15,7 @@ app.use(cors({
   origin: [
     "https://dashboard.mcpfactory.org",
     "https://mcpfactory.org",
+    "https://api.mcpfactory.org",
     "http://localhost:3000",
     "http://localhost:3001",
   ],
@@ -27,6 +29,9 @@ app.use(meRoutes);
 app.use(keysRoutes);
 app.use(apiKeysRoutes);
 app.use(validateRoutes);
+
+// Internal routes for service-to-service communication
+app.use("/internal", internalRoutes);
 
 // 404 handler
 app.use((req, res) => {

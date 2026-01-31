@@ -57,20 +57,23 @@ export async function authenticate(
 
 /**
  * Validate API key against keys-service
+ * Returns clerkOrgId for consistency with JWT auth
  */
 async function validateApiKey(apiKey: string): Promise<{ userId: string; orgId: string } | null> {
   try {
-    const result = await callService<{ valid: boolean; userId?: string; orgId?: string }>(
+    const result = await callService<{ valid: boolean; orgId?: string; clerkOrgId?: string }>(
       services.keys,
-      "/api-keys/validate",
+      "/validate",
       {
-        method: "POST",
-        body: { apiKey },
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
       }
     );
 
-    if (result.valid && result.userId && result.orgId) {
-      return { userId: result.userId, orgId: result.orgId };
+    if (result.valid && result.clerkOrgId) {
+      // Return clerkOrgId as orgId for consistency
+      return { userId: "", orgId: result.clerkOrgId };
     }
     return null;
   } catch (error) {

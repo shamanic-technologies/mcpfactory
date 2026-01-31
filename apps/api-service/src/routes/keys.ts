@@ -12,7 +12,7 @@ router.get("/keys", authenticate, requireOrg, async (req: AuthenticatedRequest, 
   try {
     const result = await callService(
       services.keys,
-      `/keys?orgId=${req.orgId}`
+      `/internal/keys?clerkOrgId=${req.orgId}`
     );
     res.json(result);
   } catch (error: any) {
@@ -35,10 +35,10 @@ router.post("/keys", authenticate, requireOrg, async (req: AuthenticatedRequest,
 
     const result = await callService(
       services.keys,
-      "/keys",
+      "/internal/keys",
       {
         method: "POST",
-        body: { orgId: req.orgId, provider, apiKey },
+        body: { clerkOrgId: req.orgId, provider, apiKey },
       }
     );
     res.json(result);
@@ -58,7 +58,7 @@ router.delete("/keys/:provider", authenticate, requireOrg, async (req: Authentic
 
     const result = await callService(
       services.keys,
-      `/keys/${provider}?orgId=${req.orgId}`,
+      `/internal/keys/${provider}?clerkOrgId=${req.orgId}`,
       { method: "DELETE" }
     );
     res.json(result);
@@ -78,10 +78,10 @@ router.post("/api-keys", authenticate, requireOrg, async (req: AuthenticatedRequ
 
     const result = await callService(
       services.keys,
-      "/api-keys",
+      "/internal/api-keys",
       {
         method: "POST",
-        body: { orgId: req.orgId, userId: req.userId, name },
+        body: { clerkOrgId: req.orgId, name },
       }
     );
     res.json(result);
@@ -99,7 +99,7 @@ router.get("/api-keys", authenticate, requireOrg, async (req: AuthenticatedReque
   try {
     const result = await callService(
       services.keys,
-      `/api-keys?orgId=${req.orgId}`
+      `/internal/api-keys?clerkOrgId=${req.orgId}`
     );
     res.json(result);
   } catch (error: any) {
@@ -118,8 +118,11 @@ router.delete("/api-keys/:id", authenticate, requireOrg, async (req: Authenticat
 
     const result = await callService(
       services.keys,
-      `/api-keys/${id}?orgId=${req.orgId}`,
-      { method: "DELETE" }
+      `/internal/api-keys/${id}`,
+      {
+        method: "DELETE",
+        body: { clerkOrgId: req.orgId },
+      }
     );
     res.json(result);
   } catch (error: any) {
