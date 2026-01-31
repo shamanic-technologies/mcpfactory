@@ -66,28 +66,9 @@ router.get("/company/by-url", authenticate, async (req: AuthenticatedRequest, re
 });
 
 /**
- * GET /v1/company/:id
- * Get company scrape result by ID
- */
-router.get("/company/:id", authenticate, async (req: AuthenticatedRequest, res) => {
-  try {
-    const { id } = req.params;
-
-    const result = await callExternalService(
-      externalServices.scraping,
-      `/scrape/${id}`
-    );
-
-    res.json(result);
-  } catch (error: any) {
-    console.error("Get company error:", error);
-    res.status(500).json({ error: error.message || "Failed to get company" });
-  }
-});
-
-/**
  * GET /v1/company/sales-profiles
  * Get all sales profiles for the organization
+ * NOTE: Must be before /:id route to avoid matching "sales-profiles" as an id
  */
 router.get("/company/sales-profiles", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
@@ -111,6 +92,26 @@ router.get("/company/sales-profiles", authenticate, requireOrg, async (req: Auth
   } catch (error: any) {
     console.error("Get sales profiles error:", error);
     res.status(500).json({ error: error.message || "Failed to get sales profiles" });
+  }
+});
+
+/**
+ * GET /v1/company/:id
+ * Get company scrape result by ID
+ */
+router.get("/company/:id", authenticate, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await callExternalService(
+      externalServices.scraping,
+      `/scrape/${id}`
+    );
+
+    res.json(result);
+  } catch (error: any) {
+    console.error("Get company error:", error);
+    res.status(500).json({ error: error.message || "Failed to get company" });
   }
 });
 
