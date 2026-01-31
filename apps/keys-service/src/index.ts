@@ -26,7 +26,7 @@ app.use(healthRoutes);
 // API key validation (called by api-service with API key in header)
 app.use(validateRoutes);
 
-// Internal routes (service-to-service with X-Service-Secret)
+// Internal routes (service-to-service with X-API-Key)
 app.use("/internal", internalRoutes);
 
 // 404

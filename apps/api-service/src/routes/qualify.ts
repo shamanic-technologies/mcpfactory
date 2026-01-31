@@ -1,10 +1,8 @@
 import { Router } from "express";
 import { authenticate, AuthenticatedRequest } from "../middleware/auth.js";
+import { callExternalService, externalServices } from "../lib/service-client.js";
 
 const router = Router();
-
-const REPLY_QUALIFICATION_URL = process.env.REPLY_QUALIFICATION_SERVICE_URL || "http://localhost:3006";
-const REPLY_QUALIFICATION_API_KEY = process.env.REPLY_QUALIFICATION_SERVICE_API_KEY;
 
 /**
  * POST /v1/qualify
@@ -35,32 +33,25 @@ router.post("/qualify", authenticate, async (req: AuthenticatedRequest, res) => 
       return res.status(400).json({ error: "bodyText or bodyHtml is required" });
     }
 
-    // Call reply-qualification-service
-    const response = await fetch(`${REPLY_QUALIFICATION_URL}/qualify`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-Key": REPLY_QUALIFICATION_API_KEY || "",
-      },
-      body: JSON.stringify({
-        sourceService,
-        sourceOrgId: orgId,
-        sourceRefId,
-        fromEmail,
-        toEmail,
-        subject,
-        bodyText,
-        bodyHtml,
-        byokApiKey,
-      }),
-    });
+    const result = await callExternalService(
+      externalServices.replyQualification,
+      "/qualify",
+      {
+        method: "POST",
+        body: {
+          sourceService,
+          sourceOrgId: orgId,
+          sourceRefId,
+          fromEmail,
+          toEmail,
+          subject,
+          bodyText,
+          bodyHtml,
+          byokApiKey,
+        },
+      }
+    );
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: "Qualification failed" }));
-      return res.status(response.status).json(error);
-    }
-
-    const result = await response.json();
     res.json(result);
   } catch (error: any) {
     console.error("Qualify error:", error);

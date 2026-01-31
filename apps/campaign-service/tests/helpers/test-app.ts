@@ -12,5 +12,5 @@ export function createTestApp() {
 }
 
 export function getAuthHeaders() {
-  return { "X-Service-Secret": "test-service-secret", "Content-Type": "application/json" };
+  return { "X-API-Key": "test-service-secret", "Content-Type": "application/json" };
 }

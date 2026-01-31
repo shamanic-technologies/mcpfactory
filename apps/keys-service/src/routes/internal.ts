@@ -1,6 +1,6 @@
 /**
  * Internal routes for service-to-service calls
- * These are called by api-service with X-Service-Secret header
+ * No auth needed - Railway private network
  */
 
 import { Router, Request, Response, NextFunction } from "express";
@@ -14,19 +14,7 @@ const router = Router();
 
 const VALID_PROVIDERS = ["apollo", "anthropic", "openai", "resend", "hunter"];
 
-// Service-to-service auth middleware
-function serviceAuth(req: Request, res: Response, next: NextFunction) {
-  const serviceSecret = req.headers["x-service-secret"];
-  
-  if (!serviceSecret || serviceSecret !== process.env.API_SERVICE_API_KEY) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  
-  next();
-}
-
-// Apply to all routes in this router
-router.use(serviceAuth);
+// No auth middleware needed - Railway private network
 
 /**
  * Ensure org exists, creating if needed

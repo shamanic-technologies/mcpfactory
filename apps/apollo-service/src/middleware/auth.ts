@@ -9,7 +9,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 /**
- * Middleware for service-to-service authentication
+ * Middleware for internal service calls (no auth - Railway private network)
  */
 export async function serviceAuth(
   req: AuthenticatedRequest,
@@ -17,12 +17,7 @@ export async function serviceAuth(
   next: NextFunction
 ) {
   try {
-    const serviceKey = req.headers["x-service-key"];
     const clerkOrgId = req.headers["x-clerk-org-id"] as string;
-
-    if (serviceKey !== process.env.SERVICE_SECRET_KEY) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
 
     if (!clerkOrgId) {
       return res.status(400).json({ error: "x-clerk-org-id header required" });

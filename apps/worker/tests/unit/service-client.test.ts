@@ -12,9 +12,9 @@ describe("Service client", () => {
 
   it("should define auth headers", () => {
     const headers = {
-      "X-Service-Secret": "secret",
+      "X-API-Key": "secret",
       "Content-Type": "application/json",
     };
-    expect(headers["X-Service-Secret"]).toBeDefined();
+    expect(headers["X-API-Key"]).toBeDefined();
   });
 });

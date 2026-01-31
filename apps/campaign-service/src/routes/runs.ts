@@ -80,12 +80,8 @@ router.get("/campaigns/:campaignId/runs/:runId", clerkAuth, requireOrg, async (r
 router.post("/campaigns/:campaignId/runs", async (req, res) => {
   try {
     const { campaignId } = req.params;
-    const serviceKey = req.headers["x-service-key"];
 
-    // Service-to-service auth
-    if (serviceKey !== process.env.SERVICE_SECRET_KEY) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    // No auth needed - Railway private network
 
     const campaign = await db.query.campaigns.findFirst({
       where: eq(campaigns.id, campaignId),
@@ -118,12 +114,8 @@ router.post("/campaigns/:campaignId/runs", async (req, res) => {
 router.patch("/runs/:runId", async (req, res) => {
   try {
     const { runId } = req.params;
-    const serviceKey = req.headers["x-service-key"];
 
-    // Service-to-service auth
-    if (serviceKey !== process.env.SERVICE_SECRET_KEY) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    // No auth needed - Railway private network
 
     const { status, errorMessage } = req.body;
 

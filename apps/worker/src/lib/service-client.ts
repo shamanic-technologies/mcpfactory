@@ -28,7 +28,7 @@ export async function callService(
   
   // Add service secret for auth
   if (apiKey) {
-    headers["X-Service-Secret"] = apiKey;
+    headers["X-API-Key"] = apiKey;
   }
   
   // Only add Clerk org header if provided (some services don't need it)
