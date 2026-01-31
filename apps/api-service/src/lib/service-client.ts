@@ -71,20 +71,35 @@ export async function callExternalService<T>(
 
   const url = `${service.url}${path}`;
 
-  const response = await fetch(url, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-Key": service.apiKey,
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  console.log(`[callExternalService] ${method} ${url}`);
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || `Service call failed: ${response.status}`);
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": service.apiKey,
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    console.log(`[callExternalService] Response status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log(`[callExternalService] Error response: ${errorText}`);
+      try {
+        const errorJson = JSON.parse(errorText);
+        throw new Error(errorJson.error || `Service call failed: ${response.status}`);
+      } catch {
+        throw new Error(`Service call failed: ${response.status} - ${errorText}`);
+      }
+    }
+
+    return response.json();
+  } catch (error: any) {
+    console.error(`[callExternalService] Fetch error:`, error.message);
+    throw error;
   }
-
-  return response.json();
 }

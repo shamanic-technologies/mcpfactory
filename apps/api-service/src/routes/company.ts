@@ -30,8 +30,11 @@ router.post("/company/scrape", authenticate, async (req: AuthenticatedRequest, r
 
     res.json(result);
   } catch (error: any) {
-    console.error("Company scrape error:", error);
-    res.status(500).json({ error: error.message || "Failed to scrape company" });
+    console.error("Company scrape error:", error.message);
+    res.status(500).json({ 
+      error: error.message || "Failed to scrape company",
+      details: error.stack?.split('\n').slice(0, 3).join(' ')
+    });
   }
 });
 
