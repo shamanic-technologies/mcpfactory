@@ -1,6 +1,10 @@
 import { Router } from "express";
-import { authenticate, AuthenticatedRequest } from "../middleware/auth.js";
+import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
 import { callExternalService, externalServices } from "../lib/service-client.js";
+
+// Company service URL (for sales profiles)
+const COMPANY_SERVICE_URL = process.env.COMPANY_SERVICE_URL || "https://company.mcpfactory.org";
+const COMPANY_SERVICE_API_KEY = process.env.COMPANY_SERVICE_API_KEY || "";
 
 const router = Router();
 
@@ -78,6 +82,35 @@ router.get("/company/:id", authenticate, async (req: AuthenticatedRequest, res) 
   } catch (error: any) {
     console.error("Get company error:", error);
     res.status(500).json({ error: error.message || "Failed to get company" });
+  }
+});
+
+/**
+ * GET /v1/company/sales-profiles
+ * Get all sales profiles for the organization
+ */
+router.get("/company/sales-profiles", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  try {
+    const response = await fetch(
+      `${COMPANY_SERVICE_URL}/sales-profiles?clerkOrgId=${req.orgId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": COMPANY_SERVICE_API_KEY,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: "Unknown error" }));
+      throw new Error(error.error || `Failed to fetch profiles: ${response.status}`);
+    }
+
+    const result = await response.json();
+    res.json(result);
+  } catch (error: any) {
+    console.error("Get sales profiles error:", error);
+    res.status(500).json({ error: error.message || "Failed to get sales profiles" });
   }
 });
 
