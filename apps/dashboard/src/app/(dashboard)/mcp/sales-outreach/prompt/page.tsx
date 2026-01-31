@@ -48,19 +48,19 @@ export default function PromptPage() {
       </div>
 
       {/* Variables */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+      <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-4">Variables</h2>
         <div className="grid gap-3">
           {VARIABLES.map((variable) => (
-            <div key={variable.name} className="flex items-center gap-4 text-sm">
-              <code className="bg-primary-50 text-primary-700 px-2 py-1 rounded font-mono">
+            <div key={variable.name} className="flex flex-wrap items-center gap-2 md:gap-4 text-sm">
+              <code className="bg-primary-50 text-primary-700 px-2 py-1 rounded font-mono text-xs md:text-sm">
                 {`{${variable.name}}`}
               </code>
-              <span className="text-gray-400">→</span>
+              <span className="text-gray-400 hidden md:inline">→</span>
               <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                 {variable.source}
               </span>
-              <span className="text-gray-600">{variable.description}</span>
+              <span className="text-gray-600 text-xs md:text-sm w-full md:w-auto">{variable.description}</span>
             </div>
           ))}
         </div>

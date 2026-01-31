@@ -163,7 +163,7 @@ export default function SalesOutreachPage() {
 
       {/* Stats Overview */}
       {campaigns.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           <FunnelMetrics 
             leadsFound={totals.leadsFound}
             emailsGenerated={totals.emailsGenerated}

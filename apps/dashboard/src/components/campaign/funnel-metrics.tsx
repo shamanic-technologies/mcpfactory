@@ -31,10 +31,10 @@ export function FunnelMetrics({
   const maxValue = Math.max(...steps.map(s => s.value), 1);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h3 className="font-medium text-gray-800 mb-6">Campaign Funnel</h3>
+    <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
+      <h3 className="font-medium text-gray-800 mb-4 md:mb-6">Campaign Funnel</h3>
       
-      <div className="flex items-end justify-between gap-2">
+      <div className="flex items-end justify-between gap-2 overflow-x-auto pb-2">
         {steps.map((step, i) => (
           <div key={step.label} className="flex-1 text-center">
             {/* Bar */}
