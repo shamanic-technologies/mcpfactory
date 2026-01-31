@@ -170,14 +170,36 @@ export const postmarkService = {
   },
 };
 
-// Company service - get already-scraped company info
+// Keys service - get BYOK keys for an org
+export const keysService = {
+  url: process.env.KEYS_SERVICE_URL || "http://localhost:3001",
+  
+  async getKey(clerkOrgId: string, provider: string) {
+    return callService(this.url, `/internal/keys/${provider}`, {
+      method: "GET",
+      clerkOrgId,
+    });
+  },
+};
+
+// Company service - get sales profile for email personalization
 export const companyService = {
   url: process.env.COMPANY_SERVICE_URL || "https://company.mcpfactory.org",
   apiKey: process.env.COMPANY_SERVICE_API_KEY,
   
-  async getByUrl(url: string) {
-    return callService(this.url, `/by-url?url=${encodeURIComponent(url)}`, {
-      method: "GET",
+  /**
+   * Get or extract sales profile for a company
+   * On first call, creates org and extracts profile
+   * On subsequent calls, returns cached profile
+   */
+  async getSalesProfile(clerkOrgId: string, clientUrl: string, anthropicApiKey: string) {
+    return callService(this.url, "/sales-profile", {
+      method: "POST",
+      body: { 
+        clerkOrgId,
+        url: clientUrl,
+        anthropicApiKey,
+      },
       apiKey: this.apiKey,
     });
   },

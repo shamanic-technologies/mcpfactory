@@ -1,7 +1,7 @@
 import { Worker, Job } from "bullmq";
 import { getRedis } from "../lib/redis.js";
 import { getQueues, QUEUE_NAMES, CampaignRunJobData, LeadSearchJobData } from "../queues/index.js";
-import { campaignService, companyService } from "../lib/service-client.js";
+import { campaignService, companyService, keysService } from "../lib/service-client.js";
 
 interface CampaignDetails {
   id: string;
@@ -11,9 +11,10 @@ interface CampaignDetails {
   };
 }
 
-interface CompanyInfo {
-  name?: string;
-  description?: string;
+interface SalesProfile {
+  companyName: string | null;
+  valueProposition: string | null;
+  companyOverview: string | null;
 }
 
 /**
@@ -47,19 +48,34 @@ export function startCampaignRunWorker(): Worker {
         
         console.log(`[campaign-run] Campaign ${campaignId} clientUrl: ${clientUrl}`);
         
-        // 3. Get client company info from company-service (already scraped at campaign creation)
+        // 3. Get client sales profile from company-service
         let clientData = { companyName: "", companyDescription: "" };
         if (clientUrl) {
           try {
-            console.log(`[campaign-run] Getting company info for: ${clientUrl}`);
-            const companyInfo = await companyService.getByUrl(clientUrl) as CompanyInfo;
-            clientData = {
-              companyName: companyInfo.name || "",
-              companyDescription: companyInfo.description || "",
-            };
-            console.log(`[campaign-run] Client company: ${clientData.companyName}`);
+            console.log(`[campaign-run] Getting sales profile for: ${clientUrl}`);
+            
+            // Get Anthropic API key from keys-service
+            const keyResult = await keysService.getKey(clerkOrgId, "anthropic") as { key?: string };
+            const anthropicApiKey = keyResult?.key;
+            
+            if (!anthropicApiKey) {
+              console.warn(`[campaign-run] No Anthropic API key found for org ${clerkOrgId}`);
+            } else {
+              const profileResult = await companyService.getSalesProfile(clerkOrgId, clientUrl, anthropicApiKey) as { 
+                profile?: SalesProfile;
+                cached?: boolean;
+              };
+              
+              if (profileResult?.profile) {
+                clientData = {
+                  companyName: profileResult.profile.companyName || "",
+                  companyDescription: profileResult.profile.valueProposition || profileResult.profile.companyOverview || "",
+                };
+                console.log(`[campaign-run] Client company: ${clientData.companyName} (cached: ${profileResult.cached})`);
+              }
+            }
           } catch (companyError) {
-            console.error(`[campaign-run] Failed to get client company info:`, companyError);
+            console.error(`[campaign-run] Failed to get client sales profile:`, companyError);
             // Continue with empty client data rather than failing
           }
         }
