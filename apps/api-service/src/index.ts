@@ -1,3 +1,5 @@
+// IMPORTANT: Import instrument first to initialize Sentry before anything else
+import "./instrument.js";
 import * as Sentry from "@sentry/node";
 import express from "express";
 import cors from "cors";
@@ -9,16 +11,6 @@ import meRoutes from "./routes/me.js";
 import qualifyRoutes from "./routes/qualify.js";
 import companyRoutes from "./routes/company.js";
 import leadsRoutes from "./routes/leads.js";
-
-// Initialize Sentry
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || "development",
-    tracesSampleRate: 0.1,
-  });
-  Sentry.setTag("service", "api-service");
-}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -53,9 +45,11 @@ app.use((req, res) => {
   res.status(404).json({ error: "Not found" });
 });
 
-// Error handler
+// Sentry error handler must be before any other error middleware
+Sentry.setupExpressErrorHandler(app);
+
+// Fallback error handler
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  Sentry.captureException(err);
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });

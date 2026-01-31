@@ -1,3 +1,5 @@
+// IMPORTANT: Import instrument first to initialize Sentry before anything else
+import "./instrument.js";
 import * as Sentry from "@sentry/node";
 import express, { Request, Response, Express } from "express";
 import cors from "cors";
@@ -5,16 +7,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { toolDefinitions, handleToolCall } from "./tools/index.js";
 import { setApiKey } from "./lib/api-client.js";
-
-// Initialize Sentry
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || "development",
-    tracesSampleRate: 0.1,
-  });
-  Sentry.setTag("service", "mcp-service");
-}
 
 const PORT = process.env.PORT || 3000;
 

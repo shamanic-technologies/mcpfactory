@@ -29,9 +29,11 @@ app.use((req, res) => {
   res.status(404).json({ error: "Not found" });
 });
 
-// Error handler
+// Sentry error handler must be before any other error middleware
+Sentry.setupExpressErrorHandler(app);
+
+// Fallback error handler
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  Sentry.captureException(err);
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
