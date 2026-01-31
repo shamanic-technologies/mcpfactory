@@ -48,8 +48,6 @@ export async function authenticate(
       req.orgId = payload.org_id || orgClaim?.id;
       req.authType = "jwt";
       
-      console.log("JWT auth - userId:", req.userId, "orgId:", req.orgId, "payload keys:", Object.keys(payload));
-      
       return next();
     }
 

@@ -54,6 +54,10 @@ export function startCampaignRunWorker(): Worker {
     }
   );
   
+  worker.on("ready", () => {
+    console.log(`[campaign-run] Worker ready and listening for jobs`);
+  });
+  
   worker.on("completed", (job) => {
     console.log(`[campaign-run] Job ${job.id} completed`);
   });
@@ -61,6 +65,8 @@ export function startCampaignRunWorker(): Worker {
   worker.on("failed", (job, err) => {
     console.error(`[campaign-run] Job ${job?.id} failed:`, err);
   });
+  
+  console.log(`[campaign-run] Worker started on queue: ${QUEUE_NAMES.CAMPAIGN_RUN}`);
   
   return worker;
 }

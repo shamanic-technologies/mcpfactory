@@ -2,13 +2,14 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useOrganization, useOrganizationList } from "@clerk/nextjs";
+import { useOrganization, useOrganizationList, useAuth } from "@clerk/nextjs";
 import { useState, useRef, useEffect } from "react";
 
 interface BreadcrumbItem {
   label: string;
   href?: string;
   isDropdown?: boolean;
+  isLoading?: boolean;
 }
 
 // MCP definitions for breadcrumb
@@ -16,14 +17,24 @@ const MCP_MAP: Record<string, { name: string; icon: string }> = {
   "sales-outreach": { name: "Sales Cold Emails", icon: "📧" },
 };
 
+// Cache for campaign names
+const campaignNameCache: Record<string, string> = {};
+
 export function BreadcrumbNav() {
   const pathname = usePathname();
+  const { getToken } = useAuth();
   const { organization } = useOrganization();
   const { userMemberships, setActive } = useOrganizationList({
     userMemberships: { infinite: true },
   });
   const [orgMenuOpen, setOrgMenuOpen] = useState(false);
+  const [campaignName, setCampaignName] = useState<string | null>(null);
+  const [campaignLoading, setCampaignLoading] = useState(false);
   const orgMenuRef = useRef<HTMLDivElement>(null);
+
+  // Parse pathname for campaign ID
+  const pathParts = pathname.split("/").filter(Boolean);
+  const campaignId = pathParts[0] === "mcp" && pathParts[2] === "campaigns" ? pathParts[3] : null;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -34,6 +45,43 @@ export function BreadcrumbNav() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Fetch campaign name when in campaign view
+  useEffect(() => {
+    if (!campaignId) {
+      setCampaignName(null);
+      return;
+    }
+
+    // Check cache first
+    if (campaignNameCache[campaignId]) {
+      setCampaignName(campaignNameCache[campaignId]);
+      return;
+    }
+
+    async function fetchCampaignName() {
+      setCampaignLoading(true);
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "https://api.mcpfactory.org"}/v1/campaigns/${campaignId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const name = data.campaign?.name || "Campaign";
+          campaignNameCache[campaignId] = name;
+          setCampaignName(name);
+        }
+      } catch (err) {
+        console.error("Failed to fetch campaign name:", err);
+      } finally {
+        setCampaignLoading(false);
+      }
+    }
+    fetchCampaignName();
+  }, [campaignId, getToken]);
 
   const handleOrgSwitch = (orgId: string) => {
     if (setActive) {
@@ -51,9 +99,6 @@ export function BreadcrumbNav() {
     isDropdown: true,
   });
 
-  // Parse pathname for MCP and campaign
-  const pathParts = pathname.split("/").filter(Boolean);
-  
   // Check if we're in an MCP
   if (pathParts[0] === "mcp" && pathParts[1]) {
     const mcpSlug = pathParts[1];
@@ -66,11 +111,12 @@ export function BreadcrumbNav() {
     }
   }
 
-  // Check if we're in a campaign (future: /mcp/sales-outreach/campaigns/:id)
-  if (pathParts[0] === "mcp" && pathParts[2] === "campaigns" && pathParts[3]) {
+  // Check if we're in a campaign
+  if (campaignId) {
     items.push({
-      label: "Campaign Details", // Would be campaign name from API
-      href: pathname,
+      label: campaignName || "Loading...",
+      href: `/mcp/${pathParts[1]}/campaigns/${campaignId}`,
+      isLoading: campaignLoading,
     });
   }
 
@@ -143,12 +189,19 @@ export function BreadcrumbNav() {
             <Link
               href={item.href}
               className={`px-2 py-1 rounded-md transition ${
-                pathname === item.href
+                pathname === item.href || pathname.startsWith(item.href + "/")
                   ? "font-medium text-gray-800"
                   : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
               }`}
             >
-              {item.label}
+              {item.isLoading ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                  <span className="text-gray-400">Loading...</span>
+                </span>
+              ) : (
+                item.label
+              )}
             </Link>
           ) : (
             <span className="px-2 py-1 font-medium text-gray-800">{item.label}</span>

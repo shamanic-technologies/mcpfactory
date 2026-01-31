@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Campaign, CampaignStats } from "@/lib/api";
 
 interface CampaignCardProps {
@@ -33,7 +34,10 @@ export function CampaignCard({ campaign, stats }: CampaignCardProps) {
     : null;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
+    <Link 
+      href={`/mcp/sales-outreach/campaigns/${campaign.id}`}
+      className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-primary-300 hover:shadow-sm transition group"
+    >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
@@ -94,17 +98,27 @@ export function CampaignCard({ campaign, stats }: CampaignCardProps) {
         </div>
       </div>
 
-      {/* Budget info */}
-      {(campaign.maxBudgetDailyUsd || campaign.maxBudgetWeeklyUsd || campaign.maxBudgetMonthlyUsd) && (
-        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-          <span>
-            Budget: 
-            {campaign.maxBudgetDailyUsd && ` $${campaign.maxBudgetDailyUsd}/day`}
-            {campaign.maxBudgetWeeklyUsd && ` $${campaign.maxBudgetWeeklyUsd}/week`}
-            {campaign.maxBudgetMonthlyUsd && ` $${campaign.maxBudgetMonthlyUsd}/month`}
-          </span>
-        </div>
-      )}
-    </div>
+      {/* Footer with budget and view action */}
+      <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+        <span>
+          {(campaign.maxBudgetDailyUsd || campaign.maxBudgetWeeklyUsd || campaign.maxBudgetMonthlyUsd) ? (
+            <>
+              Budget: 
+              {campaign.maxBudgetDailyUsd && ` $${campaign.maxBudgetDailyUsd}/day`}
+              {campaign.maxBudgetWeeklyUsd && ` $${campaign.maxBudgetWeeklyUsd}/week`}
+              {campaign.maxBudgetMonthlyUsd && ` $${campaign.maxBudgetMonthlyUsd}/month`}
+            </>
+          ) : (
+            <span className="text-gray-400">No budget limit</span>
+          )}
+        </span>
+        <span className="flex items-center gap-1 text-gray-400 group-hover:text-primary-500 transition">
+          View details
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </div>
+    </Link>
   );
 }
