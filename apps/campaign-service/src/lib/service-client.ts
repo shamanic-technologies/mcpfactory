@@ -87,6 +87,9 @@ export interface LeadData {
   email: string | null;
   title: string | null;
   organizationName: string | null;
+  organizationDomain: string | null;
+  organizationIndustry: string | null;
+  organizationSize: string | null;
   linkedinUrl: string | null;
   createdAt: string;
 }
@@ -137,6 +140,50 @@ export async function getLeadsForCampaignRuns(
   }
 
   return allLeads;
+}
+
+export interface CompanyData {
+  id: string;
+  name: string;
+  domain: string | null;
+  industry: string | null;
+  employeeCount: string | null;
+  leadsCount: number;
+}
+
+export function aggregateCompaniesFromLeads(leads: LeadData[]): CompanyData[] {
+  // Group leads by organization name
+  const companyMap = new Map<string, {
+    name: string;
+    domain: string | null;
+    industry: string | null;
+    employeeCount: string | null;
+    leadsCount: number;
+  }>();
+
+  for (const lead of leads) {
+    const orgName = lead.organizationName;
+    if (!orgName) continue;
+
+    const existing = companyMap.get(orgName);
+    if (existing) {
+      existing.leadsCount++;
+    } else {
+      companyMap.set(orgName, {
+        name: orgName,
+        domain: lead.organizationDomain || null,
+        industry: lead.organizationIndustry || null,
+        employeeCount: lead.organizationSize || null,
+        leadsCount: 1,
+      });
+    }
+  }
+
+  // Convert to array with IDs
+  return Array.from(companyMap.entries()).map(([name, data], index) => ({
+    id: `company-${index}`,
+    ...data,
+  }));
 }
 
 export async function getAggregatedStats(

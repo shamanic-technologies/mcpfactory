@@ -228,4 +228,26 @@ router.get("/campaigns/:id/leads", authenticate, requireOrg, async (req: Authent
   }
 });
 
+/**
+ * GET /v1/campaigns/:id/companies
+ * Get all companies for a campaign
+ */
+router.get("/campaigns/:id/companies", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await callService(
+      services.campaign,
+      `/internal/campaigns/${id}/companies`,
+      {
+        headers: { "x-clerk-org-id": req.orgId! },
+      }
+    );
+    res.json(result);
+  } catch (error: any) {
+    console.error("Get campaign companies error:", error);
+    res.status(500).json({ error: error.message || "Failed to get campaign companies" });
+  }
+});
+
 export default router;
