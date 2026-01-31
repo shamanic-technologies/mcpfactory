@@ -6,7 +6,7 @@
 import { Router } from "express";
 import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { campaigns, campaignRuns } from "../db/schema.js";
+import { campaigns, campaignRuns, orgs } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
 import { getAggregatedStats } from "../lib/service-client.js";
 
@@ -25,6 +25,42 @@ router.get("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) => 
     res.json({ campaigns: orgCampaigns });
   } catch (error) {
     console.error("List campaigns error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * GET /internal/campaigns/all - List all campaigns across all orgs (for scheduler)
+ * No serviceAuth - uses internal network trust
+ * Returns campaigns with clerkOrgId for downstream service calls
+ */
+router.get("/campaigns/all", async (_req, res) => {
+  try {
+    // Join with orgs to get clerkOrgId
+    const allCampaigns = await db
+      .select({
+        id: campaigns.id,
+        orgId: campaigns.orgId,
+        name: campaigns.name,
+        status: campaigns.status,
+        recurrence: campaigns.recurrence,
+        personTitles: campaigns.personTitles,
+        organizationLocations: campaigns.organizationLocations,
+        qOrganizationKeywordTags: campaigns.qOrganizationKeywordTags,
+        maxBudgetDailyUsd: campaigns.maxBudgetDailyUsd,
+        maxBudgetWeeklyUsd: campaigns.maxBudgetWeeklyUsd,
+        maxBudgetMonthlyUsd: campaigns.maxBudgetMonthlyUsd,
+        requestRaw: campaigns.requestRaw,
+        createdAt: campaigns.createdAt,
+        clerkOrgId: orgs.clerkOrgId,
+      })
+      .from(campaigns)
+      .innerJoin(orgs, eq(campaigns.orgId, orgs.id))
+      .orderBy(campaigns.createdAt);
+
+    res.json({ campaigns: allCampaigns });
+  } catch (error) {
+    console.error("List all campaigns error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -258,6 +294,88 @@ router.get("/campaigns/:id/runs", serviceAuth, async (req: AuthenticatedRequest,
     res.json({ runs });
   } catch (error) {
     console.error("Get campaign runs error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * GET /internal/campaigns/:id/runs/all - Get campaign runs (no auth, for scheduler)
+ */
+router.get("/campaigns/:id/runs/all", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const runs = await db.query.campaignRuns.findMany({
+      where: eq(campaignRuns.campaignId, id),
+      orderBy: (runs, { desc }) => [desc(runs.createdAt)],
+    });
+
+    res.json({ runs });
+  } catch (error) {
+    console.error("Get campaign runs error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * POST /internal/campaigns/:id/runs - Create a new campaign run (for scheduler)
+ */
+router.post("/campaigns/:id/runs", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verify campaign exists
+    const campaign = await db.query.campaigns.findFirst({
+      where: eq(campaigns.id, id),
+    });
+
+    if (!campaign) {
+      return res.status(404).json({ error: "Campaign not found" });
+    }
+
+    // Create a new run
+    const [run] = await db
+      .insert(campaignRuns)
+      .values({
+        campaignId: id,
+        status: "running",
+      })
+      .returning();
+
+    console.log(`Created campaign run ${run.id} for campaign ${id}`);
+    res.json({ run });
+  } catch (error) {
+    console.error("Create campaign run error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * PATCH /internal/runs/:id - Update a campaign run
+ */
+router.patch("/runs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, errorMessage } = req.body;
+
+    const [updated] = await db
+      .update(campaignRuns)
+      .set({
+        status,
+        errorMessage,
+        updatedAt: new Date(),
+        ...(status === "completed" || status === "failed" ? { completedAt: new Date() } : {}),
+      })
+      .where(eq(campaignRuns.id, id))
+      .returning();
+
+    if (!updated) {
+      return res.status(404).json({ error: "Run not found" });
+    }
+
+    res.json({ run: updated });
+  } catch (error) {
+    console.error("Update campaign run error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

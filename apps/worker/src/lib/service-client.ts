@@ -56,20 +56,41 @@ export const campaignService = {
   url: process.env.CAMPAIGN_SERVICE_URL || "http://localhost:3003",
   apiKey: process.env.CAMPAIGN_SERVICE_API_KEY,
   
-  async createRun(campaignId: string) {
-    return callService(this.url, `/campaigns/${campaignId}/runs`, {
+  async listCampaigns() {
+    return callService(this.url, "/internal/campaigns/all", {
+      method: "GET",
+      apiKey: this.apiKey,
+    });
+  },
+  
+  async getCampaign(campaignId: string, clerkOrgId: string) {
+    return callService(this.url, `/internal/campaigns/${campaignId}`, {
+      method: "GET",
+      apiKey: this.apiKey,
+      clerkOrgId,
+    });
+  },
+  
+  async getCampaignRuns(campaignId: string) {
+    return callService(this.url, `/internal/campaigns/${campaignId}/runs/all`, {
+      method: "GET",
+      apiKey: this.apiKey,
+    });
+  },
+  
+  async createRun(campaignId: string, clerkOrgId: string) {
+    return callService(this.url, `/internal/campaigns/${campaignId}/runs`, {
       method: "POST",
       apiKey: this.apiKey,
-      clerkOrgId: "", // Runs are created by internal scheduler
+      clerkOrgId,
     });
   },
   
   async updateRun(runId: string, data: { status?: string; errorMessage?: string }) {
-    return callService(this.url, `/runs/${runId}`, {
+    return callService(this.url, `/internal/runs/${runId}`, {
       method: "PATCH",
       body: data,
       apiKey: this.apiKey,
-      clerkOrgId: "",
     });
   },
 };
