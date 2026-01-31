@@ -382,6 +382,85 @@ router.patch("/runs/:id", async (req, res) => {
 });
 
 /**
+ * GET /internal/campaigns/:id/debug - Get detailed debug info for a campaign
+ * Shows campaign details, all runs with status/errors, and pipeline state
+ */
+router.get("/campaigns/:id/debug", serviceAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verify campaign ownership
+    const campaign = await db.query.campaigns.findFirst({
+      where: and(
+        eq(campaigns.id, id),
+        eq(campaigns.orgId, req.orgId!)
+      ),
+    });
+
+    if (!campaign) {
+      return res.status(404).json({ error: "Campaign not found" });
+    }
+
+    // Get all runs for this campaign with full details
+    const runs = await db.query.campaignRuns.findMany({
+      where: eq(campaignRuns.campaignId, id),
+      orderBy: (runs, { desc }) => [desc(runs.createdAt)],
+    });
+
+    // Build debug response
+    const debug = {
+      campaign: {
+        id: campaign.id,
+        name: campaign.name,
+        status: campaign.status,
+        recurrence: campaign.recurrence,
+        createdAt: campaign.createdAt,
+        updatedAt: campaign.updatedAt,
+        targeting: {
+          personTitles: campaign.personTitles,
+          locations: campaign.organizationLocations,
+          industries: campaign.qOrganizationKeywordTags,
+        },
+        budget: {
+          daily: campaign.maxBudgetDailyUsd,
+          weekly: campaign.maxBudgetWeeklyUsd,
+          monthly: campaign.maxBudgetMonthlyUsd,
+        },
+      },
+      runs: runs.map(run => ({
+        id: run.id,
+        status: run.status,
+        startedAt: run.runStartedAt,
+        endedAt: run.runEndedAt,
+        createdAt: run.createdAt,
+        errorMessage: run.errorMessage,
+        durationMs: run.runStartedAt && run.runEndedAt 
+          ? new Date(run.runEndedAt).getTime() - new Date(run.runStartedAt).getTime()
+          : null,
+      })),
+      summary: {
+        totalRuns: runs.length,
+        completed: runs.filter(r => r.status === "completed").length,
+        failed: runs.filter(r => r.status === "failed").length,
+        running: runs.filter(r => r.status === "running").length,
+        pending: runs.filter(r => r.status === "pending").length,
+        lastRunAt: runs[0]?.createdAt || null,
+        errors: runs.filter(r => r.errorMessage).map(r => ({
+          runId: r.id,
+          error: r.errorMessage,
+          at: r.runEndedAt || r.createdAt,
+        })),
+      },
+    };
+
+    res.json(debug);
+  } catch (error) {
+    console.error("Get campaign debug error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
  * GET /internal/campaigns/:id/stats - Get campaign statistics
  * Aggregates stats from all services (apollo, emailgen, postmark)
  */

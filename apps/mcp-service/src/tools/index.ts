@@ -74,6 +74,12 @@ export const toolDefinitions = {
       campaign_id: z.string().describe("Campaign ID to get stats for"),
     }),
   },
+  mcpfactory_campaign_debug: {
+    description: "Get detailed debug info for a campaign: status, all runs, errors, and pipeline state",
+    schema: z.object({
+      campaign_id: z.string().describe("Campaign ID to debug"),
+    }),
+  },
 };
 
 // Tool handlers
@@ -102,6 +108,9 @@ export async function handleToolCall(
 
     case "mcpfactory_campaign_stats":
       return handleCampaignStats(args);
+
+    case "mcpfactory_campaign_debug":
+      return handleCampaignDebug(args);
 
     case "mcpfactory_stop_campaign":
       return handleStopCampaign(args);
@@ -245,6 +254,16 @@ async function handleListCampaigns(args: Record<string, unknown>) {
 
 async function handleCampaignStats(args: Record<string, unknown>) {
   const result = await callApi(`/v1/campaigns/${args.campaign_id}/stats`);
+
+  if (result.error) {
+    throw new Error(result.error);
+  }
+
+  return result.data;
+}
+
+async function handleCampaignDebug(args: Record<string, unknown>) {
+  const result = await callApi(`/v1/campaigns/${args.campaign_id}/debug`);
 
   if (result.error) {
     throw new Error(result.error);

@@ -184,4 +184,26 @@ router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: Authent
   }
 });
 
+/**
+ * GET /v1/campaigns/:id/debug
+ * Get detailed debug info for a campaign
+ */
+router.get("/campaigns/:id/debug", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await callService(
+      services.campaign,
+      `/internal/campaigns/${id}/debug`,
+      {
+        headers: { "x-clerk-org-id": req.orgId! },
+      }
+    );
+    res.json(result);
+  } catch (error: any) {
+    console.error("Get campaign debug error:", error);
+    res.status(500).json({ error: error.message || "Failed to get campaign debug info" });
+  }
+});
+
 export default router;
