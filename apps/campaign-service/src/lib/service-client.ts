@@ -6,6 +6,11 @@ const APOLLO_SERVICE_URL = process.env.APOLLO_SERVICE_URL || "http://localhost:3
 const EMAILGENERATION_SERVICE_URL = process.env.EMAILGENERATION_SERVICE_URL || "http://localhost:3004";
 const POSTMARK_SERVICE_URL = process.env.POSTMARK_SERVICE_URL || "http://localhost:3006";
 
+// Service API keys for inter-service auth
+const APOLLO_SERVICE_API_KEY = process.env.APOLLO_SERVICE_API_KEY;
+const EMAILGENERATION_SERVICE_API_KEY = process.env.EMAILGENERATION_SERVICE_API_KEY;
+const POSTMARK_SERVICE_API_KEY = process.env.POSTMARK_SERVICE_API_KEY;
+
 interface ApolloStats {
   leadsFound: number;
   searchesCount: number;
@@ -45,14 +50,20 @@ export interface AggregatedStats {
   repliesUnsubscribe: number;
 }
 
-async function fetchStats<T>(url: string, clerkOrgId: string, body: unknown): Promise<T | null> {
+async function fetchStats<T>(url: string, clerkOrgId: string, body: unknown, apiKey?: string): Promise<T | null> {
   try {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "X-Clerk-Org-Id": clerkOrgId,
+    };
+    
+    if (apiKey) {
+      headers["X-API-Key"] = apiKey;
+    }
+    
     const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Clerk-Org-Id": clerkOrgId,
-      },
+      headers,
       body: JSON.stringify(body),
     });
 
@@ -94,9 +105,9 @@ export async function getAggregatedStats(
 
   // Fetch stats from all services in parallel
   const [apolloStats, emailGenStats, postmarkStats] = await Promise.all([
-    fetchStats<ApolloStats>(`${APOLLO_SERVICE_URL}/stats`, clerkOrgId, body),
-    fetchStats<EmailGenStats>(`${EMAILGENERATION_SERVICE_URL}/stats`, clerkOrgId, body),
-    fetchStats<PostmarkStats>(`${POSTMARK_SERVICE_URL}/stats`, clerkOrgId, body),
+    fetchStats<ApolloStats>(`${APOLLO_SERVICE_URL}/stats`, clerkOrgId, body, APOLLO_SERVICE_API_KEY),
+    fetchStats<EmailGenStats>(`${EMAILGENERATION_SERVICE_URL}/stats`, clerkOrgId, body, EMAILGENERATION_SERVICE_API_KEY),
+    fetchStats<PostmarkStats>(`${POSTMARK_SERVICE_URL}/stats`, clerkOrgId, body, POSTMARK_SERVICE_API_KEY),
   ]);
 
   return {

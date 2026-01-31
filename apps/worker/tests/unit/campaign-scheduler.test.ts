@@ -9,13 +9,15 @@ vi.mock("../../src/lib/service-client.js", () => ({
   },
 }));
 
-// Mock the queues
+// Mock the queues - we need to create a trackable mock
+const mockQueueAdd = vi.fn().mockResolvedValue({ id: "job-123" });
+
 vi.mock("../../src/queues/index.js", () => ({
-  getQueues: vi.fn(() => ({
+  getQueues: () => ({
     "campaign-run": {
-      add: vi.fn().mockResolvedValue({ id: "job-123" }),
+      add: mockQueueAdd,
     },
-  })),
+  }),
   QUEUE_NAMES: {
     CAMPAIGN_RUN: "campaign-run",
     LEAD_SEARCH: "lead-search",
@@ -31,6 +33,7 @@ vi.mock("../../src/lib/redis.js", () => ({
 
 import { campaignService } from "../../src/lib/service-client.js";
 import { getQueues } from "../../src/queues/index.js";
+import { startCampaignScheduler } from "../../src/schedulers/campaign-scheduler.js";
 
 describe("Campaign Scheduler Logic", () => {
   beforeEach(() => {
@@ -185,6 +188,144 @@ describe("Campaign Scheduler Logic", () => {
 
       expect(hasRunThisMonth([{ createdAt: lastMonth.toISOString() }])).toBe(false);
       expect(hasRunThisMonth([{ createdAt: thisMonth.toISOString() }])).toBe(true);
+    });
+  });
+
+  describe("startCampaignScheduler integration", () => {
+    beforeEach(() => {
+      mockQueueAdd.mockClear();
+    });
+
+    it("should queue oneoff campaign with no existing runs", async () => {
+      const campaigns = [
+        {
+          id: "camp-new",
+          orgId: "org-uuid",
+          clerkOrgId: "org_clerk123",
+          status: "ongoing",
+          recurrence: "oneoff",
+          createdAt: new Date().toISOString(),
+        },
+      ];
+
+      vi.mocked(campaignService.listCampaigns).mockResolvedValue({ campaigns });
+      vi.mocked(campaignService.getCampaignRuns).mockResolvedValue({ runs: [] });
+
+      // Start scheduler with very short interval
+      const interval = startCampaignScheduler(100000); // Long interval, we test first poll
+
+      // Wait for first poll to complete
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Stop scheduler
+      clearInterval(interval);
+
+      // Verify queue.add was called with correct data
+      expect(mockQueueAdd).toHaveBeenCalledTimes(1);
+      expect(mockQueueAdd).toHaveBeenCalledWith(
+        expect.stringContaining("campaign-camp-new"),
+        expect.objectContaining({
+          campaignId: "camp-new",
+          clerkOrgId: "org_clerk123",
+        })
+      );
+    });
+
+    it("should NOT queue oneoff campaign with existing runs", async () => {
+      const campaigns = [
+        {
+          id: "camp-existing",
+          orgId: "org-uuid",
+          clerkOrgId: "org_clerk456",
+          status: "ongoing",
+          recurrence: "oneoff",
+          createdAt: new Date().toISOString(),
+        },
+      ];
+
+      const existingRuns = [
+        { id: "run-1", campaignId: "camp-existing", status: "completed", createdAt: new Date().toISOString() },
+      ];
+
+      vi.mocked(campaignService.listCampaigns).mockResolvedValue({ campaigns });
+      vi.mocked(campaignService.getCampaignRuns).mockResolvedValue({ runs: existingRuns });
+
+      const interval = startCampaignScheduler(100000);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      clearInterval(interval);
+
+      // Should NOT have queued because runs already exist
+      expect(mockQueueAdd).not.toHaveBeenCalled();
+    });
+
+    it("should queue daily campaign if no run today", async () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const campaigns = [
+        {
+          id: "camp-daily",
+          orgId: "org-uuid",
+          clerkOrgId: "org_clerk789",
+          status: "ongoing",
+          recurrence: "daily",
+          createdAt: new Date().toISOString(),
+        },
+      ];
+
+      const oldRuns = [
+        { id: "run-old", campaignId: "camp-daily", status: "completed", createdAt: yesterday.toISOString() },
+      ];
+
+      vi.mocked(campaignService.listCampaigns).mockResolvedValue({ campaigns });
+      vi.mocked(campaignService.getCampaignRuns).mockResolvedValue({ runs: oldRuns });
+
+      const interval = startCampaignScheduler(100000);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      clearInterval(interval);
+
+      // Should queue because no run today
+      expect(mockQueueAdd).toHaveBeenCalledTimes(1);
+      expect(mockQueueAdd).toHaveBeenCalledWith(
+        expect.stringContaining("campaign-camp-daily"),
+        expect.objectContaining({
+          campaignId: "camp-daily",
+          clerkOrgId: "org_clerk789",
+        })
+      );
+    });
+
+    it("should handle service errors gracefully", async () => {
+      vi.mocked(campaignService.listCampaigns).mockRejectedValue(new Error("Service unavailable"));
+
+      const interval = startCampaignScheduler(100000);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      clearInterval(interval);
+
+      // Should not crash, queue should not be called
+      expect(mockQueueAdd).not.toHaveBeenCalled();
+    });
+
+    it("should skip stopped campaigns", async () => {
+      const campaigns = [
+        {
+          id: "camp-stopped",
+          orgId: "org-uuid",
+          clerkOrgId: "org_clerk999",
+          status: "stopped",
+          recurrence: "oneoff",
+          createdAt: new Date().toISOString(),
+        },
+      ];
+
+      vi.mocked(campaignService.listCampaigns).mockResolvedValue({ campaigns });
+
+      const interval = startCampaignScheduler(100000);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      clearInterval(interval);
+
+      // Should not queue stopped campaigns
+      expect(mockQueueAdd).not.toHaveBeenCalled();
     });
   });
 });
