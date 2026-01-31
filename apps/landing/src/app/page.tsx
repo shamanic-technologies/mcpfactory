@@ -301,10 +301,14 @@ export default function Home() {
                 1
               </div>
               <div>
-                <h3 className="font-display font-bold text-lg text-gray-800">Install the MCP</h3>
-                <code className="text-sm bg-primary-50 text-primary-700 px-3 py-1.5 rounded-lg border border-primary-100">
-                  npx @mcpfactory/sales-outreach
-                </code>
+                <h3 className="font-display font-bold text-lg text-gray-800">Create an account</h3>
+                <p className="text-gray-600">
+                  Sign up at{" "}
+                  <a href={`${DASHBOARD_URL}/sign-up`} className="text-primary-600 hover:underline font-medium">
+                    dashboard.mcpfactory.org
+                  </a>{" "}
+                  and get your API key
+                </p>
               </div>
             </div>
             
@@ -313,8 +317,11 @@ export default function Home() {
                 2
               </div>
               <div>
-                <h3 className="font-display font-bold text-lg text-gray-800">Configure your BYOK keys</h3>
-                <p className="text-gray-600">Add your OpenAI, Apollo, Resend keys in the dashboard</p>
+                <h3 className="font-display font-bold text-lg text-gray-800">Connect your AI</h3>
+                <p className="text-gray-600 mb-2">Add MCP Factory to ChatGPT, Claude, or Cursor:</p>
+                <code className="text-sm bg-primary-50 text-primary-700 px-3 py-1.5 rounded-lg border border-primary-100 block overflow-x-auto">
+                  https://mcp.mcpfactory.org/mcp
+                </code>
               </div>
             </div>
             
@@ -323,10 +330,8 @@ export default function Home() {
                 3
               </div>
               <div>
-                <h3 className="font-display font-bold text-lg text-gray-800">Launch from ChatGPT, Claude, or Cursor</h3>
-                <p className="text-gray-600 italic bg-secondary-50 px-4 py-2 rounded-lg border border-secondary-100">
-                  &quot;Launch a cold email campaign for acme.com, $10/day, 5 days trial, report to ceo@acme.com&quot;
-                </p>
+                <h3 className="font-display font-bold text-lg text-gray-800">Configure BYOK keys (optional)</h3>
+                <p className="text-gray-600">Add your Apollo, Anthropic keys in the dashboard for advanced features</p>
               </div>
             </div>
             
@@ -335,7 +340,19 @@ export default function Home() {
                 4
               </div>
               <div>
-                <h3 className="font-display font-bold text-lg text-gray-800">We do everything else</h3>
+                <h3 className="font-display font-bold text-lg text-gray-800">Tell your AI what to do</h3>
+                <p className="text-gray-600 italic bg-secondary-50 px-4 py-2 rounded-lg border border-secondary-100">
+                  &quot;Launch a cold email campaign for acme.com, $10/day budget, target SaaS founders&quot;
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="w-10 h-10 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold shrink-0 shadow-md">
+                5
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-lg text-gray-800">We handle the rest</h3>
                 <p className="text-gray-600">Lead finding, email generation, sending, A/B testing, optimization, reporting</p>
               </div>
             </div>
