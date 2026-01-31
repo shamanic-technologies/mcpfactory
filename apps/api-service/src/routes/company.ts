@@ -23,7 +23,7 @@ router.post("/company/scrape", authenticate, async (req: AuthenticatedRequest, r
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-API-Key": COMPANY_SERVICE_API_KEY || "",
+        "X-Service-Secret": COMPANY_SERVICE_API_KEY || "",
       },
       body: JSON.stringify({
         url,
@@ -54,7 +54,7 @@ router.get("/company/:id", authenticate, async (req: AuthenticatedRequest, res) 
 
     const response = await fetch(`${COMPANY_SERVICE_URL}/organizations/${id}`, {
       headers: {
-        "X-API-Key": COMPANY_SERVICE_API_KEY || "",
+        "X-Service-Secret": COMPANY_SERVICE_API_KEY || "",
       },
     });
 
