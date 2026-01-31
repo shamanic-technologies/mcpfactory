@@ -40,8 +40,8 @@ export const apolloPeopleSearches = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("idx_searches_org").on(table.orgId),
-    uniqueIndex("idx_searches_run").on(table.campaignRunId),
+    index("idx_searches_org").on(table.orgId),
+    index("idx_searches_run").on(table.campaignRunId),
   ]
 );
 
@@ -85,8 +85,8 @@ export const apolloPeopleEnrichments = pgTable(
   },
   (table) => [
     index("idx_enrichments_org").on(table.orgId),
-    uniqueIndex("idx_enrichments_run").on(table.campaignRunId),
-    uniqueIndex("idx_enrichments_email").on(table.email),
+    index("idx_enrichments_run").on(table.campaignRunId),
+    index("idx_enrichments_email").on(table.email),
   ]
 );
 
