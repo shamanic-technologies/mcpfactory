@@ -16,7 +16,7 @@ const LLM_INSTRUCTIONS = `# MCP Factory Authentication
 Sign up at: https://dashboard.mcpfactory.org/sign-up
 
 ## 2. Get API Key
-Dashboard → Settings → API Key
+Dashboard → API Keys
 Format: mcpf_xxxxxxxxxxxxxxxxxxxx
 
 ## 3. Using the API Key
@@ -28,7 +28,7 @@ Authorization: Bearer mcpf_YOUR_KEY
 X-API-Key: mcpf_YOUR_KEY
 
 ## 4. BYOK Keys (Optional)
-Dashboard → Settings → Keys
+Dashboard → API Keys
 
 Supported providers:
 - Apollo: For lead search (get key at apollo.io)
@@ -60,7 +60,7 @@ export default function AuthenticationPage() {
         <h2>2. Get Your API Key</h2>
         <p>
           After signing in, go to{" "}
-          <strong>Settings → API Key</strong> to generate your MCP Factory API
+          <strong>API Keys</strong> to generate your MCP Factory API
           key.
         </p>
         <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
@@ -89,7 +89,7 @@ export default function AuthenticationPage() {
         <h2>4. Configure BYOK Keys (Optional)</h2>
         <p>
           MCP Factory can use your own API keys for underlying services. Go to{" "}
-          <strong>Settings → Keys</strong> to configure them.
+          <strong>API Keys</strong> to configure them.
         </p>
 
         <h3>Supported Providers</h3>

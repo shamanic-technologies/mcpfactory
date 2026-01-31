@@ -43,8 +43,11 @@ export function startCampaignScheduler(intervalMs: number = 30000): NodeJS.Timeo
       for (const campaign of ongoingCampaigns) {
         // Check if we should run this campaign
         const shouldRun = await shouldRunCampaign(campaign);
+        const alreadyQueued = queuedCampaigns.has(campaign.id);
         
-        if (shouldRun && !queuedCampaigns.has(campaign.id)) {
+        console.log(`[scheduler] Campaign ${campaign.id}: shouldRun=${shouldRun}, alreadyQueued=${alreadyQueued}`);
+        
+        if (shouldRun && !alreadyQueued) {
           console.log(`[scheduler] Queueing campaign ${campaign.id} (${campaign.recurrence}) for org ${campaign.clerkOrgId}`);
           
           // Add to queue
@@ -83,11 +86,15 @@ async function shouldRunCampaign(campaign: Campaign): Promise<boolean> {
     const runsResult = await campaignService.getCampaignRuns(campaign.id) as { runs: CampaignRun[] };
     const runs = runsResult.runs || [];
     
+    console.log(`[scheduler] Campaign ${campaign.id} has ${runs.length} runs, recurrence=${campaign.recurrence}`);
+    
     // Check based on recurrence
     switch (campaign.recurrence) {
       case "oneoff":
         // Only run if no runs exist yet
-        return runs.length === 0;
+        const shouldRun = runs.length === 0;
+        console.log(`[scheduler] oneoff check: runs.length=${runs.length}, shouldRun=${shouldRun}`);
+        return shouldRun;
         
       case "daily":
         // Run if no run today

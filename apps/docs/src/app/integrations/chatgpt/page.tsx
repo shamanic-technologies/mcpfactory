@@ -37,7 +37,7 @@ const LLM_INSTRUCTIONS = `# MCP Factory + ChatGPT Integration
 "Check my MCPFactory connection status"
 
 ## Get API Key
-https://dashboard.mcpfactory.org/settings/api`;
+https://dashboard.mcpfactory.org/api-keys`;
 
 export default function ChatGPTIntegrationPage() {
   return (
@@ -153,7 +153,7 @@ How many emails sent, opened, and replied?"`}</code>
         <h3>Authorization errors</h3>
         <ul>
           <li>Make sure the header is <code>Authorization: Bearer YOUR_KEY</code></li>
-          <li>Verify your API key at <a href="https://dashboard.mcpfactory.org/settings/api">dashboard.mcpfactory.org</a></li>
+          <li>Verify your API key at <a href="https://dashboard.mcpfactory.org/api-keys">dashboard.mcpfactory.org/api-keys</a></li>
         </ul>
 
         <h2>Next Steps</h2>

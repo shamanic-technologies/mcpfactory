@@ -43,7 +43,7 @@ Restart Cursor after saving.
 "What's the status of my sales campaign?"
 
 ## Get API Key
-https://dashboard.mcpfactory.org/settings/api`;
+https://dashboard.mcpfactory.org/api-keys`;
 
 export default function CursorIntegrationPage() {
   return (
@@ -77,7 +77,7 @@ export default function CursorIntegrationPage() {
         </pre>
         <p>
           Replace <code>YOUR_API_KEY</code> with your MCP Factory API key from{" "}
-          <a href="https://dashboard.mcpfactory.org/settings/api">your dashboard</a>.
+          <a href="https://dashboard.mcpfactory.org/api-keys">your dashboard</a>.
         </p>
         <p><strong>Restart Cursor</strong> after saving the configuration.</p>
 
@@ -172,7 +172,7 @@ How many emails sent, opened, and replied?"`}</code>
         <ul>
           <li>Verify your API key is correct</li>
           <li>Ensure the Authorization header format is <code>Bearer YOUR_KEY</code></li>
-          <li>Check your key at <a href="https://dashboard.mcpfactory.org/settings/api">dashboard.mcpfactory.org</a></li>
+          <li>Check your key at <a href="https://dashboard.mcpfactory.org/api-keys">dashboard.mcpfactory.org/api-keys</a></li>
         </ul>
 
         <h2>Next Steps</h2>

@@ -51,7 +51,7 @@ claude mcp add mcpfactory --transport http https://mcp.mcpfactory.org/mcp
 - mcpfactory_campaign_stats: Get performance
 
 ## Get API Key
-https://dashboard.mcpfactory.org/settings/api`;
+https://dashboard.mcpfactory.org/api-keys`;
 
 export default function ClaudeIntegrationPage() {
   return (
@@ -193,7 +193,7 @@ business, products, and target audience"`}</code>
         <ul>
           <li>Check your API key is valid</li>
           <li>Ensure the Bearer token format is correct</li>
-          <li>Verify at <a href="https://dashboard.mcpfactory.org/settings/api">dashboard.mcpfactory.org</a></li>
+          <li>Verify at <a href="https://dashboard.mcpfactory.org/api-keys">dashboard.mcpfactory.org/api-keys</a></li>
         </ul>
 
         <h2>Next Steps</h2>

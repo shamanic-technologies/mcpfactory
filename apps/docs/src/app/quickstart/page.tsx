@@ -16,10 +16,10 @@ const LLM_INSTRUCTIONS = `# MCP Factory Quick Start
 Sign up at: https://dashboard.mcpfactory.org/sign-up
 
 ## 2. Get API Key
-Dashboard → Settings → API Key
+Dashboard → API Keys
 
 ## 3. Configure BYOK Keys (Optional)
-Dashboard → Settings → Keys:
+Dashboard → API Keys:
 - Apollo: For lead search
 - Anthropic: For AI email generation
 
@@ -70,13 +70,13 @@ export default function QuickstartPage() {
         <h2>2. Get Your API Key</h2>
         <p>
           In the dashboard, go to{" "}
-          <strong>Settings → API Key</strong> and copy your MCP Factory API key.
+          <strong>API Keys</strong> and copy your MCP Factory API key.
         </p>
 
         <h2>3. Configure BYOK Keys (Optional)</h2>
         <p>
           For advanced features, add your own API keys in{" "}
-          <strong>Settings → Keys</strong>:
+          <strong>API Keys</strong>:
         </p>
         <ul>
           <li><strong>Apollo</strong> - For lead search and enrichment</li>

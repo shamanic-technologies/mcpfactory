@@ -43,7 +43,7 @@ POST /v1/campaigns - Create campaign
 GET /v1/campaigns - List campaigns
 GET /v1/campaigns/:id/stats - Get campaign stats
 
-Get API key at: https://dashboard.mcpfactory.org/settings/api`;
+Get API key at: https://dashboard.mcpfactory.org/api-keys`;
 
 export default function ApiOverviewPage() {
   return (
@@ -70,8 +70,8 @@ export default function ApiOverviewPage() {
         </pre>
         <p>
           Get your API key at{" "}
-          <a href="https://dashboard.mcpfactory.org/settings/api">
-            dashboard.mcpfactory.org/settings/api
+          <a href="https://dashboard.mcpfactory.org/api-keys">
+            dashboard.mcpfactory.org/api-keys
           </a>
         </p>
 

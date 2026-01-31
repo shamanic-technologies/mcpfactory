@@ -47,7 +47,7 @@ Add to .cursor/mcp.json:
 Include API key as Bearer token:
 Authorization: Bearer YOUR_API_KEY
 
-Get your API key at: https://dashboard.mcpfactory.org/settings/api`;
+Get your API key at: https://dashboard.mcpfactory.org/api-keys`;
 
 export default function McpUsagePage() {
   return (
@@ -197,8 +197,8 @@ Run for 5 days as a trial."`}</code>
         </pre>
         <p>
           Get your API key at{" "}
-          <a href="https://dashboard.mcpfactory.org/settings/api">
-            dashboard.mcpfactory.org/settings/api
+          <a href="https://dashboard.mcpfactory.org/api-keys">
+            dashboard.mcpfactory.org/api-keys
           </a>
         </p>
 
