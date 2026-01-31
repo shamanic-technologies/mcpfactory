@@ -43,22 +43,27 @@ export function WaitlistForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="your@email.com"
-        required
-        className="flex-1 px-4 py-3 rounded-full border border-gray-200 focus:border-primary-300 focus:ring-2 focus:ring-primary-100 outline-none transition shadow-sm"
-      />
-      <button
-        type="submit"
-        disabled={status === "loading"}
-        className="px-6 py-3 bg-primary-500 text-white rounded-full font-medium hover:bg-primary-600 transition disabled:opacity-50 shadow-md hover:shadow-lg"
-      >
-        {status === "loading" ? "Joining..." : "Join Waitlist"}
-      </button>
-    </form>
+    <div className="max-w-md mx-auto">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="your@email.com"
+          required
+          className="flex-1 px-4 py-3 rounded-full border border-gray-200 focus:border-primary-300 focus:ring-2 focus:ring-primary-100 outline-none transition shadow-sm"
+        />
+        <button
+          type="submit"
+          disabled={status === "loading"}
+          className="px-6 py-3 bg-primary-500 text-white rounded-full font-medium hover:bg-primary-600 transition disabled:opacity-50 shadow-md hover:shadow-lg"
+        >
+          {status === "loading" ? "Joining..." : "Join Waitlist"}
+        </button>
+      </form>
+      {status === "error" && (
+        <p className="text-red-500 text-sm mt-2 text-center">{errorMessage}</p>
+      )}
+    </div>
   );
 }
