@@ -21,12 +21,16 @@ interface CampaignRun {
   createdAt: string;
 }
 
-// Track campaigns we've already queued to avoid duplicates
-const queuedCampaigns = new Set<string>();
+// Track campaigns currently being processed to avoid duplicate queue entries
+// This is a short-term lock, NOT a permanent record (database is source of truth)
+const processingCampaigns = new Set<string>();
 
 /**
  * Campaign Scheduler
  * Polls for ongoing campaigns that need to be executed and queues them
+ * 
+ * Source of truth for "has run" is the database (campaign_runs table).
+ * The in-memory Set only prevents duplicate queueing during the same poll cycle.
  */
 export function startCampaignScheduler(intervalMs: number = 30000): NodeJS.Timeout {
   console.log(`[scheduler] Starting campaign scheduler (interval: ${intervalMs}ms)`);
@@ -41,14 +45,22 @@ export function startCampaignScheduler(intervalMs: number = 30000): NodeJS.Timeo
       console.log(`[scheduler] Found ${ongoingCampaigns.length} ongoing campaigns`);
 
       for (const campaign of ongoingCampaigns) {
-        // Check if we should run this campaign
+        // Skip if currently being processed (prevents duplicate queue entries)
+        if (processingCampaigns.has(campaign.id)) {
+          console.log(`[scheduler] Campaign ${campaign.id}: currently processing, skipping`);
+          continue;
+        }
+        
+        // Check if we should run this campaign (based on database runs)
         const shouldRun = await shouldRunCampaign(campaign);
-        const alreadyQueued = queuedCampaigns.has(campaign.id);
         
-        console.log(`[scheduler] Campaign ${campaign.id}: shouldRun=${shouldRun}, alreadyQueued=${alreadyQueued}`);
+        console.log(`[scheduler] Campaign ${campaign.id}: shouldRun=${shouldRun}`);
         
-        if (shouldRun && !alreadyQueued) {
+        if (shouldRun) {
           console.log(`[scheduler] Queueing campaign ${campaign.id} (${campaign.recurrence}) for org ${campaign.clerkOrgId}`);
+          
+          // Mark as processing before adding to queue
+          processingCampaigns.add(campaign.id);
           
           // Add to queue
           const queues = getQueues();
@@ -60,9 +72,13 @@ export function startCampaignScheduler(intervalMs: number = 30000): NodeJS.Timeo
             } as CampaignRunJobData
           );
           
-          // Mark as queued (for oneoff, permanently; for recurring, temporarily)
+          // For oneoff: remove from processing after 5 minutes (allows retry on failure)
+          // For recurring: remove immediately so next recurrence can be checked
           if (campaign.recurrence === "oneoff") {
-            queuedCampaigns.add(campaign.id);
+            setTimeout(() => processingCampaigns.delete(campaign.id), 5 * 60 * 1000);
+          } else {
+            // For recurring campaigns, we rely on the database check each poll
+            processingCampaigns.delete(campaign.id);
           }
         }
       }
