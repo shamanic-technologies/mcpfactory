@@ -68,7 +68,7 @@ export function CampaignSidebar({ campaignId, stats }: CampaignSidebarProps) {
       label: "Emails",
       href: `${basePath}/emails`,
       icon: <EmailsIcon />,
-      badge: stats?.emailsSent,
+      badge: stats?.emailsGenerated || stats?.emailsSent,
     },
     {
       id: "replies",
