@@ -112,7 +112,7 @@ describe("Scheduler Endpoints", () => {
         .expect(200);
 
       expect(res.body.run.status).toBe("completed");
-      expect(res.body.run.completedAt).toBeDefined();
+      expect(res.body.run.runEndedAt).toBeDefined();
     });
 
     it("should update run status to failed with error message", async () => {

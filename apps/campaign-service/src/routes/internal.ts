@@ -338,7 +338,9 @@ router.post("/campaigns/:id/runs", async (req, res) => {
       .insert(campaignRuns)
       .values({
         campaignId: id,
+        orgId: campaign.orgId,
         status: "running",
+        runStartedAt: new Date(),
       })
       .returning();
 
@@ -364,7 +366,7 @@ router.patch("/runs/:id", async (req, res) => {
         status,
         errorMessage,
         updatedAt: new Date(),
-        ...(status === "completed" || status === "failed" ? { completedAt: new Date() } : {}),
+        ...(status === "completed" || status === "failed" ? { runEndedAt: new Date() } : {}),
       })
       .where(eq(campaignRuns.id, id))
       .returning();
