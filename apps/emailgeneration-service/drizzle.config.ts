@@ -5,6 +5,6 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.EMAILGEN_SERVICE_DATABASE_URL!,
+    url: process.env.EMAILGENERATION_SERVICE_DATABASE_URL!,
   },
 });
