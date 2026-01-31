@@ -1,0 +1,26 @@
+name: Test Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/worker/**"
+      - ".github/workflows/test-worker.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/worker/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install -g pnpm
+      - run: pnpm install
+      - run: pnpm --filter @mcpfactory/worker test
+        env:
+          SERVICE_SECRET_KEY: test-secret

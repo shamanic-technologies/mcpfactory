@@ -1,0 +1,27 @@
+name: Test Apollo Service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/apollo-service/**"
+      - ".github/workflows/test-apollo-service.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/apollo-service/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install -g pnpm
+      - run: pnpm install
+      - run: pnpm --filter @mcpfactory/apollo-service test
+        env:
+          APOLLO_SERVICE_DATABASE_URL: ${{ secrets.APOLLO_SERVICE_DATABASE_URL }}
+          SERVICE_SECRET_KEY: test-secret

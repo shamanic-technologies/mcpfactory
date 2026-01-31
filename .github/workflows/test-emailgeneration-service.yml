@@ -1,0 +1,27 @@
+name: Test EmailGeneration Service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/emailgeneration-service/**"
+      - ".github/workflows/test-emailgeneration-service.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/emailgeneration-service/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install -g pnpm
+      - run: pnpm install
+      - run: pnpm --filter @mcpfactory/emailgeneration-service test
+        env:
+          EMAILGEN_SERVICE_DATABASE_URL: ${{ secrets.EMAILGEN_SERVICE_DATABASE_URL }}
+          SERVICE_SECRET_KEY: test-secret

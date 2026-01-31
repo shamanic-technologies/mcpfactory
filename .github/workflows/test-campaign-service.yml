@@ -1,0 +1,27 @@
+name: Test Campaign Service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/campaign-service/**"
+      - ".github/workflows/test-campaign-service.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/campaign-service/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install -g pnpm
+      - run: pnpm install
+      - run: pnpm --filter @mcpfactory/campaign-service test
+        env:
+          CAMPAIGN_SERVICE_DATABASE_URL: ${{ secrets.CAMPAIGN_SERVICE_DATABASE_URL }}
+          SERVICE_SECRET_KEY: test-secret

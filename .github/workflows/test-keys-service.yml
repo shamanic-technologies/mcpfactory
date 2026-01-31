@@ -1,0 +1,28 @@
+name: Test Keys Service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/keys-service/**"
+      - ".github/workflows/test-keys-service.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/keys-service/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install -g pnpm
+      - run: pnpm install
+      - run: pnpm --filter @mcpfactory/keys-service test
+        env:
+          KEYS_SERVICE_DATABASE_URL: ${{ secrets.KEYS_SERVICE_DATABASE_URL }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
