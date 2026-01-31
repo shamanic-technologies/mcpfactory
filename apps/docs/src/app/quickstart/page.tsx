@@ -2,7 +2,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Quick Start",
-  description: "Get started with MCP Factory in 5 minutes. Install your first MCP and launch an automated campaign.",
+  description: "Get started with MCP Factory in 5 minutes. Connect from ChatGPT, Claude, or Cursor and launch your first campaign.",
   openGraph: {
     title: "Quick Start | MCP Factory Docs",
     description: "Get started with MCP Factory in 5 minutes.",
@@ -20,65 +20,94 @@ export default function QuickstartPage() {
       <div className="prose prose-lg">
         <h2>1. Create an Account</h2>
         <p>
-          Go to <a href="https://dashboard.mcpfactory.org/sign-up">dashboard.mcpfactory.org/sign-up</a> and
-          create your account.
+          Go to{" "}
+          <a href="https://dashboard.mcpfactory.org/sign-up">
+            dashboard.mcpfactory.org/sign-up
+          </a>{" "}
+          and create your account.
         </p>
 
         <h2>2. Get Your API Key</h2>
         <p>
-          In the dashboard, go to <strong>API Key</strong> and copy your MCP Factory API key.
-          This key identifies you across all MCPs.
+          In the dashboard, go to{" "}
+          <strong>Settings → API Key</strong> and copy your MCP Factory API key.
         </p>
 
-        <h2>3. Configure BYOK Keys</h2>
+        <h2>3. Configure BYOK Keys (Optional)</h2>
         <p>
-          Go to <strong>Sales Outreach</strong> in the sidebar and add your BYOK keys:
+          For advanced features, add your own API keys in{" "}
+          <strong>Settings → Keys</strong>:
         </p>
         <ul>
-          <li><strong>OpenAI</strong> - For AI-powered email generation</li>
-          <li><strong>Apollo</strong> - For lead finding and enrichment</li>
-          <li><strong>Resend</strong> - For email sending</li>
+          <li><strong>Apollo</strong> - For lead search and enrichment</li>
+          <li><strong>Anthropic</strong> - For AI-powered email generation</li>
         </ul>
 
-        <h2>4. Install the MCP</h2>
-        <p>Add to your Claude Desktop or Cursor config:</p>
+        <h2>4. Connect Your AI Client</h2>
+
+        <h3>ChatGPT</h3>
+        <ol>
+          <li>Go to Settings → Connectors</li>
+          <li>Add custom connector with URL: <code>https://mcp.mcpfactory.org/mcp</code></li>
+          <li>Add your API key for authentication</li>
+        </ol>
+
+        <h3>Claude.ai</h3>
+        <ol>
+          <li>Go to Settings → Connectors</li>
+          <li>Add the MCP URL: <code>https://mcp.mcpfactory.org/mcp</code></li>
+          <li>Configure your API key</li>
+        </ol>
+
+        <h3>Cursor</h3>
+        <p>Add to <code>.cursor/mcp.json</code>:</p>
         <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
           <code>{`{
   "mcpServers": {
-    "sales-outreach": {
-      "command": "npx",
-      "args": ["@mcpfactory/sales-outreach"],
-      "env": {
-        "MCPFACTORY_API_KEY": "mcpf_your_key_here"
+    "mcpfactory-sales": {
+      "url": "https://mcp.mcpfactory.org/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
       }
     }
   }
 }`}</code>
         </pre>
 
-        <h2>5. Launch Your First Campaign</h2>
-        <p>In Claude or Cursor, just say:</p>
+        <h2>5. Test the Connection</h2>
+        <p>In your AI client, ask:</p>
+        <blockquote>&quot;Check my MCPFactory connection status&quot;</blockquote>
+        <p>
+          The AI will call <code>mcpfactory_status</code> and confirm your
+          connection is working.
+        </p>
+
+        <h2>6. Launch Your First Campaign</h2>
+        <p>Just describe what you want in natural language:</p>
         <blockquote>
-          "Launch a cold email campaign for mybrand.com, $10/day budget, 5 days trial"
+          &quot;Launch a cold email campaign for mybrand.com, targeting CTOs at SaaS
+          companies. $10/day budget, 5 days trial.&quot;
         </blockquote>
 
-        <p>That's it! The MCP will:</p>
+        <p>The MCP will:</p>
         <ol>
-          <li>Analyze your website</li>
-          <li>Identify your ideal customer profile</li>
+          <li>Scrape your website to understand your business</li>
           <li>Find relevant leads via Apollo</li>
-          <li>Generate personalized emails</li>
-          <li>Send with proper deliverability</li>
-          <li>Report results to you</li>
+          <li>Generate personalized emails with AI</li>
+          <li>Send emails and track responses</li>
+          <li>Qualify replies and notify you of interested prospects</li>
         </ol>
 
-        <h2>What's Next?</h2>
+        <h2>What&apos;s Next?</h2>
         <ul>
           <li>
-            <a href="/sales-outreach">Sales Outreach Documentation</a> - Full API reference
+            <a href="/mcp">MCP Usage Guide</a> - Full MCP documentation
           </li>
           <li>
-            <a href="/api">API Reference</a> - Direct API access
+            <a href="/api">API Reference</a> - Direct REST API access
+          </li>
+          <li>
+            <a href="/sales-outreach">Sales Outreach</a> - Campaign configuration
           </li>
         </ul>
       </div>
