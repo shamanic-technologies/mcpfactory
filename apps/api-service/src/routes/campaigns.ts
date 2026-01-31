@@ -206,4 +206,26 @@ router.get("/campaigns/:id/debug", authenticate, requireOrg, async (req: Authent
   }
 });
 
+/**
+ * GET /v1/campaigns/:id/leads
+ * Get all leads for a campaign
+ */
+router.get("/campaigns/:id/leads", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await callService(
+      services.campaign,
+      `/internal/campaigns/${id}/leads`,
+      {
+        headers: { "x-clerk-org-id": req.orgId! },
+      }
+    );
+    res.json(result);
+  } catch (error: any) {
+    console.error("Get campaign leads error:", error);
+    res.status(500).json({ error: error.message || "Failed to get campaign leads" });
+  }
+});
+
 export default router;

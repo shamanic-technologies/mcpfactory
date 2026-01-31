@@ -8,7 +8,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { campaigns, campaignRuns, orgs } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
-import { getAggregatedStats } from "../lib/service-client.js";
+import { getAggregatedStats, getLeadsForCampaignRuns } from "../lib/service-client.js";
 
 const router = Router();
 
@@ -516,6 +516,56 @@ router.get("/campaigns/:id/stats", serviceAuth, async (req: AuthenticatedRequest
     res.json(stats);
   } catch (error) {
     console.error("Get campaign stats error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * GET /internal/campaigns/:id/leads - Get all leads for a campaign
+ * Aggregates leads from apollo-service across all campaign runs
+ */
+router.get("/campaigns/:id/leads", serviceAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verify campaign ownership
+    const campaign = await db.query.campaigns.findFirst({
+      where: and(
+        eq(campaigns.id, id),
+        eq(campaigns.orgId, req.orgId!)
+      ),
+    });
+
+    if (!campaign) {
+      return res.status(404).json({ error: "Campaign not found" });
+    }
+
+    // Get all runs for this campaign
+    const runs = await db.query.campaignRuns.findMany({
+      where: eq(campaignRuns.campaignId, id),
+    });
+
+    const campaignRunIds = runs.map(r => r.id);
+
+    // Fetch leads from apollo-service
+    const leads = await getLeadsForCampaignRuns(campaignRunIds, req.clerkOrgId!);
+
+    // Map to expected format
+    const mappedLeads = leads.map(lead => ({
+      id: lead.id,
+      firstName: lead.firstName,
+      lastName: lead.lastName,
+      email: lead.email,
+      title: lead.title,
+      organizationName: lead.organizationName,
+      linkedinUrl: lead.linkedinUrl,
+      status: "found", // Default status since we don't track this yet
+      createdAt: lead.createdAt,
+    }));
+
+    res.json({ leads: mappedLeads });
+  } catch (error) {
+    console.error("Get campaign leads error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -80,6 +80,65 @@ async function fetchStats<T>(url: string, clerkOrgId: string, body: unknown, api
   }
 }
 
+export interface LeadData {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  title: string | null;
+  organizationName: string | null;
+  linkedinUrl: string | null;
+  createdAt: string;
+}
+
+async function fetchData<T>(url: string, clerkOrgId: string, apiKey?: string): Promise<T | null> {
+  try {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "X-Clerk-Org-Id": clerkOrgId,
+    };
+    
+    if (apiKey) {
+      headers["X-API-Key"] = apiKey;
+    }
+    
+    const response = await fetch(url, { headers });
+
+    if (!response.ok) {
+      console.warn(`Data fetch failed: ${url} - ${response.status}`);
+      return null;
+    }
+
+    return await response.json() as T;
+  } catch (error) {
+    console.warn(`Data fetch error: ${url}`, error);
+    return null;
+  }
+}
+
+export async function getLeadsForCampaignRuns(
+  campaignRunIds: string[],
+  clerkOrgId: string
+): Promise<LeadData[]> {
+  if (campaignRunIds.length === 0) return [];
+
+  const allLeads: LeadData[] = [];
+
+  // Fetch leads for each campaign run from apollo-service
+  for (const runId of campaignRunIds) {
+    const result = await fetchData<{ enrichments: LeadData[] }>(
+      `${APOLLO_SERVICE_URL}/enrichments/${runId}`,
+      clerkOrgId,
+      APOLLO_SERVICE_API_KEY
+    );
+    if (result?.enrichments) {
+      allLeads.push(...result.enrichments);
+    }
+  }
+
+  return allLeads;
+}
+
 export async function getAggregatedStats(
   campaignRunIds: string[],
   clerkOrgId: string
