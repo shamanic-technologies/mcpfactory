@@ -111,3 +111,36 @@ export async function deleteByokKey(
     method: "DELETE",
   });
 }
+
+// Campaigns
+export interface Campaign {
+  id: string;
+  name: string;
+  status: string;
+  personTitles: string[] | null;
+  organizationLocations: string[] | null;
+  maxBudgetDailyUsd: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CampaignStats {
+  campaignId: string;
+  leadsFound: number;
+  emailsGenerated: number;
+  emailsSent: number;
+  emailsOpened: number;
+  emailsClicked: number;
+  emailsReplied: number;
+  emailsBounced: number;
+}
+
+export async function listCampaigns(token: string): Promise<{ campaigns: Campaign[] }> {
+  return apiCall<{ campaigns: Campaign[] }>("/campaigns", { token });
+}
+
+export async function getCampaignStats(token: string, campaignId: string): Promise<CampaignStats> {
+  return apiCall<CampaignStats>(`/campaigns/${campaignId}/stats`, { token });
+}

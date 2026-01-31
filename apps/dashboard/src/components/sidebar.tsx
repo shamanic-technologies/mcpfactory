@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { StatusIndicator } from "./status-indicator";
+import UseAnimations from "react-useanimations";
+import home2 from "react-useanimations/lib/home2";
+import lock from "react-useanimations/lib/lock";
+import mail from "react-useanimations/lib/mail";
 
 const MCPS = [
   {
@@ -58,23 +63,51 @@ const MCPS = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 overflow-y-auto">
-      {/* Home link */}
-      <div className="p-2 border-b border-gray-100">
+      {/* Home & API Keys */}
+      <div className="p-2 border-b border-gray-100 space-y-1">
         <Link
           href="/"
           className={`
             flex items-center gap-2 px-3 py-2.5 rounded-xl transition
             ${pathname === "/" ? "bg-primary-50 border border-primary-200" : "hover:bg-gray-50"}
           `}
+          onMouseEnter={() => setHoveredItem("home")}
+          onMouseLeave={() => setHoveredItem(null)}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
+          <UseAnimations
+            animation={home2}
+            size={20}
+            autoplay={hoveredItem === "home"}
+            loop={false}
+            strokeColor={pathname === "/" ? "#0ea5e9" : "#374151"}
+          />
           <span className={`font-medium text-sm ${pathname === "/" ? "text-primary-700" : "text-gray-700"}`}>
             Home
+          </span>
+        </Link>
+        
+        <Link
+          href="/api-keys"
+          className={`
+            flex items-center gap-2 px-3 py-2.5 rounded-xl transition
+            ${pathname === "/api-keys" ? "bg-primary-50 border border-primary-200" : "hover:bg-gray-50"}
+          `}
+          onMouseEnter={() => setHoveredItem("api-keys")}
+          onMouseLeave={() => setHoveredItem(null)}
+        >
+          <UseAnimations
+            animation={lock}
+            size={20}
+            autoplay={hoveredItem === "api-keys"}
+            loop={false}
+            strokeColor={pathname === "/api-keys" ? "#0ea5e9" : "#374151"}
+          />
+          <span className={`font-medium text-sm ${pathname === "/api-keys" ? "text-primary-700" : "text-gray-700"}`}>
+            API Keys
           </span>
         </Link>
       </div>
@@ -89,6 +122,7 @@ export function Sidebar() {
         {MCPS.map((mcp) => {
           const isActive = pathname.startsWith(mcp.href);
           const isAvailable = mcp.available;
+          const isHovered = hoveredItem === mcp.id;
 
           return (
             <Link
@@ -100,13 +134,26 @@ export function Sidebar() {
                 ${!isAvailable ? "opacity-50 cursor-not-allowed" : ""}
               `}
               onClick={(e) => !isAvailable && e.preventDefault()}
+              onMouseEnter={() => isAvailable && setHoveredItem(mcp.id)}
+              onMouseLeave={() => setHoveredItem(null)}
             >
               <div className="flex items-center justify-between">
-                <span
-                  className={`font-medium text-sm ${isActive ? "text-primary-700" : "text-gray-700"}`}
-                >
-                  {mcp.name}
-                </span>
+                <div className="flex items-center gap-2">
+                  {mcp.id === "sales-outreach" && (
+                    <UseAnimations
+                      animation={mail}
+                      size={18}
+                      autoplay={isHovered}
+                      loop={false}
+                      strokeColor={isActive ? "#0ea5e9" : "#374151"}
+                    />
+                  )}
+                  <span
+                    className={`font-medium text-sm ${isActive ? "text-primary-700" : "text-gray-700"}`}
+                  >
+                    {mcp.name}
+                  </span>
+                </div>
                 {!isAvailable && (
                   <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
                     Soon
@@ -116,43 +163,13 @@ export function Sidebar() {
                   <span className="w-2 h-2 bg-primary-500 rounded-full"></span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 mt-0.5">{mcp.description}</p>
+              <p className="text-xs text-gray-500 mt-0.5 ml-6">{mcp.description}</p>
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-2 border-t border-gray-100 space-y-1">
-        <Link
-          href="/api-keys"
-          className={`
-            flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition
-            ${pathname === "/api-keys" ? "bg-primary-50 text-primary-700 border border-primary-200" : "text-gray-600 hover:text-primary-600 hover:bg-gray-50"}
-          `}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-          </svg>
-          API Keys
-        </Link>
-        <Link
-          href="/settings"
-          className={`
-            flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition
-            ${pathname.startsWith("/settings") ? "bg-primary-50 text-primary-700 border border-primary-200" : "text-gray-600 hover:text-primary-600 hover:bg-gray-50"}
-          `}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-            />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          Settings
-        </Link>
+      <div className="p-2 border-t border-gray-100">
         <StatusIndicator />
       </div>
     </aside>

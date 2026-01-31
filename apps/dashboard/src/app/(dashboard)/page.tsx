@@ -67,7 +67,7 @@ export default async function DashboardHome() {
           </li>
           <li className="flex items-start gap-2">
             <span className="bg-primary-200 text-primary-800 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
-            <span>Configure BYOK keys in <Link href="/settings/keys" className="underline">Settings → BYOK Keys</Link> (optional)</span>
+            <span>Configure BYOK keys in <Link href="/mcp/sales-outreach" className="underline">Sales Cold Emails → BYOK Keys</Link></span>
           </li>
           <li className="flex items-start gap-2">
             <span className="bg-primary-200 text-primary-800 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
