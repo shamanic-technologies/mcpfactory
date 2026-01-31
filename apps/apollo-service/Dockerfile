@@ -3,8 +3,8 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Install pnpm 10
-RUN npm install -g pnpm@10
+# Install pnpm
+RUN npm install -g pnpm
 
 # Copy all project files
 COPY . .
