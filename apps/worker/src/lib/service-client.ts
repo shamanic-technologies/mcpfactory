@@ -170,16 +170,15 @@ export const postmarkService = {
   },
 };
 
+// Company service - get already-scraped company info
 export const companyService = {
   url: process.env.COMPANY_SERVICE_URL || "https://company.mcpfactory.org",
   apiKey: process.env.COMPANY_SERVICE_API_KEY,
   
-  async scrape(clerkOrgId: string, url: string) {
-    return callService(this.url, "/scrape", {
-      method: "POST",
-      body: { url },
+  async getByUrl(url: string) {
+    return callService(this.url, `/by-url?url=${encodeURIComponent(url)}`, {
+      method: "GET",
       apiKey: this.apiKey,
-      clerkOrgId,
     });
   },
 };

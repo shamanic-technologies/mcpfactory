@@ -11,9 +11,7 @@ interface CampaignDetails {
   };
 }
 
-interface CompanyScrapeResult {
-  companyName?: string;
-  companyDescription?: string;
+interface CompanyInfo {
   name?: string;
   description?: string;
 }
@@ -24,7 +22,7 @@ interface CompanyScrapeResult {
  * This is the main orchestrator that:
  * 1. Creates a campaign run record
  * 2. Fetches campaign details including clientUrl
- * 3. Scrapes client company info
+ * 3. Gets client company info from company-service (already scraped at campaign creation)
  * 4. Queues lead search jobs with client data
  */
 export function startCampaignRunWorker(): Worker {
@@ -49,19 +47,19 @@ export function startCampaignRunWorker(): Worker {
         
         console.log(`[campaign-run] Campaign ${campaignId} clientUrl: ${clientUrl}`);
         
-        // 3. Scrape client company info if URL provided
+        // 3. Get client company info from company-service (already scraped at campaign creation)
         let clientData = { companyName: "", companyDescription: "" };
         if (clientUrl) {
           try {
-            console.log(`[campaign-run] Scraping client company: ${clientUrl}`);
-            const scrapeResult = await companyService.scrape(clerkOrgId, clientUrl) as CompanyScrapeResult;
+            console.log(`[campaign-run] Getting company info for: ${clientUrl}`);
+            const companyInfo = await companyService.getByUrl(clientUrl) as CompanyInfo;
             clientData = {
-              companyName: scrapeResult.companyName || scrapeResult.name || "",
-              companyDescription: scrapeResult.companyDescription || scrapeResult.description || "",
+              companyName: companyInfo.name || "",
+              companyDescription: companyInfo.description || "",
             };
             console.log(`[campaign-run] Client company: ${clientData.companyName}`);
-          } catch (scrapeError) {
-            console.error(`[campaign-run] Failed to scrape client company:`, scrapeError);
+          } catch (companyError) {
+            console.error(`[campaign-run] Failed to get client company info:`, companyError);
             // Continue with empty client data rather than failing
           }
         }

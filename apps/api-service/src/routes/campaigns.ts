@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
-import { callService, services } from "../lib/service-client.js";
+import { callService, services, callExternalService, externalServices } from "../lib/service-client.js";
 import { buildInternalHeaders } from "../lib/internal-headers.js";
 
 const router = Router();
@@ -28,10 +28,37 @@ router.get("/campaigns", authenticate, requireOrg, async (req: AuthenticatedRequ
 /**
  * POST /v1/campaigns
  * Create a new campaign
+ * 
+ * If clientUrl is provided, scrapes the company info first and stores in company-service
  */
 router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
-    console.log("Create campaign - orgId:", req.orgId, "headers:", buildInternalHeaders(req));
+    console.log("Create campaign - orgId:", req.orgId);
+    
+    // If clientUrl provided, scrape it first so company info is available for runs
+    const { clientUrl } = req.body;
+    if (clientUrl) {
+      console.log("Scraping client company:", clientUrl);
+      try {
+        await callExternalService(
+          externalServices.scraping,
+          "/scrape",
+          {
+            method: "POST",
+            body: {
+              url: clientUrl,
+              sourceService: "mcpfactory",
+              sourceOrgId: req.orgId,
+            },
+          }
+        );
+        console.log("Client company scraped successfully");
+      } catch (scrapeError: any) {
+        console.warn("Failed to scrape client company (continuing anyway):", scrapeError.message);
+        // Don't fail campaign creation if scrape fails - worker will handle missing data
+      }
+    }
+    
     const result = await callService(
       services.campaign,
       "/internal/campaigns",
