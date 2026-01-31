@@ -3,7 +3,7 @@
  */
 
 const APOLLO_SERVICE_URL = process.env.APOLLO_SERVICE_URL || "http://localhost:3003";
-const EMAILGEN_SERVICE_URL = process.env.EMAILGEN_SERVICE_URL || "http://localhost:3004";
+const EMAILGENERATION_SERVICE_URL = process.env.EMAILGENERATION_SERVICE_URL || "http://localhost:3004";
 const POSTMARK_SERVICE_URL = process.env.POSTMARK_SERVICE_URL || "http://localhost:3006";
 
 interface ApolloStats {
@@ -95,7 +95,7 @@ export async function getAggregatedStats(
   // Fetch stats from all services in parallel
   const [apolloStats, emailGenStats, postmarkStats] = await Promise.all([
     fetchStats<ApolloStats>(`${APOLLO_SERVICE_URL}/stats`, clerkOrgId, body),
-    fetchStats<EmailGenStats>(`${EMAILGEN_SERVICE_URL}/stats`, clerkOrgId, body),
+    fetchStats<EmailGenStats>(`${EMAILGENERATION_SERVICE_URL}/stats`, clerkOrgId, body),
     fetchStats<PostmarkStats>(`${POSTMARK_SERVICE_URL}/stats`, clerkOrgId, body),
   ]);
 
