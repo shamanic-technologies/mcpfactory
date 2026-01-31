@@ -420,7 +420,7 @@ importers:
         specifier: ^5.3.0
         version: 5.9.3
 
-  apps/mcp-server:
+  apps/mcp-service:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: ^1.25.0

@@ -1,5 +1,5 @@
 {
-  "name": "@mcpfactory/mcp-server",
+  "name": "@mcpfactory/mcp-service",
   "version": "0.1.0",
   "description": "MCP Server for Sales Cold Emails - From URL to Revenue",
   "private": true,

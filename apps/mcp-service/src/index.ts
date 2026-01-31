@@ -42,7 +42,7 @@ function extractApiKey(req: Request): string | null {
 
 // Health check
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "mcp-server" });
+  res.json({ status: "ok", service: "mcp-service" });
 });
 
 // MCP endpoint - POST for JSON-RPC requests

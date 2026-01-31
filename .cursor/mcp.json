@@ -1,11 +1,7 @@
 {
   "mcpServers": {
     "mcpfactory-sales": {
-      "command": "node",
-      "args": ["/Users/kevinlourd/Business/mcpfactory/apps/mcp-server/dist/index.js"],
-      "env": {
-        "MCPFACTORY_API_KEY": ""
-      }
+      "url": "https://mcp.mcpfactory.org/mcp?token=YOUR_API_KEY"
     }
   }
 }
