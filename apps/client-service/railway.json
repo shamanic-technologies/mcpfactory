@@ -3,6 +3,9 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "./Dockerfile",
-    "watchPatterns": ["**"]
+    "watchPatterns": [
+      "/apps/client-service/**",
+      "/packages/shared/**"
+    ]
   }
 }
