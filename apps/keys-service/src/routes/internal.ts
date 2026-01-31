@@ -12,7 +12,7 @@ import { encrypt, decrypt, maskKey } from "../lib/crypto.js";
 
 const router = Router();
 
-const VALID_PROVIDERS = ["apollo", "anthropic", "openai", "resend", "hunter"];
+const VALID_PROVIDERS = ["apollo", "anthropic"];
 
 // No auth middleware needed - Railway private network
 
