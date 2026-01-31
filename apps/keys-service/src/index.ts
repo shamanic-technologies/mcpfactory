@@ -1,46 +1,32 @@
 import express from "express";
 import cors from "cors";
 import healthRoutes from "./routes/health.js";
-import meRoutes from "./routes/me.js";
-import keysRoutes from "./routes/keys.js";
-import apiKeysRoutes from "./routes/api-keys.js";
-import validateRoutes from "./routes/validate.js";
 import internalRoutes from "./routes/internal.js";
+import validateRoutes from "./routes/validate.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors({
-  origin: [
-    "https://dashboard.mcpfactory.org",
-    "https://mcpfactory.org",
-    "https://api.mcpfactory.org",
-    "http://localhost:3000",
-    "http://localhost:3001",
-  ],
-  credentials: true,
-}));
+app.use(cors());
 app.use(express.json());
 
-// Routes
+// Health check (public)
 app.use(healthRoutes);
-app.use(meRoutes);
-app.use(keysRoutes);
-app.use(apiKeysRoutes);
+
+// API key validation (called by api-service with API key in header)
 app.use(validateRoutes);
 
-// Internal routes for service-to-service communication
+// Internal routes (service-to-service with X-Service-Secret)
 app.use("/internal", internalRoutes);
 
-// 404 handler
+// 404
 app.use((req, res) => {
   res.status(404).json({ error: "Not found" });
 });
 
 // Error handler
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error("Unhandled error:", err);
+  console.error("Error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
 
