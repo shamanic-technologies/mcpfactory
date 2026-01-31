@@ -23,5 +23,5 @@ jobs:
       - run: pnpm install
       - run: pnpm --filter @mcpfactory/emailgeneration-service test
         env:
-          EMAILGEN_SERVICE_DATABASE_URL: ${{ secrets.EMAILGEN_SERVICE_DATABASE_URL }}
+          EMAILGENERATION_SERVICE_DATABASE_URL: ${{ secrets.EMAILGENERATION_SERVICE_DATABASE_URL }}
           SERVICE_SECRET_KEY: test-secret
