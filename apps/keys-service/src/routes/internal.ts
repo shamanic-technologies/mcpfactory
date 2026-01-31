@@ -259,4 +259,38 @@ router.delete("/keys/:provider", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /internal/keys/:provider/decrypt
+ * Get decrypted BYOK key (for internal service use)
+ * Called by apollo-service via Railway private network
+ */
+router.get("/keys/:provider/decrypt", async (req: Request, res: Response) => {
+  try {
+    const { provider } = req.params;
+    const clerkOrgId = req.query.clerkOrgId as string;
+
+    if (!clerkOrgId) {
+      return res.status(400).json({ error: "clerkOrgId required" });
+    }
+
+    const orgId = await ensureOrg(clerkOrgId);
+
+    const key = await db.query.byokKeys.findFirst({
+      where: and(eq(byokKeys.orgId, orgId), eq(byokKeys.provider, provider)),
+    });
+
+    if (!key) {
+      return res.status(404).json({ error: `${provider} key not configured` });
+    }
+
+    res.json({
+      provider,
+      key: decrypt(key.encryptedKey),
+    });
+  } catch (error) {
+    console.error("Decrypt key error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

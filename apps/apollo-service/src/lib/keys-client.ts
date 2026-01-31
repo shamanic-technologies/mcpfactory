@@ -9,7 +9,7 @@ export async function getByokKey(
   const keysServiceUrl = process.env.KEYS_SERVICE_URL || "http://localhost:3001";
 
   const response = await fetch(
-    `${keysServiceUrl}/byok/${provider}/decrypt?clerkOrgId=${clerkOrgId}`
+    `${keysServiceUrl}/internal/keys/${provider}/decrypt?clerkOrgId=${clerkOrgId}`
   );
 
   if (!response.ok) {
