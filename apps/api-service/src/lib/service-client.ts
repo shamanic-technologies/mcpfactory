@@ -43,6 +43,6 @@ export const services = {
   apollo: process.env.APOLLO_SERVICE_URL || "http://localhost:3003",
   campaign: process.env.CAMPAIGN_SERVICE_URL || "http://localhost:3004",
   emailgen: process.env.EMAILGEN_SERVICE_URL || "http://localhost:3005",
-  conversation: process.env.CONVERSATION_SERVICE_URL || "http://localhost:3006",
+  replyQualification: process.env.REPLY_QUALIFICATION_SERVICE_URL || "http://localhost:3006",
   client: process.env.CLIENT_SERVICE_URL || "http://localhost:3002",
 };

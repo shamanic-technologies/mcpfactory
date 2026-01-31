@@ -19,7 +19,6 @@
     "dev:campaign-service": "pnpm --filter @mcpfactory/campaign-service dev",
     "dev:apollo-service": "pnpm --filter @mcpfactory/apollo-service dev",
     "dev:emailgeneration-service": "pnpm --filter @mcpfactory/emailgeneration-service dev",
-    "dev:conversation-service": "pnpm --filter @mcpfactory/conversation-service dev",
     "dev:worker": "pnpm --filter @mcpfactory/worker dev",
     "build": "turbo build",
     "build:landing": "pnpm --filter @mcpfactory/landing build",
