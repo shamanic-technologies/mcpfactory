@@ -21,16 +21,12 @@ interface CampaignRun {
   createdAt: string;
 }
 
-// Track campaigns currently being processed to avoid duplicate queue entries
-// This is a short-term lock, NOT a permanent record (database is source of truth)
-const processingCampaigns = new Set<string>();
-
 /**
  * Campaign Scheduler
  * Polls for ongoing campaigns that need to be executed and queues them
  * 
- * Source of truth for "has run" is the database (campaign_runs table).
- * The in-memory Set only prevents duplicate queueing during the same poll cycle.
+ * Source of truth is the database (campaign_runs table).
+ * We check for "running" status runs to avoid duplicate processing.
  */
 export function startCampaignScheduler(intervalMs: number = 30000): NodeJS.Timeout {
   console.log(`[scheduler] Starting campaign scheduler (interval: ${intervalMs}ms)`);
@@ -45,22 +41,19 @@ export function startCampaignScheduler(intervalMs: number = 30000): NodeJS.Timeo
       console.log(`[scheduler] Found ${ongoingCampaigns.length} ongoing campaigns`);
 
       for (const campaign of ongoingCampaigns) {
-        // Skip if currently being processed (prevents duplicate queue entries)
-        if (processingCampaigns.has(campaign.id)) {
-          console.log(`[scheduler] Campaign ${campaign.id}: currently processing, skipping`);
+        // Check if we should run this campaign (based on database runs)
+        const { shouldRun, hasRunningRun } = await shouldRunCampaign(campaign);
+        
+        console.log(`[scheduler] Campaign ${campaign.id}: shouldRun=${shouldRun}, hasRunningRun=${hasRunningRun}`);
+        
+        // Skip if there's already a run in progress
+        if (hasRunningRun) {
+          console.log(`[scheduler] Campaign ${campaign.id}: has running run, skipping`);
           continue;
         }
         
-        // Check if we should run this campaign (based on database runs)
-        const shouldRun = await shouldRunCampaign(campaign);
-        
-        console.log(`[scheduler] Campaign ${campaign.id}: shouldRun=${shouldRun}`);
-        
         if (shouldRun) {
           console.log(`[scheduler] Queueing campaign ${campaign.id} (${campaign.recurrence}) for org ${campaign.clerkOrgId}`);
-          
-          // Mark as processing before adding to queue
-          processingCampaigns.add(campaign.id);
           
           // Add to queue
           const queues = getQueues();
@@ -71,15 +64,6 @@ export function startCampaignScheduler(intervalMs: number = 30000): NodeJS.Timeo
               clerkOrgId: campaign.clerkOrgId,
             } as CampaignRunJobData
           );
-          
-          // For oneoff: remove from processing after 5 minutes (allows retry on failure)
-          // For recurring: remove immediately so next recurrence can be checked
-          if (campaign.recurrence === "oneoff") {
-            setTimeout(() => processingCampaigns.delete(campaign.id), 5 * 60 * 1000);
-          } else {
-            // For recurring campaigns, we rely on the database check each poll
-            processingCampaigns.delete(campaign.id);
-          }
         }
       }
     } catch (error) {
@@ -96,40 +80,55 @@ export function startCampaignScheduler(intervalMs: number = 30000): NodeJS.Timeo
   return interval;
 }
 
-async function shouldRunCampaign(campaign: Campaign): Promise<boolean> {
+interface ShouldRunResult {
+  shouldRun: boolean;
+  hasRunningRun: boolean;
+}
+
+async function shouldRunCampaign(campaign: Campaign): Promise<ShouldRunResult> {
   // Get existing runs for this campaign
   try {
     const runsResult = await campaignService.getCampaignRuns(campaign.id) as { runs: CampaignRun[] };
     const runs = runsResult.runs || [];
     
-    console.log(`[scheduler] Campaign ${campaign.id} has ${runs.length} runs, recurrence=${campaign.recurrence}`);
+    // Check if any run is currently in progress
+    const hasRunningRun = runs.some(r => r.status === "running" || r.status === "pending");
+    
+    console.log(`[scheduler] Campaign ${campaign.id} has ${runs.length} runs (${runs.filter(r => r.status === "running").length} running), recurrence=${campaign.recurrence}`);
     
     // Check based on recurrence
+    let shouldRun = false;
     switch (campaign.recurrence) {
       case "oneoff":
-        // Only run if no runs exist yet
-        const shouldRun = runs.length === 0;
-        console.log(`[scheduler] oneoff check: runs.length=${runs.length}, shouldRun=${shouldRun}`);
-        return shouldRun;
+        // Only run if no completed/failed runs exist yet
+        const completedOrFailed = runs.filter(r => r.status === "completed" || r.status === "failed");
+        shouldRun = completedOrFailed.length === 0;
+        console.log(`[scheduler] oneoff check: completedOrFailed=${completedOrFailed.length}, shouldRun=${shouldRun}`);
+        break;
         
       case "daily":
         // Run if no run today
-        return !hasRunToday(runs);
+        shouldRun = !hasRunToday(runs);
+        break;
         
       case "weekly":
         // Run if no run this week
-        return !hasRunThisWeek(runs);
+        shouldRun = !hasRunThisWeek(runs);
+        break;
         
       case "monthly":
         // Run if no run this month
-        return !hasRunThisMonth(runs);
+        shouldRun = !hasRunThisMonth(runs);
+        break;
         
       default:
-        return false;
+        shouldRun = false;
     }
+    
+    return { shouldRun, hasRunningRun };
   } catch (error) {
     console.error(`[scheduler] Error checking runs for ${campaign.id}:`, error);
-    return false;
+    return { shouldRun: false, hasRunningRun: false };
   }
 }
 
