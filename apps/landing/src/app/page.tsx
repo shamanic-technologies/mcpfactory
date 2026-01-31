@@ -68,7 +68,9 @@ export default function Home() {
             <Image src="/logo-head.jpg" alt="MCP Factory" width={36} height={36} className="rounded-lg" />
             <span className="font-display font-bold text-xl text-primary-600">MCP Factory</span>
           </div>
-          <div className="flex items-center gap-4">
+          
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-4">
             <a
               href="https://docs.mcpfactory.org"
               className="text-gray-600 hover:text-primary-600 text-sm transition"
@@ -95,6 +97,28 @@ export default function Home() {
             >
               Get Started
             </LinkButton>
+          </div>
+
+          {/* Mobile nav */}
+          <div className="flex md:hidden items-center gap-2">
+            <LinkButton
+              href={`${DASHBOARD_URL}/sign-up`}
+              className="bg-primary-500 text-white px-3 py-1.5 rounded-full text-sm font-medium"
+            >
+              Start
+            </LinkButton>
+            <details className="relative">
+              <summary className="list-none p-2 cursor-pointer">
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </summary>
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-xl py-2 z-50">
+                <a href="https://docs.mcpfactory.org" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Docs</a>
+                <a href="https://github.com/shamanic-technologies/mcpfactory" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">GitHub</a>
+                <a href={`${DASHBOARD_URL}/sign-in`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Sign In</a>
+              </div>
+            </details>
           </div>
         </div>
       </nav>

@@ -5,16 +5,31 @@ import { useState } from "react";
 export function WaitlistForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("loading");
+    setErrorMessage("");
     
-    // TODO: Connect to actual waitlist API
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    setStatus("success");
-    setEmail("");
+    try {
+      const response = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to join waitlist");
+      }
+
+      setStatus("success");
+      setEmail("");
+    } catch (error) {
+      setStatus("error");
+      setErrorMessage(error instanceof Error ? error.message : "Something went wrong");
+    }
   };
 
   if (status === "success") {

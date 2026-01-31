@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useState, useRef, useEffect } from "react";
 import { BreadcrumbNav } from "./breadcrumb-nav";
+import { useMobileSidebar } from "./mobile-sidebar-context";
 
 export function Header() {
   const { signOut } = useClerk();
   const { user } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { toggle: toggleMobileSidebar } = useMobileSidebar();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -25,14 +27,26 @@ export function Header() {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="px-4 py-2.5 flex items-center justify-between">
-        {/* Left: Logo + Breadcrumb */}
-        <div className="flex items-center gap-4">
+        {/* Left: Hamburger + Logo + Breadcrumb */}
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* Mobile hamburger */}
+          <button
+            onClick={toggleMobileSidebar}
+            className="md:hidden p-1.5 -ml-1.5 rounded-lg hover:bg-gray-100 transition"
+          >
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          
           <Link href="/" className="flex items-center gap-2 pr-4 border-r border-gray-200">
             <Image src="/logo-head.jpg" alt="MCP Factory" width={28} height={28} className="rounded-md" />
             <span className="font-display font-bold text-lg text-primary-600 hidden sm:block">MCP Factory</span>
           </Link>
 
-          <BreadcrumbNav />
+          <div className="hidden sm:block">
+            <BreadcrumbNav />
+          </div>
         </div>
 
         {/* Right: Docs + User menu */}

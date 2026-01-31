@@ -79,5 +79,12 @@ export function CampaignSidebar({ campaignId, stats }: CampaignSidebarProps) {
     },
   ];
 
-  return <McpSidebar items={items} title="Campaign" />;
+  return (
+    <McpSidebar 
+      items={items} 
+      title="Campaign" 
+      backHref="/mcp/sales-outreach"
+      backLabel="Campaigns"
+    />
+  );
 }

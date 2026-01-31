@@ -15,7 +15,7 @@ export default function CampaignLayout({
 
   return (
     <CampaignProvider campaignId={resolvedParams.id}>
-      <div className="flex flex-1 h-full">
+      <div className="flex flex-col md:flex-row flex-1 h-full">
         <CampaignSidebarWrapper />
         <div className="flex-1 overflow-y-auto">{children}</div>
       </div>

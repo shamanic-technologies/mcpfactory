@@ -44,7 +44,7 @@ export default function CampaignCompaniesPage() {
 
   if (loading) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="animate-pulse space-y-4">
           <div className="h-8 w-32 bg-gray-200 rounded" />
           {[1, 2, 3].map((i) => (
@@ -56,7 +56,7 @@ export default function CampaignCompaniesPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-xl font-bold text-gray-800">
           Companies

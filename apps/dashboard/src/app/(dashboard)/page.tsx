@@ -7,7 +7,7 @@ export default async function DashboardHome() {
   const user = await currentUser();
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-gray-800">
           Welcome{user?.firstName ? `, ${user.firstName}` : ""} 👋

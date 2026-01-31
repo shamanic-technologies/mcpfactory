@@ -9,7 +9,7 @@ export default function CampaignOverviewPage() {
 
   if (loading) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="animate-pulse space-y-4">
           <div className="h-8 w-64 bg-gray-200 rounded" />
           <div className="h-4 w-96 bg-gray-100 rounded" />
@@ -24,7 +24,7 @@ export default function CampaignOverviewPage() {
 
   if (!campaign) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
           <div className="text-4xl mb-4">❌</div>
           <h3 className="font-display font-bold text-lg text-gray-800 mb-2">Campaign not found</h3>
@@ -43,7 +43,7 @@ export default function CampaignOverviewPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">

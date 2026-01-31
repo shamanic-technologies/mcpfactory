@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Sidebar } from "@/components/sidebar";
-import { Header } from "@/components/header";
+import { DocsLayout } from "@/components/docs-layout";
 
 const SITE_URL = "https://docs.mcpfactory.org";
 const SITE_NAME = "MCP Factory Documentation";
@@ -228,11 +227,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased h-screen flex flex-col overflow-hidden">
-        <Header />
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto">{children}</main>
-        </div>
+        <DocsLayout>{children}</DocsLayout>
       </body>
     </html>
   );

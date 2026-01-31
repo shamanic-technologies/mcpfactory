@@ -51,8 +51,9 @@ export default function SalesOutreachLayout({
   }
 
   return (
-    <div className="flex h-full">
-      <aside className="w-56 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+    <div className="flex flex-col md:flex-row h-full">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-56 bg-white border-r border-gray-200 flex-col flex-shrink-0">
         <div className="px-4 py-3 border-b border-gray-100">
           <Link 
             href="/" 
@@ -93,6 +94,44 @@ export default function SalesOutreachLayout({
           })}
         </nav>
       </aside>
+
+      {/* Mobile top bar */}
+      <div className="md:hidden bg-white border-b border-gray-200 px-4 py-2">
+        <div className="flex items-center justify-between mb-2">
+          <Link href="/" className="text-xs text-gray-400 flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back
+          </Link>
+          <span className="text-sm font-semibold text-gray-800">Sales Cold Emails</span>
+          <div className="w-8" />
+        </div>
+        <nav className="flex gap-1 overflow-x-auto pb-1">
+          {SIDEBAR_ITEMS.map((item) => {
+            const isActive = item.href === "/mcp/sales-outreach" 
+              ? pathname === item.href 
+              : pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={`
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition
+                  ${isActive 
+                    ? "bg-primary-100 text-primary-700 font-medium" 
+                    : "bg-gray-100 text-gray-600"
+                  }
+                `}
+              >
+                <span className="w-4 h-4">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
