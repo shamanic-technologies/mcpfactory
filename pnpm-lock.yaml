@@ -18,43 +18,6 @@ importers:
         specifier: ^5.3.0
         version: 5.9.3
 
-  apps/api:
-    dependencies:
-      '@clerk/backend':
-        specifier: ^1.0.0
-        version: 1.14.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      cors:
-        specifier: ^2.8.5
-        version: 2.8.6
-      drizzle-orm:
-        specifier: ^0.36.0
-        version: 0.36.4(@types/react@18.3.27)(postgres@3.4.8)(react@18.3.1)
-      express:
-        specifier: ^4.21.0
-        version: 4.22.1
-      postgres:
-        specifier: ^3.4.0
-        version: 3.4.8
-    devDependencies:
-      '@types/cors':
-        specifier: ^2.8.17
-        version: 2.8.19
-      '@types/express':
-        specifier: ^4.17.21
-        version: 4.17.25
-      '@types/node':
-        specifier: ^20.0.0
-        version: 20.19.30
-      drizzle-kit:
-        specifier: ^0.28.0
-        version: 0.28.1
-      tsx:
-        specifier: ^4.0.0
-        version: 4.21.0
-      typescript:
-        specifier: ^5.3.0
-        version: 5.9.3
-
   apps/apollo-service:
     dependencies:
       cors:
