@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, uniqueIndex, date, decimal, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, uniqueIndex, index, date, decimal, jsonb } from "drizzle-orm/pg-core";
 
 // Local users table (maps to Clerk)
 export const users = pgTable(
@@ -75,7 +75,7 @@ export const campaigns = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("idx_campaigns_org").on(table.orgId),
+    index("idx_campaigns_org").on(table.orgId),
   ]
 );
 
@@ -104,7 +104,7 @@ export const campaignRuns = pgTable(
   },
   (table) => [
     uniqueIndex("idx_campaign_runs_campaign").on(table.campaignId),
-    uniqueIndex("idx_campaign_runs_org").on(table.orgId),
+    index("idx_campaign_runs_org").on(table.orgId),
   ]
 );
 

@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, uniqueIndex, integer, decimal, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, uniqueIndex, index, integer, decimal, jsonb } from "drizzle-orm/pg-core";
 
 // Local orgs table (maps to Clerk)
 export const orgs = pgTable(
@@ -53,7 +53,7 @@ export const emailGenerations = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("idx_emailgen_org").on(table.orgId),
+    index("idx_emailgen_org").on(table.orgId),
     uniqueIndex("idx_emailgen_run").on(table.campaignRunId),
     uniqueIndex("idx_emailgen_enrichment").on(table.apolloEnrichmentId),
   ]
