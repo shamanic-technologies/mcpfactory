@@ -5,6 +5,9 @@ import campaignsRoutes from "./routes/campaigns.js";
 import keysRoutes from "./routes/keys.js";
 import searchRoutes from "./routes/search.js";
 import meRoutes from "./routes/me.js";
+import qualifyRoutes from "./routes/qualify.js";
+import companyRoutes from "./routes/company.js";
+import leadsRoutes from "./routes/leads.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +33,9 @@ app.use("/v1", meRoutes);
 app.use("/v1", keysRoutes);
 app.use("/v1", campaignsRoutes);
 app.use("/v1", searchRoutes);
+app.use("/v1", qualifyRoutes);
+app.use("/v1", companyRoutes);
+app.use("/v1", leadsRoutes);
 
 // 404 handler
 app.use((req, res) => {

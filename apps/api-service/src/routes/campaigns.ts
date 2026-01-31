@@ -149,4 +149,23 @@ router.get("/campaigns/:id/runs", authenticate, requireOrg, async (req: Authenti
   }
 });
 
+/**
+ * GET /v1/campaigns/:id/stats
+ * Get campaign statistics
+ */
+router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await callService(
+      services.campaign,
+      `/campaigns/${id}/stats?orgId=${req.orgId}`
+    );
+    res.json(result);
+  } catch (error: any) {
+    console.error("Get campaign stats error:", error);
+    res.status(500).json({ error: error.message || "Failed to get campaign stats" });
+  }
+});
+
 export default router;
