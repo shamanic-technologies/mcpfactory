@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { externalServices } from "../lib/service-client.js";
 
 const router = Router();
 
@@ -7,6 +8,21 @@ router.get("/health", (req, res) => {
     status: "ok",
     service: "api-gateway",
     version: "1.0.0",
+  });
+});
+
+// Debug endpoint to check config (temporary)
+router.get("/debug/config", (req, res) => {
+  res.json({
+    company: {
+      url: externalServices.company.url,
+      hasApiKey: !!externalServices.company.apiKey,
+      apiKeyLength: externalServices.company.apiKey?.length || 0,
+    },
+    replyQualification: {
+      url: externalServices.replyQualification.url,
+      hasApiKey: !!externalServices.replyQualification.apiKey,
+    },
   });
 });
 
