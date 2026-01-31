@@ -47,12 +47,13 @@ export interface ApolloEnrichResponse {
 
 /**
  * Search for people using Apollo API
+ * Uses the new api_search endpoint (mixed_people/search is deprecated)
  */
 export async function searchPeople(
   apiKey: string,
   params: ApolloSearchParams
 ): Promise<ApolloSearchResponse> {
-  const response = await fetch(`${APOLLO_API_BASE}/mixed_people/search`, {
+  const response = await fetch(`${APOLLO_API_BASE}/mixed_people/api_search`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
