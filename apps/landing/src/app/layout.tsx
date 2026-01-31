@@ -25,8 +25,11 @@ export const metadata: Metadata = {
     "bring your own key",
     "AI automation",
     "lead generation",
+    "ChatGPT",
     "Claude",
     "Cursor",
+    "AI sales",
+    "email automation",
   ],
   authors: [{ name: "MCP Factory" }],
   creator: "MCP Factory",
@@ -152,6 +155,46 @@ const websiteJsonLd = {
   },
 };
 
+const howToJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How to Launch a Sales Campaign with MCP Factory",
+  description: "Launch automated cold email campaigns using AI from ChatGPT, Claude, or Cursor",
+  step: [
+    {
+      "@type": "HowToStep",
+      position: 1,
+      name: "Sign up",
+      text: "Create an account at dashboard.mcpfactory.org/sign-up",
+    },
+    {
+      "@type": "HowToStep",
+      position: 2,
+      name: "Get API Key",
+      text: "Go to Settings → API Key and copy your MCP Factory API key",
+    },
+    {
+      "@type": "HowToStep",
+      position: 3,
+      name: "Configure BYOK Keys",
+      text: "Add your Apollo and Anthropic keys in Settings → Keys",
+    },
+    {
+      "@type": "HowToStep",
+      position: 4,
+      name: "Connect AI Client",
+      text: "Add MCP Factory to ChatGPT, Claude, or Cursor using the MCP URL: https://mcp.mcpfactory.org/mcp",
+    },
+    {
+      "@type": "HowToStep",
+      position: 5,
+      name: "Launch Campaign",
+      text: "Ask your AI: 'Launch a cold email campaign for mybrand.com targeting CTOs at SaaS companies'",
+    },
+  ],
+  totalTime: "PT5M",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -171,6 +214,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
         />
       </head>
       <body className="antialiased">{children}</body>

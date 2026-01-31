@@ -26,6 +26,9 @@ const NAV_ITEMS = [
     title: "Integrations",
     items: [
       { name: "Overview", href: "/integrations" },
+      { name: "ChatGPT", href: "/integrations/chatgpt" },
+      { name: "Claude", href: "/integrations/claude" },
+      { name: "Cursor", href: "/integrations/cursor" },
       { name: "Cursor Skill", href: "/integrations/cursor-skill" },
       { name: "n8n", href: "/integrations/n8n" },
       { name: "Zapier", href: "/integrations/zapier" },

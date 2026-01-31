@@ -70,7 +70,7 @@ app.post("/mcp", async (req: Request, res: Response) => {
         mcpServer.tool(
           tool.name,
           tool.description || "",
-          tool.inputSchema.properties as Record<string, unknown>,
+          tool.inputSchema as Record<string, unknown>,
           async (args: Record<string, unknown>) => {
             // Set the API key for this request context
             const session = sessions.get(sessionId!);

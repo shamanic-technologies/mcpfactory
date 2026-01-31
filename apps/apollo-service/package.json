@@ -17,6 +17,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@sentry/node": "^8.0.0",
     "cors": "^2.8.5",
     "drizzle-orm": "^0.36.0",
     "express": "^4.21.0",

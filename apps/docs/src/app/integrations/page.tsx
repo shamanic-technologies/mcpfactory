@@ -1,22 +1,68 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { CopyForLLM } from "@/components/copy-for-llm";
 
 export const metadata: Metadata = {
   title: "Integrations",
-  description: "Connect MCP Factory to Cursor, n8n, Zapier, Make.com, and more. Automate workflows with webhooks and REST API.",
+  description: "Connect MCP Factory to ChatGPT, Claude, Cursor, n8n, Zapier, Make.com, and more. Automate workflows with MCP and REST API.",
   openGraph: {
     title: "Integrations | MCP Factory Docs",
     description: "Connect MCP Factory to your favorite tools.",
   },
 };
 
-const INTEGRATIONS = [
+const LLM_INSTRUCTIONS = `# MCP Factory Integrations
+
+## AI Clients (MCP Protocol)
+- ChatGPT: Settings → Connectors → Add https://mcp.mcpfactory.org/mcp
+- Claude.ai: Settings → Integrations → Add https://mcp.mcpfactory.org/mcp
+- Claude Desktop: Edit claude_desktop_config.json
+- Cursor: Add to .cursor/mcp.json
+
+## Automation Platforms
+- n8n: Use HTTP Request node with API
+- Zapier: Use Webhooks by Zapier
+- Make.com: Use HTTP module
+
+## Integration Methods
+1. MCP Protocol (Recommended): Full DFY automation from AI clients
+2. REST API: Direct HTTP calls from any platform
+3. Webhooks: Real-time event notifications
+
+## MCP Endpoint
+https://mcp.mcpfactory.org/mcp
+
+## API Base URL
+https://api.mcpfactory.org/v1`;
+
+const AI_CLIENTS = [
   {
-    name: "Cursor Skill",
-    description: "Use MCP Factory as a Cursor skill for AI-assisted development workflows.",
-    href: "/integrations/cursor-skill",
+    name: "ChatGPT",
+    description: "Connect MCP Factory to OpenAI's ChatGPT (Plus, Pro, Team, Enterprise).",
+    href: "/integrations/chatgpt",
+    icon: "🤖",
+  },
+  {
+    name: "Claude",
+    description: "Use MCP Factory with Claude.ai, Claude Desktop, or Claude Code.",
+    href: "/integrations/claude",
+    icon: "🧠",
+  },
+  {
+    name: "Cursor",
+    description: "Connect MCP Factory to Cursor IDE for AI-assisted workflows.",
+    href: "/integrations/cursor",
     icon: "🖥️",
   },
+  {
+    name: "Cursor Skill",
+    description: "Advanced: Install MCP Factory as a Cursor skill with custom instructions.",
+    href: "/integrations/cursor-skill",
+    icon: "⚙️",
+  },
+];
+
+const AUTOMATION_PLATFORMS = [
   {
     name: "n8n",
     description: "Build automated workflows with n8n using HTTP requests or custom nodes.",
@@ -40,13 +86,38 @@ const INTEGRATIONS = [
 export default function IntegrationsPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">
-      <h1 className="text-4xl font-bold mb-4">Integrations</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-4xl font-bold">Integrations</h1>
+        <CopyForLLM content={LLM_INSTRUCTIONS} />
+      </div>
       <p className="text-xl text-gray-600 mb-8">
         Connect MCP Factory to your favorite tools and platforms.
       </p>
 
+      <h2 className="text-2xl font-semibold mb-4">AI Clients</h2>
+      <div className="grid gap-4 mb-8">
+        {AI_CLIENTS.map((integration) => (
+          <Link
+            key={integration.name}
+            href={integration.href}
+            className="block p-6 border border-gray-200 rounded-lg hover:border-primary-500 hover:shadow-md transition"
+          >
+            <div className="flex items-start gap-4">
+              <span className="text-3xl">{integration.icon}</span>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {integration.name}
+                </h3>
+                <p className="text-gray-600 mt-1">{integration.description}</p>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <h2 className="text-2xl font-semibold mb-4">Automation Platforms</h2>
       <div className="grid gap-4">
-        {INTEGRATIONS.map((integration) => (
+        {AUTOMATION_PLATFORMS.map((integration) => (
           <Link
             key={integration.name}
             href={integration.href}
