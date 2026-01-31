@@ -1,0 +1,40 @@
+name: Test Client Service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/client-service/**"
+      - ".github/workflows/test-client-service.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/client-service/**"
+      - ".github/workflows/test-client-service.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run unit tests
+        run: pnpm --filter @mcpfactory/client-service test:unit
+
+      - name: Run integration tests
+        run: pnpm --filter @mcpfactory/client-service test:integration
+        env:
+          CLIENT_SERVICE_DATABASE_URL: ${{ secrets.CLIENT_SERVICE_DATABASE_URL }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
