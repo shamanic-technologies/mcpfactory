@@ -28,13 +28,15 @@ router.post("/leads/search", authenticate, requireOrg, async (req: Authenticated
       "/search",
       {
         method: "POST",
+        headers: {
+          "x-clerk-org-id": req.orgId!,
+        },
         body: {
-          orgId: req.orgId,
-          person_titles,
-          organization_locations,
-          organization_industries,
-          organization_num_employees_ranges,
-          per_page: Math.min(per_page, 100), // Cap at 100
+          personTitles: person_titles,
+          organizationLocations: organization_locations,
+          qOrganizationIndustryTagIds: organization_industries,
+          organizationNumEmployeesRanges: organization_num_employees_ranges,
+          perPage: Math.min(per_page, 100), // Cap at 100
         },
       }
     );
@@ -63,10 +65,12 @@ router.post("/leads/enrich", authenticate, requireOrg, async (req: Authenticated
       "/enrich",
       {
         method: "POST",
+        headers: {
+          "x-clerk-org-id": req.orgId!,
+        },
         body: {
-          orgId: req.orgId,
           email,
-          linkedin_url,
+          linkedinUrl: linkedin_url,
         },
       }
     );

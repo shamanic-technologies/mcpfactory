@@ -6,6 +6,7 @@ import cors from "cors";
 import healthRoutes from "./routes/health.js";
 import campaignsRoutes from "./routes/campaigns.js";
 import runsRoutes from "./routes/runs.js";
+import internalRoutes from "./routes/internal.js";
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -27,6 +28,7 @@ app.use(express.json());
 app.use(healthRoutes);
 app.use(campaignsRoutes);
 app.use(runsRoutes);
+app.use("/internal", internalRoutes);
 
 // 404 handler
 app.use((req, res) => {

@@ -9,14 +9,11 @@ const router = Router();
 
 /**
  * POST /search - Search for people via Apollo
+ * campaignRunId is optional - if not provided, search is ad-hoc (MCP usage)
  */
 router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const { campaignRunId, ...searchParams } = req.body;
-
-    if (!campaignRunId) {
-      return res.status(400).json({ error: "campaignRunId required" });
-    }
 
     // Get Apollo API key from keys-service
     const apolloApiKey = await getByokKey(req.clerkOrgId!, "apollo");
@@ -35,47 +32,53 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
 
     const result = await searchPeople(apolloApiKey, apolloParams);
 
-    // Store search record
-    const [search] = await db
-      .insert(apolloPeopleSearches)
-      .values({
-        orgId: req.orgId!,
-        campaignRunId,
-        requestParams: apolloParams,
-        peopleCount: result.people.length,
-        totalEntries: result.pagination.total_entries,
-        costUsd: "0", // Apollo search is usually free
-        responseRaw: result,
-      })
-      .returning();
+    // Only store records if campaignRunId is provided (campaign workflow)
+    let searchId: string | null = null;
+    if (campaignRunId) {
+      // Store search record
+      const [search] = await db
+        .insert(apolloPeopleSearches)
+        .values({
+          orgId: req.orgId!,
+          campaignRunId,
+          requestParams: apolloParams,
+          peopleCount: result.people.length,
+          totalEntries: result.pagination.total_entries,
+          costUsd: "0", // Apollo search is usually free
+          responseRaw: result,
+        })
+        .returning();
 
-    // Store enrichment records for each person
-    const enrichmentPromises = result.people.map((person: ApolloPerson) =>
-      db.insert(apolloPeopleEnrichments).values({
-        orgId: req.orgId!,
-        campaignRunId,
-        searchId: search.id,
-        apolloPersonId: person.id,
-        firstName: person.first_name,
-        lastName: person.last_name,
-        email: person.email,
-        emailStatus: person.email_status,
-        title: person.title,
-        linkedinUrl: person.linkedin_url,
-        organizationName: person.organization?.name,
-        organizationDomain: person.organization?.primary_domain,
-        organizationIndustry: person.organization?.industry,
-        organizationSize: person.organization?.estimated_num_employees?.toString(),
-        organizationRevenueUsd: person.organization?.annual_revenue?.toString(),
-        costUsd: "0",
-        responseRaw: person,
-      })
-    );
+      searchId = search.id;
 
-    await Promise.all(enrichmentPromises);
+      // Store enrichment records for each person
+      const enrichmentPromises = result.people.map((person: ApolloPerson) =>
+        db.insert(apolloPeopleEnrichments).values({
+          orgId: req.orgId!,
+          campaignRunId,
+          searchId: search.id,
+          apolloPersonId: person.id,
+          firstName: person.first_name,
+          lastName: person.last_name,
+          email: person.email,
+          emailStatus: person.email_status,
+          title: person.title,
+          linkedinUrl: person.linkedin_url,
+          organizationName: person.organization?.name,
+          organizationDomain: person.organization?.primary_domain,
+          organizationIndustry: person.organization?.industry,
+          organizationSize: person.organization?.estimated_num_employees?.toString(),
+          organizationRevenueUsd: person.organization?.annual_revenue?.toString(),
+          costUsd: "0",
+          responseRaw: person,
+        })
+      );
+
+      await Promise.all(enrichmentPromises);
+    }
 
     res.json({
-      searchId: search.id,
+      searchId,
       peopleCount: result.people.length,
       totalEntries: result.pagination.total_entries,
       people: result.people,

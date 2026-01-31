@@ -12,7 +12,10 @@ router.get("/campaigns", authenticate, requireOrg, async (req: AuthenticatedRequ
   try {
     const result = await callService(
       services.campaign,
-      `/campaigns?orgId=${req.orgId}`
+      `/internal/campaigns`,
+      {
+        headers: { "x-clerk-org-id": req.orgId! },
+      }
     );
     res.json(result);
   } catch (error: any) {
@@ -29,10 +32,11 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
   try {
     const result = await callService(
       services.campaign,
-      "/campaigns",
+      "/internal/campaigns",
       {
         method: "POST",
-        body: { ...req.body, orgId: req.orgId },
+        headers: { "x-clerk-org-id": req.orgId! },
+        body: req.body,
       }
     );
     res.json(result);
@@ -52,7 +56,10 @@ router.get("/campaigns/:id", authenticate, requireOrg, async (req: Authenticated
 
     const result = await callService(
       services.campaign,
-      `/campaigns/${id}?orgId=${req.orgId}`
+      `/internal/campaigns/${id}`,
+      {
+        headers: { "x-clerk-org-id": req.orgId! },
+      }
     );
     res.json(result);
   } catch (error: any) {
@@ -71,10 +78,11 @@ router.patch("/campaigns/:id", authenticate, requireOrg, async (req: Authenticat
 
     const result = await callService(
       services.campaign,
-      `/campaigns/${id}`,
+      `/internal/campaigns/${id}`,
       {
         method: "PATCH",
-        body: { ...req.body, orgId: req.orgId },
+        headers: { "x-clerk-org-id": req.orgId! },
+        body: req.body,
       }
     );
     res.json(result);
@@ -94,10 +102,10 @@ router.post("/campaigns/:id/start", authenticate, requireOrg, async (req: Authen
 
     const result = await callService(
       services.campaign,
-      `/campaigns/${id}/start`,
+      `/internal/campaigns/${id}/activate`,
       {
         method: "POST",
-        body: { orgId: req.orgId },
+        headers: { "x-clerk-org-id": req.orgId! },
       }
     );
     res.json(result);
@@ -117,10 +125,10 @@ router.post("/campaigns/:id/pause", authenticate, requireOrg, async (req: Authen
 
     const result = await callService(
       services.campaign,
-      `/campaigns/${id}/pause`,
+      `/internal/campaigns/${id}/pause`,
       {
         method: "POST",
-        body: { orgId: req.orgId },
+        headers: { "x-clerk-org-id": req.orgId! },
       }
     );
     res.json(result);
@@ -140,7 +148,10 @@ router.get("/campaigns/:id/runs", authenticate, requireOrg, async (req: Authenti
 
     const result = await callService(
       services.campaign,
-      `/campaigns/${id}/runs?orgId=${req.orgId}`
+      `/internal/campaigns/${id}/runs`,
+      {
+        headers: { "x-clerk-org-id": req.orgId! },
+      }
     );
     res.json(result);
   } catch (error: any) {
@@ -159,7 +170,10 @@ router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: Authent
 
     const result = await callService(
       services.campaign,
-      `/campaigns/${id}/stats?orgId=${req.orgId}`
+      `/internal/campaigns/${id}/stats`,
+      {
+        headers: { "x-clerk-org-id": req.orgId! },
+      }
     );
     res.json(result);
   } catch (error: any) {
