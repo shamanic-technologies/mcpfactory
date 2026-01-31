@@ -4,7 +4,7 @@ const SETTINGS_NAV = [
   {
     name: "BYOK Keys",
     href: "/settings/keys",
-    description: "Configure your API keys for OpenAI, Apollo, Resend, etc.",
+    description: "Configure your API keys for Apollo, Anthropic, etc.",
     icon: "🔑",
   },
   {

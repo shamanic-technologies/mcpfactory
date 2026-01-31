@@ -8,9 +8,22 @@ import { SkeletonKeysList } from "@/components/skeleton";
 type Tab = "keys" | "requests" | "results" | "spending";
 
 const REQUIRED_KEYS = [
-  { id: "openai", name: "OpenAI", description: "For email generation (GPT-4)", placeholder: "sk-..." },
-  { id: "apollo", name: "Apollo", description: "For lead finding", placeholder: "api_..." },
-  { id: "resend", name: "Resend", description: "For email sending", placeholder: "re_..." },
+  { 
+    id: "apollo", 
+    name: "Apollo", 
+    description: "For lead search and enrichment", 
+    placeholder: "api_...",
+    helpUrl: "https://app.apollo.io/#/settings/integrations/api",
+    helpText: "Get your API key"
+  },
+  { 
+    id: "anthropic", 
+    name: "Anthropic", 
+    description: "For email generation and reply qualification (Claude)", 
+    placeholder: "sk-ant-...",
+    helpUrl: "https://console.anthropic.com/settings/keys",
+    helpText: "Get your API key"
+  },
 ];
 
 export default function SalesOutreachPage() {
@@ -141,6 +154,16 @@ export default function SalesOutreachPage() {
                     <div>
                       <h3 className="font-medium text-gray-800">{provider.name}</h3>
                       <p className="text-sm text-gray-500">{provider.description}</p>
+                      {provider.helpUrl && (
+                        <a 
+                          href={provider.helpUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary-500 hover:text-primary-600 hover:underline"
+                        >
+                          {provider.helpText} →
+                        </a>
+                      )}
                     </div>
                     {existingKey ? (
                       <span className="text-xs bg-accent-100 text-accent-700 px-2 py-1 rounded-full border border-accent-200">
@@ -262,9 +285,8 @@ $10/day budget, 5 days trial"`}
             <h3 className="font-medium text-gray-800 mb-4">Breakdown by Service</h3>
             <div className="space-y-3">
               {[
-                { name: "OpenAI (GPT-4)", spent: "$0.00", usage: "0 tokens" },
                 { name: "Apollo", spent: "$0.00", usage: "0 lookups" },
-                { name: "Resend", spent: "$0.00", usage: "0 emails" },
+                { name: "Anthropic (Claude)", spent: "$0.00", usage: "0 tokens" },
               ].map((service) => (
                 <div
                   key={service.name}
