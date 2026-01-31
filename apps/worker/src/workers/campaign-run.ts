@@ -1,7 +1,7 @@
 import { Worker, Job } from "bullmq";
 import { getRedis } from "../lib/redis.js";
 import { getQueues, QUEUE_NAMES, CampaignRunJobData, LeadSearchJobData } from "../queues/index.js";
-import { campaignService, companyService, keysService } from "../lib/service-client.js";
+import { campaignService, companyService } from "../lib/service-client.js";
 
 interface CampaignDetails {
   id: string;
@@ -11,10 +11,13 @@ interface CampaignDetails {
   };
 }
 
-interface SalesProfile {
-  companyName: string | null;
-  valueProposition: string | null;
-  companyOverview: string | null;
+interface SalesProfileResponse {
+  cached?: boolean;
+  profile?: {
+    companyName: string | null;
+    valueProposition: string | null;
+    companyOverview: string | null;
+  };
 }
 
 /**
@@ -54,25 +57,19 @@ export function startCampaignRunWorker(): Worker {
           try {
             console.log(`[campaign-run] Getting sales profile for: ${clientUrl}`);
             
-            // Get Anthropic API key from keys-service
-            const keyResult = await keysService.getKey(clerkOrgId, "anthropic") as { key?: string };
-            const anthropicApiKey = keyResult?.key;
+            // Company-service handles fetching the API key internally
+            const profileResult = await companyService.getSalesProfile(
+              clerkOrgId, 
+              clientUrl, 
+              "byok"  // Use user's own Anthropic key
+            ) as SalesProfileResponse;
             
-            if (!anthropicApiKey) {
-              console.warn(`[campaign-run] No Anthropic API key found for org ${clerkOrgId}`);
-            } else {
-              const profileResult = await companyService.getSalesProfile(clerkOrgId, clientUrl, anthropicApiKey) as { 
-                profile?: SalesProfile;
-                cached?: boolean;
+            if (profileResult?.profile) {
+              clientData = {
+                companyName: profileResult.profile.companyName || "",
+                companyDescription: profileResult.profile.valueProposition || profileResult.profile.companyOverview || "",
               };
-              
-              if (profileResult?.profile) {
-                clientData = {
-                  companyName: profileResult.profile.companyName || "",
-                  companyDescription: profileResult.profile.valueProposition || profileResult.profile.companyOverview || "",
-                };
-                console.log(`[campaign-run] Client company: ${clientData.companyName} (cached: ${profileResult.cached})`);
-              }
+              console.log(`[campaign-run] Client company: ${clientData.companyName} (cached: ${profileResult.cached})`);
             }
           } catch (companyError) {
             console.error(`[campaign-run] Failed to get client sales profile:`, companyError);

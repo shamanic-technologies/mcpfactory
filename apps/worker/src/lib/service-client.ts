@@ -170,18 +170,6 @@ export const postmarkService = {
   },
 };
 
-// Keys service - get BYOK keys for an org
-export const keysService = {
-  url: process.env.KEYS_SERVICE_URL || "http://localhost:3001",
-  
-  async getKey(clerkOrgId: string, provider: string) {
-    return callService(this.url, `/internal/keys/${provider}`, {
-      method: "GET",
-      clerkOrgId,
-    });
-  },
-};
-
 // Company service - get sales profile for email personalization
 export const companyService = {
   url: process.env.COMPANY_SERVICE_URL || "https://company.mcpfactory.org",
@@ -191,14 +179,18 @@ export const companyService = {
    * Get or extract sales profile for a company
    * On first call, creates org and extracts profile
    * On subsequent calls, returns cached profile
+   * 
+   * @param clerkOrgId - Clerk organization ID
+   * @param clientUrl - Company website URL
+   * @param keyType - "byok" for user's key, "platform" for MCP Factory's key
    */
-  async getSalesProfile(clerkOrgId: string, clientUrl: string, anthropicApiKey: string) {
+  async getSalesProfile(clerkOrgId: string, clientUrl: string, keyType: "byok" | "platform" = "byok") {
     return callService(this.url, "/sales-profile", {
       method: "POST",
       body: { 
         clerkOrgId,
         url: clientUrl,
-        anthropicApiKey,
+        keyType,
       },
       apiKey: this.apiKey,
     });
