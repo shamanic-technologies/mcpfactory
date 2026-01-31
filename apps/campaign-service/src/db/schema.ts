@@ -106,7 +106,7 @@ export const campaignRuns = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("idx_campaign_runs_campaign").on(table.campaignId),
+    index("idx_campaign_runs_campaign").on(table.campaignId),
     index("idx_campaign_runs_org").on(table.orgId),
   ]
 );
