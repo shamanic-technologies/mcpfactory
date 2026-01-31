@@ -15,7 +15,7 @@ global.fetch = vi.fn().mockResolvedValue({
 });
 
 process.env.CLERK_SECRET_KEY = "test_clerk_secret_key";
-process.env.SERVICE_SECRET_KEY = "test-service-secret";
+process.env.API_SERVICE_API_KEY = "test-service-secret";
 process.env.KEYS_SERVICE_URL = "http://localhost:3001";
 process.env.APOLLO_SERVICE_URL = "http://localhost:3003";
 process.env.CAMPAIGN_SERVICE_URL = "http://localhost:3004";

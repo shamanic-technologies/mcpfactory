@@ -2,7 +2,7 @@
  * Internal service client for calling other mcpfactory services
  */
 
-const SERVICE_SECRET = process.env.SERVICE_SECRET_KEY || "";
+const SERVICE_SECRET = process.env.API_SERVICE_API_KEY || "";
 
 interface ServiceCallOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

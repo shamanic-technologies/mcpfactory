@@ -24,4 +24,4 @@ jobs:
       - run: pnpm --filter @mcpfactory/api-service test
         env:
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-          SERVICE_SECRET_KEY: test-secret
+          API_SERVICE_API_KEY: test-secret

@@ -9,7 +9,7 @@ describe("Service client", () => {
 
   it("should use X-Service-Secret header for internal calls", () => {
     const headers = {
-      "X-Service-Secret": process.env.SERVICE_SECRET_KEY,
+      "X-Service-Secret": process.env.API_SERVICE_API_KEY,
       "Content-Type": "application/json",
     };
     expect(headers["X-Service-Secret"]).toBeDefined();
