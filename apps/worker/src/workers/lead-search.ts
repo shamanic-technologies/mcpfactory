@@ -25,9 +25,10 @@ export function startLeadSearchWorker(): Worker {
   const worker = new Worker<LeadSearchJobData>(
     QUEUE_NAMES.LEAD_SEARCH,
     async (job: Job<LeadSearchJobData>) => {
-      const { campaignRunId, clerkOrgId, searchParams } = job.data;
+      const { campaignRunId, clerkOrgId, searchParams, clientData } = job.data;
       
       console.log(`[lead-search] Searching leads for run ${campaignRunId}`);
+      console.log(`[lead-search] Client: ${clientData?.companyName || "(no client data)"}`);
       
       try {
         // Call Apollo service to search
@@ -53,10 +54,7 @@ export function startLeadSearchWorker(): Worker {
               company: enrichment.organizationName,
               industry: enrichment.organizationIndustry,
             },
-            clientData: {
-              companyName: "", // Would come from company scrape
-              companyDescription: "",
-            },
+            clientData: clientData || { companyName: "", companyDescription: "" },
           } as EmailGenerateJobData,
         }));
         

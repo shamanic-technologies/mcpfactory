@@ -41,6 +41,10 @@ export interface LeadSearchJobData {
   campaignRunId: string;
   clerkOrgId: string;
   searchParams: Record<string, unknown>;
+  clientData: {
+    companyName: string;
+    companyDescription: string;
+  };
 }
 
 export interface LeadEnrichJobData {

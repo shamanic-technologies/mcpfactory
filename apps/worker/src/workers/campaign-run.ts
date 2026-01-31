@@ -1,15 +1,31 @@
 import { Worker, Job } from "bullmq";
 import { getRedis } from "../lib/redis.js";
 import { getQueues, QUEUE_NAMES, CampaignRunJobData, LeadSearchJobData } from "../queues/index.js";
-import { campaignService, apolloService } from "../lib/service-client.js";
+import { campaignService, companyService } from "../lib/service-client.js";
+
+interface CampaignDetails {
+  id: string;
+  name: string;
+  requestRaw?: {
+    clientUrl?: string;
+  };
+}
+
+interface CompanyScrapeResult {
+  companyName?: string;
+  companyDescription?: string;
+  name?: string;
+  description?: string;
+}
 
 /**
  * Campaign Run Worker
  * 
  * This is the main orchestrator that:
  * 1. Creates a campaign run record
- * 2. Fetches campaign targeting criteria
- * 3. Queues lead search jobs
+ * 2. Fetches campaign details including clientUrl
+ * 3. Scrapes client company info
+ * 4. Queues lead search jobs with client data
  */
 export function startCampaignRunWorker(): Worker {
   const connection = getRedis();
@@ -26,17 +42,39 @@ export function startCampaignRunWorker(): Worker {
         const runResult = await campaignService.createRun(campaignId, clerkOrgId) as { run: { id: string } };
         const campaignRunId = runResult.run.id;
         
-        // 2. Get campaign details (we'd need to add this endpoint)
-        // For now, we'll use the job data or fetch from the campaign
+        // 2. Get campaign details to find clientUrl
+        const campaignResult = await campaignService.getCampaign(campaignId, clerkOrgId) as { campaign: CampaignDetails };
+        const campaign = campaignResult.campaign;
+        const clientUrl = campaign.requestRaw?.clientUrl;
         
-        // 3. Queue lead search job
+        console.log(`[campaign-run] Campaign ${campaignId} clientUrl: ${clientUrl}`);
+        
+        // 3. Scrape client company info if URL provided
+        let clientData = { companyName: "", companyDescription: "" };
+        if (clientUrl) {
+          try {
+            console.log(`[campaign-run] Scraping client company: ${clientUrl}`);
+            const scrapeResult = await companyService.scrape(clerkOrgId, clientUrl) as CompanyScrapeResult;
+            clientData = {
+              companyName: scrapeResult.companyName || scrapeResult.name || "",
+              companyDescription: scrapeResult.companyDescription || scrapeResult.description || "",
+            };
+            console.log(`[campaign-run] Client company: ${clientData.companyName}`);
+          } catch (scrapeError) {
+            console.error(`[campaign-run] Failed to scrape client company:`, scrapeError);
+            // Continue with empty client data rather than failing
+          }
+        }
+        
+        // 4. Queue lead search job with client data
         const queues = getQueues();
         await queues[QUEUE_NAMES.LEAD_SEARCH].add(
           `search-${campaignRunId}`,
           {
             campaignRunId,
             clerkOrgId,
-            searchParams: {}, // Would be populated from campaign
+            searchParams: {},
+            clientData,
           } as LeadSearchJobData
         );
         
