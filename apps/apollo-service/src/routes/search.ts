@@ -80,11 +80,26 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
       await Promise.all(enrichmentPromises);
     }
 
+    // Transform to camelCase for worker consumption
+    const transformedPeople = result.people.map((person: ApolloPerson) => ({
+      id: person.id,
+      firstName: person.first_name,
+      lastName: person.last_name,
+      email: person.email,
+      emailStatus: person.email_status,
+      title: person.title,
+      linkedinUrl: person.linkedin_url,
+      organizationName: person.organization?.name,
+      organizationDomain: person.organization?.primary_domain,
+      organizationIndustry: person.organization?.industry,
+      organizationSize: person.organization?.estimated_num_employees?.toString(),
+    }));
+
     res.json({
       searchId,
       peopleCount: result.people.length,
       totalEntries,
-      people: result.people,
+      people: transformedPeople,
     });
   } catch (error) {
     console.error("Search error:", error);
