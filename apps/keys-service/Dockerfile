@@ -21,6 +21,9 @@ RUN pnpm --filter @mcpfactory/keys-service build
 # Prepare production directory with only production dependencies
 RUN pnpm deploy --filter @mcpfactory/keys-service --legacy /prod
 
+# Copy built files to production directory
+RUN cp -r /app/apps/keys-service/dist /prod/dist
+
 # Stage 2: Production
 FROM node:20-slim
 
