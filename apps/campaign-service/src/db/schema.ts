@@ -63,7 +63,7 @@ export const campaigns = pgTable(
     recurrence: text("recurrence").notNull(),  // 'oneoff', 'daily', 'weekly', 'monthly'
     
     // Status: 'ongoing' or 'stopped'
-    status: text("status").notNull().default("ongoing")
+    status: text("status").notNull().default("ongoing"),
     toResumeAt: timestamp("to_resume_at", { withTimezone: true }),
     
     // Notifications
