@@ -140,11 +140,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
         />
       </head>
-      <body className="antialiased">
+      <body className="antialiased h-screen flex flex-col overflow-hidden">
         <Header />
-        <div className="flex">
+        <div className="flex flex-1 overflow-hidden">
           <Sidebar />
-          <main className="flex-1 min-h-screen">{children}</main>
+          <main className="flex-1 overflow-y-auto">{children}</main>
         </div>
       </body>
     </html>

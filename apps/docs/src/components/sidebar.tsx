@@ -50,7 +50,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 border-r border-secondary-100 min-h-screen bg-gradient-to-b from-white to-secondary-50/30 p-4">
+    <aside className="w-64 border-r border-secondary-100 bg-gradient-to-b from-white to-secondary-50/30 p-4 flex-shrink-0 overflow-y-auto">
       <nav className="space-y-6">
         {NAV_ITEMS.map((section) => (
           <div key={section.title}>
