@@ -1,36 +1,36 @@
 import { Router } from "express";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { users, byokKeys } from "../db/schema.js";
+import { orgs, byokKeys } from "../db/schema.js";
 import { apiKeyAuth, AuthenticatedRequest } from "../middleware/auth.js";
 import { decrypt } from "../lib/crypto.js";
 
 const router = Router();
 
 /**
- * GET /validate - Validate API key and return user info (for MCP)
+ * GET /validate - Validate API key and return org info (for MCP)
  */
 router.get("/validate", apiKeyAuth, async (req: AuthenticatedRequest, res) => {
   try {
-    const user = await db.query.users.findFirst({
-      where: eq(users.id, req.userId!),
+    const org = await db.query.orgs.findFirst({
+      where: eq(orgs.id, req.orgId!),
     });
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    if (!org) {
+      return res.status(404).json({ error: "Organization not found" });
     }
 
     // Get configured BYOK keys (just providers, not the actual keys)
     const keys = await db.query.byokKeys.findMany({
-      where: eq(byokKeys.userId, req.userId!),
+      where: eq(byokKeys.orgId, req.orgId!),
     });
 
     const configuredProviders = keys.map((k) => k.provider);
 
     res.json({
       valid: true,
-      userId: user.id,
-      plan: user.plan,
+      orgId: org.id,
+      clerkOrgId: org.clerkOrgId,
       configuredProviders,
     });
   } catch (error) {
@@ -48,10 +48,13 @@ router.get("/validate/keys/:provider", apiKeyAuth, async (req: AuthenticatedRequ
     const { provider } = req.params;
 
     const key = await db.query.byokKeys.findFirst({
-      where: eq(byokKeys.userId, req.userId!),
+      where: and(
+        eq(byokKeys.orgId, req.orgId!),
+        eq(byokKeys.provider, provider)
+      ),
     });
 
-    if (!key || key.provider !== provider) {
+    if (!key) {
       return res.status(404).json({ error: `${provider} key not configured` });
     }
 
