@@ -71,11 +71,10 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
+    icon: "/favicon.jpg",
+    shortcut: "/favicon.jpg",
+    apple: "/favicon.jpg",
   },
-  manifest: "/site.webmanifest",
   alternates: {
     canonical: SITE_URL,
   },
@@ -115,7 +114,7 @@ const jsonLd = {
     "@type": "Organization",
     name: "MCP Factory",
     url: SITE_URL,
-    logo: `${SITE_URL}/logo.jpg`,
+    logo: `${SITE_URL}/logo-head.jpg`,
     sameAs: [
       "https://github.com/shamanic-technologies/mcpfactory",
       "https://twitter.com/mcpfactory",
@@ -128,7 +127,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: "MCP Factory",
   url: SITE_URL,
-  logo: `${SITE_URL}/logo.jpg`,
+  logo: `${SITE_URL}/logo-head.jpg`,
   description: "The DFY, BYOK MCP Platform",
   sameAs: [
     "https://github.com/shamanic-technologies/mcpfactory",
@@ -137,6 +136,19 @@ const organizationJsonLd = {
     "@type": "ContactPoint",
     email: "support@mcpfactory.org",
     contactType: "customer service",
+  },
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "MCP Factory",
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${SITE_URL}/?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
   },
 };
 
@@ -155,6 +167,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
       <body className="antialiased">{children}</body>

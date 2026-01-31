@@ -69,9 +69,9 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
+    icon: "/favicon.jpg",
+    shortcut: "/favicon.jpg",
+    apple: "/favicon.jpg",
   },
   alternates: {
     canonical: SITE_URL,
@@ -95,7 +95,7 @@ const jsonLd = {
     url: "https://mcpfactory.org",
     logo: {
       "@type": "ImageObject",
-      url: "https://mcpfactory.org/logo.jpg",
+      url: "https://mcpfactory.org/logo-head.jpg",
     },
   },
   mainEntityOfPage: {
