@@ -44,8 +44,11 @@ export function startBrandProfileWorker(): Worker {
       console.log(`[brand-profile] Fetching profile for brand ${brandId} (${brandUrl})`);
       
       try {
+        // Extract domain from brandUrl for fallback
+        const brandDomain = new URL(brandUrl).hostname.replace(/^www\./, '');
+        
         // 1. Get sales profile from brand-service
-        let clientData: LeadSearchJobData["clientData"] = { companyName: "" };
+        let clientData: LeadSearchJobData["clientData"] = { companyName: brandDomain };
         
         try {
           const profileResult = await brandService.getSalesProfile(
