@@ -37,7 +37,7 @@ export const toolDefinitions = {
     description: "Create and immediately start a cold email campaign targeting specific leads. Campaign starts in 'ongoing' status.",
     schema: z.object({
       name: z.string().describe("Campaign name"),
-      client_url: z.string().describe("Your company URL (for context in emails)"),
+      brand_url: z.string().describe("Your brand/company URL to promote"),
       target_titles: z.array(z.string()).describe("Job titles to target"),
       target_industries: z.array(z.string()).optional().describe("Industries to target"),
       target_locations: z.array(z.string()).optional().describe("Locations to target"),
@@ -222,7 +222,7 @@ async function handleCreateCampaign(args: Record<string, unknown>) {
     method: "POST",
     body: {
       name: args.name,
-      clientUrl: args.client_url,
+      brandUrl: args.brand_url,
       personTitles: args.target_titles,
       organizationLocations: args.target_locations,
       qOrganizationKeywordTags: args.target_industries,

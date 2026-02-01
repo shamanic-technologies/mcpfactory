@@ -17,7 +17,6 @@ interface CampaignDetails {
   qOrganizationIndustryTagIds?: string[];
   qKeywords?: string;
   requestRaw?: {
-    clientUrl?: string;
     brandUrl?: string;
   };
 }
@@ -54,7 +53,7 @@ export function startBrandUpsertWorker(): Worker {
         
         // Get brand info - brand should already exist from campaign creation
         const brandId = campaign.brandId;
-        const brandUrl = campaign.brandUrl || campaign.requestRaw?.brandUrl || campaign.requestRaw?.clientUrl;
+        const brandUrl = campaign.brandUrl || campaign.requestRaw?.brandUrl;
         
         if (!brandId || !brandUrl) {
           throw new Error(`Campaign ${campaignId} has no brand associated`);

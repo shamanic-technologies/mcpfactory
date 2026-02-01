@@ -35,10 +35,10 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
   try {
     console.log("Create campaign - orgId:", req.orgId);
     
-    // If clientUrl provided, scrape it first so company info is available for runs
-    const { clientUrl } = req.body;
-    if (clientUrl) {
-      console.log("Scraping client company:", clientUrl);
+    // If brandUrl provided, scrape it first so company info is available for runs
+    const { brandUrl } = req.body;
+    if (brandUrl) {
+      console.log("Scraping brand:", brandUrl);
       try {
         await callExternalService(
           externalServices.scraping,
@@ -46,15 +46,15 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
           {
             method: "POST",
             body: {
-              url: clientUrl,
+              url: brandUrl,
               sourceService: "mcpfactory",
               sourceOrgId: req.orgId,
             },
           }
         );
-        console.log("Client company scraped successfully");
+        console.log("Brand scraped successfully");
       } catch (scrapeError: any) {
-        console.warn("Failed to scrape client company (continuing anyway):", scrapeError.message);
+        console.warn("Failed to scrape brand (continuing anyway):", scrapeError.message);
         // Don't fail campaign creation if scrape fails - worker will handle missing data
       }
     }
