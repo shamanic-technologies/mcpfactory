@@ -197,8 +197,8 @@ export default function Home() {
             <span className="text-gray-800">That Actually Work</span>
           </h1>
           <p className="text-xl text-gray-600 mb-4 max-w-2xl mx-auto">
-            The <span className="font-semibold text-primary-500">DFY</span>,{" "}
-            <span className="font-semibold text-accent-500">BYOK</span> cold email platform.
+            <span className="font-semibold text-primary-600">Done For You</span>, with{" "}
+            <span className="font-semibold text-accent-600">Your Own API Keys</span>.
           </p>
           <p className="text-lg text-gray-500 mb-8 max-w-2xl mx-auto">
             You give us your URL + target audience. We handle lead finding, email generation, 
@@ -266,7 +266,7 @@ export default function Home() {
               <div className="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 border border-primary-200">
                 <span className="text-3xl">🎯</span>
               </div>
-              <h3 className="font-bold text-xl mb-2 text-gray-800">DFY (Done For You)</h3>
+              <h3 className="font-bold text-xl mb-2 text-gray-800">Done For You</h3>
               <p className="text-gray-600 mb-4">
                 Competitors give you tools. We do the work.
               </p>
@@ -280,7 +280,7 @@ export default function Home() {
               <div className="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center mb-4 border border-accent-200">
                 <span className="text-3xl">🔑</span>
               </div>
-              <h3 className="font-bold text-xl mb-2 text-gray-800">BYOK (Bring Your Own Keys)</h3>
+              <h3 className="font-bold text-xl mb-2 text-gray-800">Bring Your Own Keys</h3>
               <p className="text-gray-600 mb-4">
                 Use your own API keys. Pay only for what you use.
               </p>
