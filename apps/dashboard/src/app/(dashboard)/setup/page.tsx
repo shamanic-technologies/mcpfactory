@@ -208,7 +208,14 @@ export default function SetupPage() {
 
                 {mcp.isLive ? (
                   <div className="space-y-3">
-                    {!status.ready && (
+                    {status.ready ? (
+                      <button
+                        onClick={() => setSelectedMcp(mcp)}
+                        className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition"
+                      >
+                        Edit Keys
+                      </button>
+                    ) : (
                       <button
                         onClick={() => setSelectedMcp(mcp)}
                         className="w-full px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 text-sm font-medium transition"
