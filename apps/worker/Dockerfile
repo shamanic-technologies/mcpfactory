@@ -19,7 +19,7 @@ RUN pnpm install -r --no-frozen-lockfile
 RUN pnpm --filter @mcpfactory/worker build
 
 # Prepare production directory with only production dependencies
-RUN pnpm deploy --filter @mcpfactory/worker --legacy /prod
+RUN pnpm deploy --filter @mcpfactory/worker /prod
 
 # Copy built files to production directory
 RUN cp -r /app/apps/worker/dist /prod/dist
