@@ -34,7 +34,7 @@ export default async function DashboardHome() {
             Generate and send personalized cold emails from any URL.
           </p>
           <LinkButton
-            href="/mcp/sales-outreach"
+            href="/setup"
             className="text-primary-500 hover:text-primary-600 font-medium text-sm"
           >
             Get Started →
@@ -69,11 +69,11 @@ export default async function DashboardHome() {
         <ol className="space-y-2 text-sm text-primary-700">
           <li className="flex items-start gap-2">
             <span className="bg-primary-200 text-primary-800 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
-            <span>Create your API key above or in <Link href="/api-keys" className="underline">API Keys</Link></span>
+            <span>Configure AI provider keys in <Link href="/setup" className="underline">Setup</Link></span>
           </li>
           <li className="flex items-start gap-2">
             <span className="bg-primary-200 text-primary-800 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
-            <span>Configure BYOK keys in <Link href="/mcp/sales-outreach" className="underline">Sales Cold Emails → BYOK Keys</Link></span>
+            <span>Create your MCP API key above or in <Link href="/api-keys" className="underline">API Keys</Link></span>
           </li>
           <li className="flex items-start gap-2">
             <span className="bg-primary-200 text-primary-800 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
