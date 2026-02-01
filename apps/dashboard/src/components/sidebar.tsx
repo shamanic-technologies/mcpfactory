@@ -67,6 +67,26 @@ export function Sidebar() {
             API Keys
           </span>
         </Link>
+        
+        <Link
+          href="/brands"
+          className={`
+            flex items-center gap-2 px-3 py-2.5 rounded-xl transition
+            ${pathname.startsWith("/brands") ? "bg-primary-50 border border-primary-200" : "hover:bg-gray-50"}
+          `}
+        >
+          <svg 
+            className={`w-5 h-5 ${pathname.startsWith("/brands") ? "text-primary-600" : "text-gray-600"}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+          </svg>
+          <span className={`font-medium text-sm ${pathname.startsWith("/brands") ? "text-primary-700" : "text-gray-700"}`}>
+            Brands
+          </span>
+        </Link>
       </div>
 
       <div className="p-4 border-b border-gray-100">
