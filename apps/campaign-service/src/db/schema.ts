@@ -28,33 +28,6 @@ export const orgs = pgTable(
   ]
 );
 
-// Brands table - represents a company/brand being promoted
-export const brands = pgTable(
-  "brands",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    orgId: uuid("org_id")
-      .notNull()
-      .references(() => orgs.id, { onDelete: "cascade" }),
-    
-    // Domain is the unique key (extracted from brandUrl)
-    domain: text("domain").notNull(),
-    
-    // Display name (auto-extracted or user-defined)
-    name: text("name"),
-    
-    // The full URL used to scrape brand info
-    brandUrl: text("brand_url").notNull(),
-    
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [
-    index("idx_brands_org").on(table.orgId),
-    uniqueIndex("idx_brands_org_domain").on(table.orgId, table.domain),
-  ]
-);
-
 // Campaigns table
 export const campaigns = pgTable(
   "campaigns",
@@ -63,10 +36,6 @@ export const campaigns = pgTable(
     orgId: uuid("org_id")
       .notNull()
       .references(() => orgs.id, { onDelete: "cascade" }),
-    // DEPRECATED: brandId is being phased out. Use brandUrl instead.
-    // Brand data now lives in brand-service, not campaign-service.
-    brandId: uuid("brand_id")
-      .references(() => brands.id, { onDelete: "set null" }),  // Nullable, deprecated
     createdByUserId: uuid("created_by_user_id")
       .references(() => users.id),  // Optional - MCP calls don't have user context
     
@@ -150,8 +119,6 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Org = typeof orgs.$inferSelect;
 export type NewOrg = typeof orgs.$inferInsert;
-export type Brand = typeof brands.$inferSelect;
-export type NewBrand = typeof brands.$inferInsert;
 export type Campaign = typeof campaigns.$inferSelect;
 export type NewCampaign = typeof campaigns.$inferInsert;
 export type CampaignRun = typeof campaignRuns.$inferSelect;

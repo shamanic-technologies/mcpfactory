@@ -4,7 +4,6 @@ import * as Sentry from "@sentry/node";
 import express from "express";
 import cors from "cors";
 import healthRoutes from "./routes/health.js";
-import brandsRoutes from "./routes/brands.js";
 import campaignsRoutes from "./routes/campaigns.js";
 import runsRoutes from "./routes/runs.js";
 import internalRoutes from "./routes/internal.js";
@@ -27,7 +26,6 @@ app.use(express.json());
 
 // Routes
 app.use(healthRoutes);
-app.use(brandsRoutes);
 app.use(campaignsRoutes);
 app.use(runsRoutes);
 app.use("/internal", internalRoutes);

@@ -1,48 +1,38 @@
 import { Router } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { campaigns, campaignRuns, brands } from "../db/schema.js";
+import { campaigns } from "../db/schema.js";
 import { clerkAuth, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
-import { getOrCreateBrand } from "./brands.js";
+import { extractDomain, normalizeUrl } from "../lib/domain.js";
 
 const router = Router();
 
 /**
  * GET /campaigns - List all campaigns for org
- * Optional query param: brandId to filter by brand
+ * Optional query param: brandUrl to filter by brand
  */
 router.get("/campaigns", clerkAuth, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
-    const { brandId } = req.query;
+    const { brandUrl } = req.query;
     
-    // Build query with optional brand filter
-    let query = db
-      .select({
-        campaign: campaigns,
-        brand: brands,
-      })
+    const results = await db
+      .select()
       .from(campaigns)
-      .leftJoin(brands, eq(campaigns.brandId, brands.id))
       .where(eq(campaigns.orgId, req.orgId!))
-      .orderBy(campaigns.createdAt);
+      .orderBy(desc(campaigns.createdAt));
 
-    const results = await query;
+    // Filter by brandUrl domain if provided
+    let filtered = results;
+    if (brandUrl && typeof brandUrl === "string") {
+      const filterDomain = extractDomain(normalizeUrl(brandUrl));
+      filtered = results.filter(c => {
+        if (!c.brandUrl) return false;
+        const campaignDomain = extractDomain(normalizeUrl(c.brandUrl));
+        return campaignDomain === filterDomain;
+      });
+    }
 
-    // Filter by brandId if provided
-    const filtered = brandId 
-      ? results.filter(r => r.campaign.brandId === brandId)
-      : results;
-
-    res.json({ 
-      campaigns: filtered.map(r => ({
-        ...r.campaign,
-        brand: r.brand ? {
-          id: r.brand.id,
-          domain: r.brand.domain,
-          name: r.brand.name,
-        } : null,
-      }))
-    });
+    res.json({ campaigns: filtered });
   } catch (error) {
     console.error("List campaigns error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -107,24 +97,24 @@ router.post("/campaigns", clerkAuth, requireOrg, async (req: AuthenticatedReques
       return res.status(400).json({ error: "brandUrl is required" });
     }
 
-    // Get or create brand from brandUrl
-    const brand = await getOrCreateBrand(req.orgId!, brandUrl);
-    console.log(`[campaigns] Using brand: ${brand.domain} (id: ${brand.id})`);
+    // Normalize the brandUrl
+    const normalizedBrandUrl = normalizeUrl(brandUrl);
+    console.log(`[campaigns] Creating campaign with brandUrl: ${normalizedBrandUrl}`);
 
     const [campaign] = await db
       .insert(campaigns)
       .values({
         orgId: req.orgId!,
-        brandId: brand.id,
         createdByUserId: req.userId!,
         name,
+        brandUrl: normalizedBrandUrl,  // Store brandUrl directly, brand-service is source of truth
         personTitles,
         qOrganizationKeywordTags,
         organizationLocations,
         organizationNumEmployeesRanges,
         qOrganizationIndustryTagIds,
         qKeywords,
-        requestRaw: { ...req.body, brandUrl },  // Store full request for transparency
+        requestRaw: { ...req.body, brandUrl: normalizedBrandUrl },
         maxBudgetDailyUsd,
         maxBudgetWeeklyUsd,
         maxBudgetMonthlyUsd,
@@ -138,7 +128,7 @@ router.post("/campaigns", clerkAuth, requireOrg, async (req: AuthenticatedReques
       })
       .returning();
 
-    res.status(201).json({ campaign, brand });
+    res.status(201).json({ campaign });
   } catch (error) {
     console.error("Create campaign error:", error);
     res.status(500).json({ error: "Internal server error" });

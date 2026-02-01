@@ -22,6 +22,13 @@
       "when": 1769900000000,
       "tag": "0002_add_brand_url",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769940000000,
+      "tag": "0003_remove_brands_table",
+      "breakpoints": true
     }
   ]
 }
