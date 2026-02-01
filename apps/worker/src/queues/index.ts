@@ -40,7 +40,14 @@ export interface CampaignRunJobData {
 export interface LeadSearchJobData {
   campaignRunId: string;
   clerkOrgId: string;
-  searchParams: Record<string, unknown>;
+  searchParams: {
+    personTitles?: string[];
+    organizationLocations?: string[];
+    qOrganizationKeywordTags?: string[];
+    organizationNumEmployeesRanges?: string[];
+    qOrganizationIndustryTagIds?: string[];
+    qKeywords?: string;
+  };
   clientData: {
     companyName: string;
     companyDescription: string;

@@ -6,6 +6,14 @@ import { campaignService, companyService } from "../lib/service-client.js";
 interface CampaignDetails {
   id: string;
   name: string;
+  // Apollo targeting criteria
+  personTitles?: string[];
+  organizationLocations?: string[];
+  qOrganizationKeywordTags?: string[];
+  organizationNumEmployeesRanges?: string[];
+  qOrganizationIndustryTagIds?: string[];
+  qKeywords?: string;
+  // Raw request storage
   requestRaw?: {
     clientUrl?: string;
   };
@@ -99,14 +107,26 @@ export function startCampaignRunWorker(): Worker {
           }
         }
         
-        // 4. Queue lead search job with client data
+        // 4. Build search params from campaign targeting criteria
+        const searchParams = {
+          personTitles: campaign.personTitles,
+          organizationLocations: campaign.organizationLocations,
+          qOrganizationKeywordTags: campaign.qOrganizationKeywordTags,
+          organizationNumEmployeesRanges: campaign.organizationNumEmployeesRanges,
+          qOrganizationIndustryTagIds: campaign.qOrganizationIndustryTagIds,
+          qKeywords: campaign.qKeywords,
+        };
+        
+        console.log(`[campaign-run] Search params:`, JSON.stringify(searchParams));
+        
+        // 5. Queue lead search job with client data and search params
         const queues = getQueues();
         await queues[QUEUE_NAMES.LEAD_SEARCH].add(
           `search-${campaignRunId}`,
           {
             campaignRunId,
             clerkOrgId,
-            searchParams: {},
+            searchParams,
             clientData,
           } as LeadSearchJobData
         );
