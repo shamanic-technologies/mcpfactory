@@ -126,6 +126,40 @@ router.get("/brands/:id", authenticate, async (req: AuthenticatedRequest, res) =
 });
 
 /**
+ * GET /v1/brands/:id/sales-profile
+ * Get sales profile for a specific brand
+ */
+router.get("/brands/:id/sales-profile", authenticate, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const response = await fetch(
+      `${BRAND_SERVICE_URL}/brands/${id}/sales-profile`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": BRAND_SERVICE_API_KEY,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return res.status(404).json({ error: "Sales profile not found" });
+      }
+      const error = await response.json().catch(() => ({ error: "Unknown error" }));
+      throw new Error(error.error || `Failed to fetch sales profile: ${response.status}`);
+    }
+
+    const result = await response.json();
+    res.json(result);
+  } catch (error: any) {
+    console.error("Get brand sales profile error:", error);
+    res.status(500).json({ error: error.message || "Failed to get sales profile" });
+  }
+});
+
+/**
  * GET /v1/brand/sales-profiles
  * Get all sales profiles (brands) for the organization
  * NOTE: Must be before /:id route to avoid matching "sales-profiles" as an id

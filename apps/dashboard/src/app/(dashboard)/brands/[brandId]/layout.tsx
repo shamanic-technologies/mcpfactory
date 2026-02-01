@@ -60,8 +60,9 @@ export default function BrandDetailLayout({
     async function fetchBrand() {
       try {
         const token = await getToken();
+        // Use API gateway which proxies to brand-service
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_CAMPAIGN_SERVICE_URL}/brands/${brandId}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/v1/brands/${brandId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

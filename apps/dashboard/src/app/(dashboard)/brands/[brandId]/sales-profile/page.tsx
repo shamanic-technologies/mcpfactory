@@ -35,8 +35,9 @@ export default function BrandSalesProfilePage() {
     async function fetchProfile() {
       try {
         const token = await getToken();
+        // Use API gateway which has the X-API-Key for brand-service
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BRAND_SERVICE_URL}/brands/${brandId}/sales-profile`,
+          `${process.env.NEXT_PUBLIC_API_URL}/v1/brands/${brandId}/sales-profile`,
           {
             headers: { 
               Authorization: `Bearer ${token}`,

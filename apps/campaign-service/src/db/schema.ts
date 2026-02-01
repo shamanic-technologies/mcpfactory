@@ -41,9 +41,12 @@ export const campaigns = pgTable(
     
     name: text("name").notNull(),
     
-    // Brand URL - the single source of truth for which brand this campaign is for
-    // brand-service will be called to get brand details using clerkOrgId + brandUrl
+    // Brand URL - used to identify which brand this campaign promotes
     brandUrl: text("brand_url"),
+    
+    // Brand ID from brand-service (set by worker after brand-upsert)
+    // Nullable initially, populated when brand is created/found in brand-service
+    brandId: uuid("brand_id"),
     
     // Apollo targeting criteria (using Apollo API naming)
     personTitles: text("person_titles").array(),           // ["CEO", "CTO", "Founder"]

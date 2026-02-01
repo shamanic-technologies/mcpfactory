@@ -31,30 +31,10 @@ export default function BrandCampaignsPage() {
       try {
         const token = await getToken();
         
-        // First, get the brand to get its brandUrl
-        const brandRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/brands/${brandId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        
-        if (!brandRes.ok) {
-          console.error("Failed to fetch brand");
-          setLoading(false);
-          return;
-        }
-        
-        const brandData = await brandRes.json();
-        const brandUrl = brandData.brand?.brandUrl;
-        
-        if (!brandUrl) {
-          console.error("Brand has no URL");
-          setLoading(false);
-          return;
-        }
-        
-        // Now fetch campaigns filtered by brandUrl
+        // Fetch campaigns filtered by brandId via API gateway
+        // brandId in the URL is the brand-service ID
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_CAMPAIGN_SERVICE_URL}/campaigns?brandUrl=${encodeURIComponent(brandUrl)}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/v1/campaigns?brandId=${brandId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.ok) {

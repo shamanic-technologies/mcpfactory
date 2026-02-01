@@ -93,6 +93,15 @@ export const campaignService = {
       apiKey: this.apiKey,
     });
   },
+  
+  async updateCampaign(campaignId: string, clerkOrgId: string, data: { brandId?: string }) {
+    return callService(this.url, `/internal/campaigns/${campaignId}`, {
+      method: "PATCH",
+      body: data,
+      apiKey: this.apiKey,
+      clerkOrgId,
+    });
+  },
 };
 
 export const apolloService = {

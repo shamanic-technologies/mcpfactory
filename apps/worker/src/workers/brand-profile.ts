@@ -1,10 +1,11 @@
 import { Worker, Job } from "bullmq";
 import { getRedis } from "../lib/redis.js";
 import { getQueues, QUEUE_NAMES, BrandProfileJobData, LeadSearchJobData } from "../queues/index.js";
-import { brandService } from "../lib/service-client.js";
+import { brandService, campaignService } from "../lib/service-client.js";
 
 interface SalesProfileResponse {
   cached?: boolean;
+  brandId?: string;  // Brand ID from brand-service
   profile?: {
     companyName: string | null;
     valueProposition: string | null;
@@ -39,7 +40,7 @@ export function startBrandProfileWorker(): Worker {
   const worker = new Worker<BrandProfileJobData>(
     QUEUE_NAMES.BRAND_PROFILE,
     async (job: Job<BrandProfileJobData>) => {
-      const { campaignRunId, clerkOrgId, brandUrl, searchParams } = job.data;
+      const { campaignId, campaignRunId, clerkOrgId, brandUrl, searchParams } = job.data;
       
       // Extract domain from brandUrl for logging and fallback
       const brandDomain = new URL(brandUrl).hostname.replace(/^www\./, '');
@@ -73,6 +74,19 @@ export function startBrandProfileWorker(): Worker {
               additionalContext: p.additionalContext || undefined,
             };
             console.log(`[brand-profile] Got profile: ${clientData.companyName} (cached: ${profileResult.cached})`);
+            
+            // Update campaign with brandId from brand-service
+            if (profileResult.brandId) {
+              try {
+                await campaignService.updateCampaign(campaignId, clerkOrgId, {
+                  brandId: profileResult.brandId,
+                });
+                console.log(`[brand-profile] Updated campaign ${campaignId} with brandId: ${profileResult.brandId}`);
+              } catch (updateErr) {
+                // Non-fatal - log and continue
+                console.error(`[brand-profile] Failed to update campaign brandId:`, updateErr);
+              }
+            }
           }
         } catch (profileError) {
           console.error(`[brand-profile] Failed to get profile:`, profileError);

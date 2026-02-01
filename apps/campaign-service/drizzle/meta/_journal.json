@@ -29,6 +29,13 @@
       "when": 1769940000000,
       "tag": "0003_remove_brands_table",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769945000000,
+      "tag": "0004_add_brand_id_reference",
+      "breakpoints": true
     }
   ]
 }

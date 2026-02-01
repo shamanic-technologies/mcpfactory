@@ -8,12 +8,25 @@ const router = Router();
 /**
  * GET /v1/campaigns
  * List campaigns for the organization
+ * Query params:
+ * - brandId: optional, filter by brand ID (preferred)
+ * - brandUrl: optional, filter by brand URL (legacy)
  */
 router.get("/campaigns", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
+    // Build query string with optional filters
+    const brandId = req.query.brandId as string;
+    const brandUrl = req.query.brandUrl as string;
+    
+    const params = new URLSearchParams();
+    if (brandId) params.set("brandId", brandId);
+    else if (brandUrl) params.set("brandUrl", brandUrl);
+    
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    
     const result = await callService(
       services.campaign,
-      `/internal/campaigns`,
+      `/internal/campaigns${queryString}`,
       {
         headers: buildInternalHeaders(req),
       }

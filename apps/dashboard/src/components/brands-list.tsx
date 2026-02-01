@@ -22,8 +22,9 @@ export function BrandsList() {
     async function fetchBrands() {
       try {
         const token = await getToken();
+        // Use API gateway which proxies to brand-service
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_CAMPAIGN_SERVICE_URL}/brands`,
+          `${process.env.NEXT_PUBLIC_API_URL}/v1/brands`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
