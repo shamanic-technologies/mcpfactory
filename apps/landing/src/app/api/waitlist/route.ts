@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Service-Secret": POSTMARK_SERVICE_API_KEY,
+        "X-API-Key": POSTMARK_SERVICE_API_KEY,
       },
       body: JSON.stringify({
         from: FROM_EMAIL,
