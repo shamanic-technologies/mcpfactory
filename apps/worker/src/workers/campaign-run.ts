@@ -129,13 +129,14 @@ export function startCampaignRunWorker(): Worker {
         
         console.log(`[campaign-run] Search params:`, JSON.stringify(searchParams));
         
-        // 5. Queue lead search job with client data and search params
+        // 5. Queue lead search job with client data, search params, and brandId
         const queues = getQueues();
         await queues[QUEUE_NAMES.LEAD_SEARCH].add(
           `search-${campaignRunId}`,
           {
             campaignRunId,
             clerkOrgId,
+            brandId,
             searchParams,
             clientData,
           } as LeadSearchJobData

@@ -40,6 +40,7 @@ export interface CampaignRunJobData {
 export interface LeadSearchJobData {
   campaignRunId: string;
   clerkOrgId: string;
+  brandId?: string;
   searchParams: {
     personTitles?: string[];
     organizationLocations?: string[];
@@ -50,7 +51,20 @@ export interface LeadSearchJobData {
   };
   clientData: {
     companyName: string;
-    companyDescription: string;
+    companyOverview?: string;
+    valueProposition?: string;
+    targetAudience?: string;
+    customerPainPoints?: string[];
+    keyFeatures?: string[];
+    productDifferentiators?: string[];
+    competitors?: string[];
+    socialProof?: {
+      caseStudies?: string[];
+      testimonials?: string[];
+      results?: string[];
+    };
+    callToAction?: string;
+    additionalContext?: string;
   };
 }
 
