@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
-import { PlusIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
+import { GlobeAltIcon } from "@heroicons/react/24/outline";
 
 interface Brand {
   id: string;
@@ -56,13 +56,6 @@ export default function BrandsPage() {
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Your Brands</h1>
-        <Link
-          href="/brands/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-        >
-          <PlusIcon className="h-5 w-5" />
-          Add Brand
-        </Link>
       </div>
 
       {brands.length === 0 ? (
@@ -70,15 +63,8 @@ export default function BrandsPage() {
           <GlobeAltIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-medium text-gray-900">No brands yet</h3>
           <p className="mt-2 text-sm text-gray-500">
-            Add a brand to start creating campaigns.
+            Brands are created automatically when you start a campaign via MCP.
           </p>
-          <Link
-            href="/brands/new"
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-          >
-            <PlusIcon className="h-5 w-5" />
-            Add your first brand
-          </Link>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

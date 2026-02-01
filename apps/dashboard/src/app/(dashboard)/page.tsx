@@ -2,6 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { LinkButton } from "@/components/link-button";
 import { ApiKeyPreview } from "@/components/api-key-preview";
+import { BrandsList } from "@/components/brands-list";
 
 export default async function DashboardHome() {
   const user = await currentUser();
@@ -18,6 +19,11 @@ export default async function DashboardHome() {
       {/* API Key Section */}
       <div className="mb-8 max-w-md">
         <ApiKeyPreview />
+      </div>
+
+      {/* Brands Section */}
+      <div className="mb-8">
+        <BrandsList />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
