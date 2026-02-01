@@ -112,6 +112,19 @@ export async function deleteByokKey(
   });
 }
 
+// Session API Key (Foxy chat)
+export interface SessionApiKey {
+  id: string;
+  key?: string; // Only present on first creation
+  keyPrefix: string;
+  name: string;
+  exists: boolean;
+}
+
+export async function getOrCreateSessionKey(token: string): Promise<SessionApiKey> {
+  return apiCall<SessionApiKey>("/api-keys/session", { token, method: "POST" });
+}
+
 // Campaigns
 export interface Campaign {
   id: string;

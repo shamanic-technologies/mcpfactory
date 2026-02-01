@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/sidebar";
 import { Header } from "@/components/header";
 import { OrgActivator } from "@/components/org-activator";
 import { MobileSidebarProvider, useMobileSidebar } from "@/components/mobile-sidebar-context";
+import { ChatWidget } from "@/components/chat/chat-widget";
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -45,6 +46,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
+      <ChatWidget />
     </div>
   );
 }
