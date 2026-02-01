@@ -43,7 +43,6 @@ router.get("/campaigns/all", async (_req, res) => {
       .select({
         id: campaigns.id,
         orgId: campaigns.orgId,
-        brandId: campaigns.brandId,  // Deprecated, kept for compatibility
         name: campaigns.name,
         status: campaigns.status,
         recurrence: campaigns.recurrence,
