@@ -6,7 +6,7 @@
 import { Router } from "express";
 import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { campaigns, campaignRuns, orgs } from "../db/schema.js";
+import { campaigns, campaignRuns, orgs, brands } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
 import { getAggregatedStats, getLeadsForCampaignRuns, aggregateCompaniesFromLeads } from "../lib/service-client.js";
 
@@ -32,30 +32,38 @@ router.get("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) => 
 /**
  * GET /internal/campaigns/all - List all campaigns across all orgs (for scheduler)
  * No serviceAuth - uses internal network trust
- * Returns campaigns with clerkOrgId for downstream service calls
+ * Returns campaigns with clerkOrgId and brand info for downstream service calls
  */
 router.get("/campaigns/all", async (_req, res) => {
   try {
-    // Join with orgs to get clerkOrgId
+    // Join with orgs to get clerkOrgId, and brands for brand info
     const allCampaigns = await db
       .select({
         id: campaigns.id,
         orgId: campaigns.orgId,
+        brandId: campaigns.brandId,
         name: campaigns.name,
         status: campaigns.status,
         recurrence: campaigns.recurrence,
         personTitles: campaigns.personTitles,
         organizationLocations: campaigns.organizationLocations,
         qOrganizationKeywordTags: campaigns.qOrganizationKeywordTags,
+        organizationNumEmployeesRanges: campaigns.organizationNumEmployeesRanges,
+        qOrganizationIndustryTagIds: campaigns.qOrganizationIndustryTagIds,
+        qKeywords: campaigns.qKeywords,
         maxBudgetDailyUsd: campaigns.maxBudgetDailyUsd,
         maxBudgetWeeklyUsd: campaigns.maxBudgetWeeklyUsd,
         maxBudgetMonthlyUsd: campaigns.maxBudgetMonthlyUsd,
         requestRaw: campaigns.requestRaw,
         createdAt: campaigns.createdAt,
         clerkOrgId: orgs.clerkOrgId,
+        brandDomain: brands.domain,
+        brandName: brands.name,
+        brandUrl: brands.brandUrl,
       })
       .from(campaigns)
       .innerJoin(orgs, eq(campaigns.orgId, orgs.id))
+      .leftJoin(brands, eq(campaigns.brandId, brands.id))
       .orderBy(campaigns.createdAt);
 
     res.json({ campaigns: allCampaigns });

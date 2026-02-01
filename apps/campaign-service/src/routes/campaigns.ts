@@ -1,22 +1,48 @@
 import { Router } from "express";
 import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { campaigns, campaignRuns } from "../db/schema.js";
+import { campaigns, campaignRuns, brands } from "../db/schema.js";
 import { clerkAuth, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
+import { getOrCreateBrand } from "./brands.js";
 
 const router = Router();
 
 /**
  * GET /campaigns - List all campaigns for org
+ * Optional query param: brandId to filter by brand
  */
 router.get("/campaigns", clerkAuth, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
-    const orgCampaigns = await db.query.campaigns.findMany({
-      where: eq(campaigns.orgId, req.orgId!),
-      orderBy: (campaigns, { desc }) => [desc(campaigns.createdAt)],
-    });
+    const { brandId } = req.query;
+    
+    // Build query with optional brand filter
+    let query = db
+      .select({
+        campaign: campaigns,
+        brand: brands,
+      })
+      .from(campaigns)
+      .leftJoin(brands, eq(campaigns.brandId, brands.id))
+      .where(eq(campaigns.orgId, req.orgId!))
+      .orderBy(campaigns.createdAt);
 
-    res.json({ campaigns: orgCampaigns });
+    const results = await query;
+
+    // Filter by brandId if provided
+    const filtered = brandId 
+      ? results.filter(r => r.campaign.brandId === brandId)
+      : results;
+
+    res.json({ 
+      campaigns: filtered.map(r => ({
+        ...r.campaign,
+        brand: r.brand ? {
+          id: r.brand.id,
+          domain: r.brand.domain,
+          name: r.brand.name,
+        } : null,
+      }))
+    });
   } catch (error) {
     console.error("List campaigns error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -55,6 +81,7 @@ router.post("/campaigns", clerkAuth, requireOrg, async (req: AuthenticatedReques
   try {
     const {
       name,
+      brandUrl,  // URL of the brand to promote
       personTitles,
       qOrganizationKeywordTags,
       organizationLocations,
@@ -76,10 +103,19 @@ router.post("/campaigns", clerkAuth, requireOrg, async (req: AuthenticatedReques
       return res.status(400).json({ error: "Campaign name is required" });
     }
 
+    if (!brandUrl) {
+      return res.status(400).json({ error: "brandUrl is required" });
+    }
+
+    // Get or create brand from brandUrl
+    const brand = await getOrCreateBrand(req.orgId!, brandUrl);
+    console.log(`[campaigns] Using brand: ${brand.domain} (id: ${brand.id})`);
+
     const [campaign] = await db
       .insert(campaigns)
       .values({
         orgId: req.orgId!,
+        brandId: brand.id,
         createdByUserId: req.userId!,
         name,
         personTitles,
@@ -88,7 +124,7 @@ router.post("/campaigns", clerkAuth, requireOrg, async (req: AuthenticatedReques
         organizationNumEmployeesRanges,
         qOrganizationIndustryTagIds,
         qKeywords,
-        requestRaw: req.body, // Store full request for transparency
+        requestRaw: { ...req.body, brandUrl },  // Store full request for transparency
         maxBudgetDailyUsd,
         maxBudgetWeeklyUsd,
         maxBudgetMonthlyUsd,
@@ -102,7 +138,7 @@ router.post("/campaigns", clerkAuth, requireOrg, async (req: AuthenticatedReques
       })
       .returning();
 
-    res.status(201).json({ campaign });
+    res.status(201).json({ campaign, brand });
   } catch (error) {
     console.error("Create campaign error:", error);
     res.status(500).json({ error: "Internal server error" });
