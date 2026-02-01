@@ -17,8 +17,9 @@ const MCP_MAP: Record<string, { name: string; icon: string }> = {
   "sales-outreach": { name: "Sales Cold Emails", icon: "📧" },
 };
 
-// Cache for campaign names
+// Cache for campaign and brand names
 const campaignNameCache: Record<string, string> = {};
+const brandNameCache: Record<string, string> = {};
 
 export function BreadcrumbNav() {
   const pathname = usePathname();
@@ -30,11 +31,15 @@ export function BreadcrumbNav() {
   const [orgMenuOpen, setOrgMenuOpen] = useState(false);
   const [campaignName, setCampaignName] = useState<string | null>(null);
   const [campaignLoading, setCampaignLoading] = useState(false);
+  const [brandName, setBrandName] = useState<string | null>(null);
+  const [brandLoading, setBrandLoading] = useState(false);
   const orgMenuRef = useRef<HTMLDivElement>(null);
 
-  // Parse pathname for campaign ID
+  // Parse pathname
   const pathParts = pathname.split("/").filter(Boolean);
   const campaignId = pathParts[0] === "mcp" && pathParts[2] === "campaigns" ? pathParts[3] : null;
+  const brandId = pathParts[0] === "brands" && pathParts[1] ? pathParts[1] : null;
+  const brandSubpage = pathParts[0] === "brands" && pathParts[2] ? pathParts[2] : null;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -45,6 +50,44 @@ export function BreadcrumbNav() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Fetch brand name when in brand view
+  useEffect(() => {
+    if (!brandId) {
+      setBrandName(null);
+      return;
+    }
+
+    // Check cache first
+    if (brandNameCache[brandId]) {
+      setBrandName(brandNameCache[brandId]);
+      return;
+    }
+
+    const currentBrandId = brandId;
+    async function fetchBrandName() {
+      setBrandLoading(true);
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "https://api.mcpfactory.org"}/v1/brands/${currentBrandId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const name = data.brand?.name || data.brand?.domain || "Brand";
+          brandNameCache[currentBrandId] = name;
+          setBrandName(name);
+        }
+      } catch (err) {
+        console.error("Failed to fetch brand name:", err);
+      } finally {
+        setBrandLoading(false);
+      }
+    }
+    fetchBrandName();
+  }, [brandId, getToken]);
 
   // Fetch campaign name when in campaign view
   useEffect(() => {
@@ -59,7 +102,7 @@ export function BreadcrumbNav() {
       return;
     }
 
-    const currentCampaignId = campaignId; // Capture for closure
+    const currentCampaignId = campaignId;
     async function fetchCampaignName() {
       setCampaignLoading(true);
       try {
@@ -100,6 +143,36 @@ export function BreadcrumbNav() {
     isDropdown: true,
   });
 
+  // Check if we're in brands section
+  if (pathParts[0] === "brands") {
+    items.push({
+      label: "Brands",
+      href: "/brands",
+    });
+
+    // If viewing a specific brand
+    if (brandId) {
+      items.push({
+        label: brandName || "Loading...",
+        href: `/brands/${brandId}`,
+        isLoading: brandLoading,
+      });
+
+      // Brand subpages
+      if (brandSubpage === "sales-profile") {
+        items.push({
+          label: "Sales Profile",
+          href: `/brands/${brandId}/sales-profile`,
+        });
+      } else if (brandSubpage === "campaigns") {
+        items.push({
+          label: "Campaigns",
+          href: `/brands/${brandId}/campaigns`,
+        });
+      }
+    }
+  }
+
   // Check if we're in an MCP
   if (pathParts[0] === "mcp" && pathParts[1]) {
     const mcpSlug = pathParts[1];
@@ -110,15 +183,15 @@ export function BreadcrumbNav() {
         href: `/mcp/${mcpSlug}`,
       });
     }
-  }
 
-  // Check if we're in a campaign
-  if (campaignId) {
-    items.push({
-      label: campaignName || "Loading...",
-      href: `/mcp/${pathParts[1]}/campaigns/${campaignId}`,
-      isLoading: campaignLoading,
-    });
+    // Check if we're in a campaign within MCP
+    if (campaignId) {
+      items.push({
+        label: campaignName || "Loading...",
+        href: `/mcp/${pathParts[1]}/campaigns/${campaignId}`,
+        isLoading: campaignLoading,
+      });
+    }
   }
 
   return (
