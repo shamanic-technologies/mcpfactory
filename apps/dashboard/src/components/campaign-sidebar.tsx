@@ -36,11 +36,13 @@ const RepliesIcon = () => (
 
 interface CampaignSidebarProps {
   campaignId: string;
+  brandId: string;
   stats?: CampaignStats;
 }
 
-export function CampaignSidebar({ campaignId, stats }: CampaignSidebarProps) {
-  const basePath = `/mcp/sales-outreach/campaigns/${campaignId}`;
+export function CampaignSidebar({ campaignId, brandId, stats }: CampaignSidebarProps) {
+  const basePath = `/brands/${brandId}/mcp/sales-outreach/campaigns/${campaignId}`;
+  const backHref = `/brands/${brandId}/mcp/sales-outreach`;
 
   const items = [
     {
@@ -54,7 +56,7 @@ export function CampaignSidebar({ campaignId, stats }: CampaignSidebarProps) {
       label: "Companies",
       href: `${basePath}/companies`,
       icon: <CompaniesIcon />,
-      badge: stats?.leadsFound ? Math.round(stats.leadsFound / 3) : undefined, // Approximate companies
+      badge: stats?.leadsFound ? Math.round(stats.leadsFound / 3) : undefined,
     },
     {
       id: "leads",
@@ -83,7 +85,7 @@ export function CampaignSidebar({ campaignId, stats }: CampaignSidebarProps) {
     <McpSidebar 
       items={items} 
       title="Campaign" 
-      backHref="/mcp/sales-outreach"
+      backHref={backHref}
       backLabel="Campaigns"
     />
   );

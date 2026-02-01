@@ -1,47 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 
-const SIDEBAR_ITEMS = [
-  {
-    id: "campaigns",
-    label: "Campaigns",
-    href: "/mcp/sales-outreach",
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-      </svg>
-    ),
-  },
-  {
-    id: "company-info",
-    label: "Company Info",
-    href: "/mcp/sales-outreach/company-info",
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-      </svg>
-    ),
-  },
-  {
-    id: "prompt",
-    label: "Email Prompt",
-    href: "/mcp/sales-outreach/prompt",
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-      </svg>
-    ),
-  },
-];
-
-export default function SalesOutreachLayout({
+export default function BrandMcpSalesOutreachLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const params = useParams();
+  const brandId = params.brandId as string;
+
+  const basePath = `/brands/${brandId}/mcp/sales-outreach`;
+
+  const SIDEBAR_ITEMS = [
+    {
+      id: "campaigns",
+      label: "Campaigns",
+      href: basePath,
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      ),
+    },
+    {
+      id: "prompt",
+      label: "Email Prompt",
+      href: `${basePath}/prompt`,
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+        </svg>
+      ),
+    },
+  ];
 
   // Don't show this sidebar when viewing a specific campaign
   const isInCampaign = pathname.includes("/campaigns/") && pathname.split("/campaigns/")[1]?.length > 0;
@@ -56,13 +50,13 @@ export default function SalesOutreachLayout({
       <aside className="hidden md:flex w-56 bg-white border-r border-gray-200 flex-col flex-shrink-0">
         <div className="px-4 py-3 border-b border-gray-100">
           <Link 
-            href="/" 
+            href={`/brands/${brandId}`} 
             className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 mb-2 transition"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            All MCPs
+            Brand
           </Link>
           <h3 className="text-sm font-semibold text-gray-800">
             Sales Cold Emails
@@ -70,7 +64,7 @@ export default function SalesOutreachLayout({
         </div>
         <nav className="flex-1 p-2 space-y-1">
           {SIDEBAR_ITEMS.map((item) => {
-            const isActive = item.href === "/mcp/sales-outreach" 
+            const isActive = item.id === "campaigns" 
               ? pathname === item.href 
               : pathname.startsWith(item.href);
             return (
@@ -98,18 +92,18 @@ export default function SalesOutreachLayout({
       {/* Mobile top bar */}
       <div className="md:hidden bg-white border-b border-gray-200 px-4 py-2">
         <div className="flex items-center justify-between mb-2">
-          <Link href="/" className="text-xs text-gray-400 flex items-center gap-1">
+          <Link href={`/brands/${brandId}`} className="text-xs text-gray-400 flex items-center gap-1">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back
+            Brand
           </Link>
           <span className="text-sm font-semibold text-gray-800">Sales Cold Emails</span>
           <div className="w-8" />
         </div>
         <nav className="flex gap-1 overflow-x-auto pb-1">
           {SIDEBAR_ITEMS.map((item) => {
-            const isActive = item.href === "/mcp/sales-outreach" 
+            const isActive = item.id === "campaigns" 
               ? pathname === item.href 
               : pathname.startsWith(item.href);
             return (

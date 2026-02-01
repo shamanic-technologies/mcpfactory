@@ -35,11 +35,19 @@ export function BreadcrumbNav() {
   const [brandLoading, setBrandLoading] = useState(false);
   const orgMenuRef = useRef<HTMLDivElement>(null);
 
-  // Parse pathname
+  // Parse pathname for brand-centric navigation
+  // Patterns:
+  // /brands/[brandId]/mcp/[mcpSlug]/campaigns/[campaignId]
+  // /brands/[brandId]/brand-info
+  // /brands/[brandId]
   const pathParts = pathname.split("/").filter(Boolean);
-  const campaignId = pathParts[0] === "mcp" && pathParts[2] === "campaigns" ? pathParts[3] : null;
   const brandId = pathParts[0] === "brands" && pathParts[1] ? pathParts[1] : null;
-  const brandSubpage = pathParts[0] === "brands" && pathParts[2] ? pathParts[2] : null;
+  
+  // MCP under brand: /brands/[brandId]/mcp/[mcpSlug]
+  const mcpSlug = brandId && pathParts[2] === "mcp" && pathParts[3] ? pathParts[3] : null;
+  
+  // Campaign under brand MCP: /brands/[brandId]/mcp/[mcpSlug]/campaigns/[campaignId]
+  const campaignId = mcpSlug && pathParts[4] === "campaigns" && pathParts[5] ? pathParts[5] : null;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -159,38 +167,37 @@ export function BreadcrumbNav() {
       });
 
       // Brand subpages
-      if (brandSubpage === "sales-profile") {
+      if (pathParts[2] === "brand-info") {
         items.push({
-          label: "Sales Profile",
-          href: `/brands/${brandId}/sales-profile`,
-        });
-      } else if (brandSubpage === "campaigns") {
-        items.push({
-          label: "Campaigns",
-          href: `/brands/${brandId}/campaigns`,
+          label: "Brand Info",
+          href: `/brands/${brandId}/brand-info`,
         });
       }
-    }
-  }
 
-  // Check if we're in an MCP
-  if (pathParts[0] === "mcp" && pathParts[1]) {
-    const mcpSlug = pathParts[1];
-    const mcp = MCP_MAP[mcpSlug];
-    if (mcp) {
-      items.push({
-        label: mcp.name,
-        href: `/mcp/${mcpSlug}`,
-      });
-    }
+      // MCP under brand: /brands/[brandId]/mcp/[mcpSlug]
+      if (mcpSlug) {
+        const mcp = MCP_MAP[mcpSlug];
+        if (mcp) {
+          items.push({
+            label: mcp.name,
+            href: `/brands/${brandId}/mcp/${mcpSlug}`,
+          });
+        }
 
-    // Check if we're in a campaign within MCP
-    if (campaignId) {
-      items.push({
-        label: campaignName || "Loading...",
-        href: `/mcp/${pathParts[1]}/campaigns/${campaignId}`,
-        isLoading: campaignLoading,
-      });
+        // Campaign subpages under MCP
+        if (pathParts[4] === "campaigns" && campaignId) {
+          items.push({
+            label: campaignName || "Loading...",
+            href: `/brands/${brandId}/mcp/${mcpSlug}/campaigns/${campaignId}`,
+            isLoading: campaignLoading,
+          });
+        } else if (pathParts[4] === "prompt") {
+          items.push({
+            label: "Email Prompt",
+            href: `/brands/${brandId}/mcp/${mcpSlug}/prompt`,
+          });
+        }
+      }
     }
   }
 

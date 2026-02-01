@@ -2,14 +2,25 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 import { 
   listByokKeys, setByokKey, deleteByokKey, ByokKey,
-  listCampaigns, getCampaignStats, Campaign, CampaignStats
+  getCampaignStats, CampaignStats
 } from "@/lib/api";
 import { SkeletonKeysList } from "@/components/skeleton";
 import { FunnelMetrics } from "@/components/campaign/funnel-metrics";
 import { ReplyBreakdown } from "@/components/campaign/reply-breakdown";
-import { CampaignCard } from "@/components/campaign/campaign-card";
+
+interface Campaign {
+  id: string;
+  name: string;
+  status: string;
+  recurrence: string;
+  createdAt: string;
+  personTitles?: string[];
+  organizationLocations?: string[];
+}
 
 type Tab = "campaigns" | "keys";
 
@@ -32,8 +43,10 @@ const REQUIRED_KEYS = [
   },
 ];
 
-export default function SalesOutreachPage() {
+export default function BrandMcpSalesOutreachPage() {
   const { getToken } = useAuth();
+  const params = useParams();
+  const brandId = params.brandId as string;
   const [activeTab, setActiveTab] = useState<Tab>("campaigns");
   const [keys, setKeys] = useState<ByokKey[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -49,7 +62,7 @@ export default function SalesOutreachPage() {
     loadCampaigns();
     const interval = setInterval(loadCampaigns, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [brandId]);
 
   async function loadKeys() {
     try {
@@ -68,17 +81,24 @@ export default function SalesOutreachPage() {
     try {
       const token = await getToken();
       if (!token) return;
-      const data = await listCampaigns(token);
-      setCampaigns(data.campaigns || []);
-      
-      const stats: Record<string, CampaignStats> = {};
-      for (const campaign of data.campaigns || []) {
-        try {
-          const s = await getCampaignStats(token, campaign.id);
-          stats[campaign.id] = s;
-        } catch { /* Stats not available */ }
+      // Fetch campaigns filtered by brandId
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/v1/campaigns?brandId=${brandId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setCampaigns(data.campaigns || []);
+        
+        const stats: Record<string, CampaignStats> = {};
+        for (const campaign of data.campaigns || []) {
+          try {
+            const s = await getCampaignStats(token, campaign.id);
+            stats[campaign.id] = s;
+          } catch { /* Stats not available */ }
+        }
+        setCampaignStats(stats);
       }
-      setCampaignStats(stats);
     } catch (err) {
       console.error("Failed to load campaigns:", err);
     } finally {
@@ -122,7 +142,7 @@ export default function SalesOutreachPage() {
   const configuredCount = REQUIRED_KEYS.filter((k) => getKeyForProvider(k.id)).length;
   const isFullyConfigured = configuredCount === REQUIRED_KEYS.length;
 
-  // Aggregate stats across all campaigns
+  // Aggregate stats
   const totals = Object.values(campaignStats).reduce(
     (acc, s) => ({
       leadsFound: acc.leadsFound + (s.leadsFound || 0),
@@ -141,12 +161,19 @@ export default function SalesOutreachPage() {
       willingToMeet: 0, interested: 0, notInterested: 0, outOfOffice: 0, unsubscribe: 0 }
   );
 
+  function getStatusColor(status: string): string {
+    switch (status) {
+      case "ongoing": return "bg-green-100 text-green-700 border-green-200";
+      case "stopped": return "bg-gray-100 text-gray-500 border-gray-200";
+      default: return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  }
+
   return (
     <div className="p-4 md:p-8">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-3xl">📧</span>
           <h1 className="font-display text-2xl font-bold text-gray-800">Sales Cold Emails</h1>
           {isFullyConfigured ? (
             <span className="text-xs bg-accent-100 text-accent-700 px-2 py-1 rounded-full border border-accent-200">
@@ -154,11 +181,11 @@ export default function SalesOutreachPage() {
             </span>
           ) : (
             <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full border border-yellow-200">
-              {configuredCount}/{REQUIRED_KEYS.length} keys configured
+              {configuredCount}/{REQUIRED_KEYS.length} keys
             </span>
           )}
         </div>
-        <p className="text-gray-600">Generate and send personalized cold emails via MCP.</p>
+        <p className="text-gray-600">Campaigns for this brand.</p>
       </div>
 
       {/* Stats Overview */}
@@ -215,27 +242,44 @@ export default function SalesOutreachPage() {
               <div className="text-4xl mb-4">📤</div>
               <h3 className="font-display font-bold text-lg text-gray-800 mb-2">No campaigns yet</h3>
               <p className="text-gray-600 text-sm max-w-md mx-auto mb-4">
-                Use the MCP from Claude, Cursor, or any MCP-compatible client to create your first campaign.
+                Use the MCP from Claude, Cursor, or any MCP-compatible client to create campaigns for this brand.
               </p>
-              <code className="block bg-gray-900 text-gray-100 p-4 rounded-lg text-left text-sm max-w-lg mx-auto">
-                {`"Create a cold email campaign targeting 
-CTOs at fintech startups in California, 
-$10/day budget, run daily"`}
-              </code>
             </div>
           ) : (
-            campaigns.map((campaign) => (
-              <CampaignCard
-                key={campaign.id}
-                campaign={campaign}
-                stats={campaignStats[campaign.id]}
-              />
-            ))
+            campaigns.map((campaign) => {
+              const stats = campaignStats[campaign.id];
+              return (
+                <Link
+                  key={campaign.id}
+                  href={`/brands/${brandId}/mcp/sales-outreach/campaigns/${campaign.id}`}
+                  className="block bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-300 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h3 className="font-medium text-gray-800">{campaign.name}</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {campaign.recurrence} • Created {new Date(campaign.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(campaign.status)}`}>
+                      {campaign.status}
+                    </span>
+                  </div>
+                  {stats && (
+                    <div className="flex gap-4 text-xs text-gray-500">
+                      <span>{stats.leadsFound || 0} leads</span>
+                      <span>{stats.emailsSent || 0} sent</span>
+                      <span>{stats.emailsReplied || 0} replies</span>
+                    </div>
+                  )}
+                </Link>
+              );
+            })
           )}
         </div>
       )}
 
-      {/* Keys Tab */}
+      {/* Keys Tab - same as before */}
       {activeTab === "keys" && (
         <div className="space-y-4">
           {loading ? (
@@ -251,16 +295,10 @@ $10/day budget, run daily"`}
                     <div>
                       <h3 className="font-medium text-gray-800">{provider.name}</h3>
                       <p className="text-sm text-gray-500">{provider.description}</p>
-                      {provider.helpUrl && (
-                        <a href={provider.helpUrl} target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-primary-500 hover:underline">
-                          {provider.helpText} →
-                        </a>
-                      )}
                     </div>
                     {existingKey ? (
                       <span className="text-xs bg-accent-100 text-accent-700 px-2 py-1 rounded-full border border-accent-200">
-                        ✓ Configured
+                        Configured
                       </span>
                     ) : (
                       <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full border border-red-200">
@@ -274,7 +312,7 @@ $10/day budget, run daily"`}
                       <input type="password" value={newKeyValue}
                         onChange={(e) => setNewKeyValue(e.target.value)}
                         placeholder={provider.placeholder}
-                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary-300 outline-none"
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"
                         autoFocus />
                       <button onClick={() => handleSaveKey(provider.id)}
                         disabled={saving || !newKeyValue.trim()}

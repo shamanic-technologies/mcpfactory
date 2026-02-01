@@ -23,7 +23,7 @@ interface SalesProfile {
   extractedAt: string;
 }
 
-export default function BrandSalesProfilePage() {
+export default function BrandInfoPage() {
   const { getToken } = useAuth();
   const params = useParams();
   const brandId = params.brandId as string;
@@ -35,7 +35,6 @@ export default function BrandSalesProfilePage() {
     async function fetchProfile() {
       try {
         const token = await getToken();
-        // Use API gateway which has the X-API-Key for brand-service
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/brands/${brandId}/sales-profile`,
           {
@@ -52,7 +51,7 @@ export default function BrandSalesProfilePage() {
         }
         
         if (!res.ok) {
-          throw new Error("Failed to fetch sales profile");
+          throw new Error("Failed to fetch brand info");
         }
         
         const data = await res.json();
@@ -91,11 +90,24 @@ export default function BrandSalesProfilePage() {
   if (!profile) {
     return (
       <div className="p-4 md:p-8">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Sales Profile</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Brand Info</h1>
         <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-8 text-center">
-          <p className="text-gray-500 mb-4">No sales profile extracted yet.</p>
-          <p className="text-sm text-gray-400">
-            The sales profile will be automatically extracted when you run a campaign.
+          <svg
+            className="w-12 h-12 text-gray-400 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+            />
+          </svg>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No brand info yet</h3>
+          <p className="text-gray-500 text-sm">
+            Brand information will be automatically extracted when you run a campaign.
           </p>
         </div>
       </div>
@@ -120,13 +132,35 @@ export default function BrandSalesProfilePage() {
     </ul>
   );
 
+  const Tags = ({ items, variant = "primary" }: { items: string[]; variant?: "primary" | "gray" }) => (
+    <div className="flex flex-wrap gap-1">
+      {items.map((item, i) => (
+        <span 
+          key={i} 
+          className={`text-xs px-2 py-0.5 rounded ${
+            variant === "primary" 
+              ? "bg-primary-50 text-primary-700" 
+              : "bg-gray-100 text-gray-600"
+          }`}
+        >
+          {item}
+        </span>
+      ))}
+    </div>
+  );
+
   return (
     <div className="p-4 md:p-8 max-w-4xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Sales Profile</h1>
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Brand Info</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Extracted profile used for email personalization
+          </p>
+        </div>
         {profile.extractedAt && (
           <span className="text-xs text-gray-400">
-            Last updated: {new Date(profile.extractedAt).toLocaleDateString()}
+            Updated: {new Date(profile.extractedAt).toLocaleDateString()}
           </span>
         )}
       </div>
@@ -134,7 +168,7 @@ export default function BrandSalesProfilePage() {
       <div className="space-y-4">
         {profile.companyName && (
           <Section title="Company Name">
-            <p className="text-gray-700">{profile.companyName}</p>
+            <p className="text-gray-700 font-medium">{profile.companyName}</p>
           </Section>
         )}
 
@@ -164,7 +198,7 @@ export default function BrandSalesProfilePage() {
 
         {profile.keyFeatures?.length > 0 && (
           <Section title="Key Features">
-            <List items={profile.keyFeatures} />
+            <Tags items={profile.keyFeatures} variant="primary" />
           </Section>
         )}
 
@@ -176,7 +210,7 @@ export default function BrandSalesProfilePage() {
 
         {profile.competitors?.length > 0 && (
           <Section title="Competitors">
-            <List items={profile.competitors} />
+            <Tags items={profile.competitors} variant="gray" />
           </Section>
         )}
 

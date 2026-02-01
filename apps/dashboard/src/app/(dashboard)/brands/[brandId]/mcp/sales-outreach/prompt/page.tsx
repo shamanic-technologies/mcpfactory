@@ -32,12 +32,12 @@ const VARIABLES = [
   { name: "leadTitle", source: "Apollo", description: "Lead's job title" },
   { name: "leadCompany", source: "Apollo", description: "Lead's company name" },
   { name: "leadIndustry", source: "Apollo", description: "Lead's company industry" },
-  { name: "clientCompanyName", source: "Company Info", description: "Your company name (from scraped data)" },
-  { name: "clientCompanyDescription", source: "Company Info", description: "Your company description (from scraped data)" },
-  { name: "clientValue", source: "Company Info", description: "Your value proposition (from scraped data)" },
+  { name: "clientCompanyName", source: "Brand Info", description: "Your company name (from brand profile)" },
+  { name: "clientCompanyDescription", source: "Brand Info", description: "Your company description (from brand profile)" },
+  { name: "clientValue", source: "Brand Info", description: "Your value proposition (from brand profile)" },
 ];
 
-export default function PromptPage() {
+export default function BrandMcpPromptPage() {
   return (
     <div className="p-4 md:p-8 max-w-4xl">
       <div className="mb-6">
@@ -56,7 +56,7 @@ export default function PromptPage() {
               <code className="bg-primary-50 text-primary-700 px-2 py-1 rounded font-mono text-xs md:text-sm">
                 {`{${variable.name}}`}
               </code>
-              <span className="text-gray-400 hidden md:inline">→</span>
+              <span className="text-gray-400 hidden md:inline">-</span>
               <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                 {variable.source}
               </span>
@@ -89,7 +89,7 @@ export default function PromptPage() {
             <p className="font-medium mb-1">How it works</p>
             <p>
               When a campaign runs, we search leads via Apollo, then for each lead we call Claude with this prompt.
-              The variables are replaced with actual data from Apollo (lead info) and your scraped Company Info.
+              The variables are replaced with actual data from Apollo (lead info) and your Brand Info.
             </p>
           </div>
         </div>

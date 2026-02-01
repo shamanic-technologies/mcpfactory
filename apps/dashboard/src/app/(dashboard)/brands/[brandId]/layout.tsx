@@ -24,9 +24,9 @@ const getBrandSidebarItems = (brandId: string) => [
     ),
   },
   {
-    id: "sales-profile",
-    label: "Sales Profile",
-    href: `/brands/${brandId}/sales-profile`,
+    id: "brand-info",
+    label: "Brand Info",
+    href: `/brands/${brandId}/brand-info`,
     icon: (
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -34,12 +34,12 @@ const getBrandSidebarItems = (brandId: string) => [
     ),
   },
   {
-    id: "campaigns",
-    label: "Campaigns",
-    href: `/brands/${brandId}/campaigns`,
+    id: "mcp-sales",
+    label: "Sales Cold Emails",
+    href: `/brands/${brandId}/mcp/sales-outreach`,
     icon: (
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
       </svg>
     ),
   },
@@ -81,6 +81,12 @@ export default function BrandDetailLayout({
   }, [brandId, getToken]);
 
   const sidebarItems = getBrandSidebarItems(brandId);
+
+  // Hide brand sidebar when inside MCP (MCP has its own sidebar)
+  const isInsideMcp = pathname.includes("/mcp/");
+  if (isInsideMcp) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-full">
