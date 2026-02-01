@@ -3,7 +3,7 @@
  * 
  * Each service has its own API key env var:
  * - POSTMARK_SERVICE_API_KEY for postmark-service
- * - COMPANY_SERVICE_API_KEY for company-service
+ * - BRAND_SERVICE_API_KEY for brand-service
  * - CAMPAIGN_SERVICE_API_KEY for campaign-service
  * - etc.
  */
@@ -170,26 +170,26 @@ export const postmarkService = {
   },
 };
 
-// Company service - get sales profile for email personalization
-export const companyService = {
-  url: process.env.COMPANY_SERVICE_URL || "https://company.mcpfactory.org",
-  apiKey: process.env.COMPANY_SERVICE_API_KEY,
+// Brand service - get sales profile for email personalization
+export const brandService = {
+  url: process.env.BRAND_SERVICE_URL || "https://brand.mcpfactory.org",
+  apiKey: process.env.BRAND_SERVICE_API_KEY,
   
   /**
-   * Get or extract sales profile for a company
+   * Get or extract sales profile for a brand
    * On first call, creates org and extracts profile
    * On subsequent calls, returns cached profile
    * 
    * @param clerkOrgId - Clerk organization ID
-   * @param clientUrl - Company website URL
+   * @param brandUrl - Brand website URL
    * @param keyType - "byok" for user's key, "platform" for MCP Factory's key
    */
-  async getSalesProfile(clerkOrgId: string, clientUrl: string, keyType: "byok" | "platform" = "byok") {
+  async getSalesProfile(clerkOrgId: string, brandUrl: string, keyType: "byok" | "platform" = "byok") {
     return callService(this.url, "/sales-profile", {
       method: "POST",
       body: { 
         clerkOrgId,
-        url: clientUrl,
+        url: brandUrl,
         keyType,
       },
       apiKey: this.apiKey,

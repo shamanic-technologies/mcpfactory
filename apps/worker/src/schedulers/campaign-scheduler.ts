@@ -1,4 +1,4 @@
-import { getQueues, QUEUE_NAMES, CampaignRunJobData } from "../queues/index.js";
+import { getQueues, QUEUE_NAMES, BrandUpsertJobData } from "../queues/index.js";
 import { campaignService } from "../lib/service-client.js";
 
 interface Campaign {
@@ -58,14 +58,14 @@ export function startCampaignScheduler(intervalMs: number = 30000): NodeJS.Timeo
         if (shouldRun) {
           console.log(`[scheduler] Queueing campaign ${campaign.id} (${campaign.recurrence}) for org ${campaign.clerkOrgId}`);
           
-          // Add to queue
+          // Add to brand-upsert queue (first step in campaign run chain)
           const queues = getQueues();
-          await queues[QUEUE_NAMES.CAMPAIGN_RUN].add(
+          await queues[QUEUE_NAMES.BRAND_UPSERT].add(
             `campaign-${campaign.id}-${Date.now()}`,
             {
               campaignId: campaign.id,
               clerkOrgId: campaign.clerkOrgId,
-            } as CampaignRunJobData
+            } as BrandUpsertJobData
           );
         }
       }

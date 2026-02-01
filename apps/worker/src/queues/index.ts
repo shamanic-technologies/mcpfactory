@@ -3,10 +3,10 @@ import { getRedis } from "../lib/redis.js";
 
 // Queue names
 export const QUEUE_NAMES = {
-  CAMPAIGN_RUN: "campaign-run",
+  BRAND_UPSERT: "brand-upsert",
+  BRAND_PROFILE: "brand-profile",
   LEAD_SEARCH: "lead-search",
   LEAD_ENRICH: "lead-enrich",
-  COMPANY_SCRAPE: "company-scrape",
   EMAIL_GENERATE: "email-generate",
   EMAIL_SEND: "email-send",
 } as const;
@@ -19,10 +19,10 @@ export function getQueues(): Record<string, Queue> {
     const connection = getRedis();
     
     queues = {
-      [QUEUE_NAMES.CAMPAIGN_RUN]: new Queue(QUEUE_NAMES.CAMPAIGN_RUN, { connection }),
+      [QUEUE_NAMES.BRAND_UPSERT]: new Queue(QUEUE_NAMES.BRAND_UPSERT, { connection }),
+      [QUEUE_NAMES.BRAND_PROFILE]: new Queue(QUEUE_NAMES.BRAND_PROFILE, { connection }),
       [QUEUE_NAMES.LEAD_SEARCH]: new Queue(QUEUE_NAMES.LEAD_SEARCH, { connection }),
       [QUEUE_NAMES.LEAD_ENRICH]: new Queue(QUEUE_NAMES.LEAD_ENRICH, { connection }),
-      [QUEUE_NAMES.COMPANY_SCRAPE]: new Queue(QUEUE_NAMES.COMPANY_SCRAPE, { connection }),
       [QUEUE_NAMES.EMAIL_GENERATE]: new Queue(QUEUE_NAMES.EMAIL_GENERATE, { connection }),
       [QUEUE_NAMES.EMAIL_SEND]: new Queue(QUEUE_NAMES.EMAIL_SEND, { connection }),
     };
@@ -31,10 +31,26 @@ export function getQueues(): Record<string, Queue> {
 }
 
 // Job data types
-export interface CampaignRunJobData {
+
+export interface BrandUpsertJobData {
   campaignId: string;
   clerkOrgId: string;
-  campaignRunId?: string;
+}
+
+export interface BrandProfileJobData {
+  campaignId: string;
+  campaignRunId: string;
+  clerkOrgId: string;
+  brandId: string;
+  brandUrl: string;
+  searchParams: {
+    personTitles?: string[];
+    organizationLocations?: string[];
+    qOrganizationKeywordTags?: string[];
+    organizationNumEmployeesRanges?: string[];
+    qOrganizationIndustryTagIds?: string[];
+    qKeywords?: string;
+  };
 }
 
 export interface LeadSearchJobData {
