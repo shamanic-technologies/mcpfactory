@@ -71,7 +71,7 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
         subject: result.subject,
         bodyHtml: result.bodyHtml,
         bodyText: result.bodyText,
-        model: "claude-3-haiku-20240307",
+        model: "claude-opus-4-5-20251101",
         tokensInput: result.tokensInput,
         tokensOutput: result.tokensOutput,
         costUsd: result.costUsd.toFixed(6),

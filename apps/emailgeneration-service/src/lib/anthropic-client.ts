@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-const MODEL = "claude-3-haiku-20240307";
+const MODEL = "claude-opus-4-5-20251101";
 
 // Pricing per 1M tokens (as of 2024)
 const HAIKU_INPUT_PRICE_PER_M = 0.25;
