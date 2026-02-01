@@ -19,7 +19,7 @@ RUN pnpm install -r --no-frozen-lockfile
 RUN pnpm --filter @mcpfactory/apollo-service build
 
 # Prepare production directory with only production dependencies
-RUN pnpm deploy --filter @mcpfactory/apollo-service --legacy /prod
+RUN pnpm deploy --filter @mcpfactory/apollo-service  /prod
 
 # Copy built files to production directory
 RUN cp -r /app/apps/apollo-service/dist /prod/dist

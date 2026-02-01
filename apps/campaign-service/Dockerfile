@@ -19,7 +19,7 @@ RUN pnpm install -r --no-frozen-lockfile
 RUN pnpm --filter @mcpfactory/campaign-service build
 
 # Prepare production directory with only production dependencies
-RUN pnpm deploy --filter @mcpfactory/campaign-service --legacy /prod
+RUN pnpm deploy --filter @mcpfactory/campaign-service  /prod
 
 # Copy built files to production directory
 RUN cp -r /app/apps/campaign-service/dist /prod/dist

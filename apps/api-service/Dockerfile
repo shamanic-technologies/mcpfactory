@@ -19,7 +19,7 @@ RUN pnpm install -r --no-frozen-lockfile
 RUN pnpm --filter @mcpfactory/api-service build
 
 # Prepare production directory with only production dependencies
-RUN pnpm deploy --filter @mcpfactory/api-service --legacy /prod
+RUN pnpm deploy --filter @mcpfactory/api-service /prod
 
 # Copy built files to production directory
 RUN cp -r /app/apps/api-service/dist /prod/dist
