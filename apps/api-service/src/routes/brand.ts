@@ -2,17 +2,17 @@ import { Router } from "express";
 import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
 import { callExternalService, externalServices } from "../lib/service-client.js";
 
-// Company service URL (for sales profiles)
-const COMPANY_SERVICE_URL = process.env.COMPANY_SERVICE_URL || "https://company.mcpfactory.org";
-const COMPANY_SERVICE_API_KEY = process.env.COMPANY_SERVICE_API_KEY || "";
+// Brand service URL (for sales profiles)
+const BRAND_SERVICE_URL = process.env.BRAND_SERVICE_URL || "https://brand.mcpfactory.org";
+const BRAND_SERVICE_API_KEY = process.env.BRAND_SERVICE_API_KEY || "";
 
 const router = Router();
 
 /**
- * POST /v1/company/scrape
- * Scrape company information from a URL using scraping-service
+ * POST /v1/brand/scrape
+ * Scrape brand information from a URL using scraping-service
  */
-router.post("/company/scrape", authenticate, async (req: AuthenticatedRequest, res) => {
+router.post("/brand/scrape", authenticate, async (req: AuthenticatedRequest, res) => {
   try {
     const { url, skipCache } = req.body;
 
@@ -36,16 +36,16 @@ router.post("/company/scrape", authenticate, async (req: AuthenticatedRequest, r
 
     res.json(result);
   } catch (error: any) {
-    console.error("Company scrape error:", error.message);
-    res.status(500).json({ error: error.message || "Failed to scrape company" });
+    console.error("Brand scrape error:", error.message);
+    res.status(500).json({ error: error.message || "Failed to scrape brand" });
   }
 });
 
 /**
- * GET /v1/company/by-url
- * Get cached company info by URL
+ * GET /v1/brand/by-url
+ * Get cached brand info by URL
  */
-router.get("/company/by-url", authenticate, async (req: AuthenticatedRequest, res) => {
+router.get("/brand/by-url", authenticate, async (req: AuthenticatedRequest, res) => {
   try {
     const url = req.query.url as string;
 
@@ -60,24 +60,24 @@ router.get("/company/by-url", authenticate, async (req: AuthenticatedRequest, re
 
     res.json(result);
   } catch (error: any) {
-    console.error("Get company error:", error);
-    res.status(500).json({ error: error.message || "Failed to get company" });
+    console.error("Get brand error:", error);
+    res.status(500).json({ error: error.message || "Failed to get brand" });
   }
 });
 
 /**
- * GET /v1/company/sales-profiles
- * Get all sales profiles for the organization
+ * GET /v1/brand/sales-profiles
+ * Get all sales profiles (brands) for the organization
  * NOTE: Must be before /:id route to avoid matching "sales-profiles" as an id
  */
-router.get("/company/sales-profiles", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+router.get("/brand/sales-profiles", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
     const response = await fetch(
-      `${COMPANY_SERVICE_URL}/sales-profiles?clerkOrgId=${req.orgId}`,
+      `${BRAND_SERVICE_URL}/sales-profiles?clerkOrgId=${req.orgId}`,
       {
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": COMPANY_SERVICE_API_KEY,
+          "X-API-Key": BRAND_SERVICE_API_KEY,
         },
       }
     );
@@ -96,10 +96,10 @@ router.get("/company/sales-profiles", authenticate, requireOrg, async (req: Auth
 });
 
 /**
- * GET /v1/company/:id
- * Get company scrape result by ID
+ * GET /v1/brand/:id
+ * Get brand scrape result by ID
  */
-router.get("/company/:id", authenticate, async (req: AuthenticatedRequest, res) => {
+router.get("/brand/:id", authenticate, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
 
@@ -110,8 +110,8 @@ router.get("/company/:id", authenticate, async (req: AuthenticatedRequest, res) 
 
     res.json(result);
   } catch (error: any) {
-    console.error("Get company error:", error);
-    res.status(500).json({ error: error.message || "Failed to get company" });
+    console.error("Get brand error:", error);
+    res.status(500).json({ error: error.message || "Failed to get brand" });
   }
 });
 
