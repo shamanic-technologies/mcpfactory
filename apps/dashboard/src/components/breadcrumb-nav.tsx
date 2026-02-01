@@ -153,12 +153,15 @@ export function BreadcrumbNav() {
 
   // Check if we're in brands section
   if (pathParts[0] === "brands") {
-    items.push({
-      label: "Brands",
-      href: "/brands",
-    });
+    // Only show "Brands" on the list page, not when viewing a specific brand
+    if (!brandId) {
+      items.push({
+        label: "Brands",
+        href: "/brands",
+      });
+    }
 
-    // If viewing a specific brand
+    // If viewing a specific brand - show brand name directly after org
     if (brandId) {
       items.push({
         label: brandName || "Loading...",
