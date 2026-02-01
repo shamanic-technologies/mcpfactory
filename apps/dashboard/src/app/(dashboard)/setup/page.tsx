@@ -12,16 +12,18 @@ interface ByokKey {
 
 const PROVIDERS = [
   {
-    id: "openai",
-    name: "OpenAI",
-    description: "For GPT models (email generation, lead qualification)",
-    placeholder: "sk-...",
-  },
-  {
     id: "anthropic",
     name: "Anthropic",
     description: "For Claude models (email generation, research)",
     placeholder: "sk-ant-...",
+    getKeyUrl: "https://console.anthropic.com/settings/keys",
+  },
+  {
+    id: "apollo",
+    name: "Apollo",
+    description: "For lead enrichment and contact discovery",
+    placeholder: "...",
+    getKeyUrl: "https://app.apollo.io/#/settings/integrations/api",
   },
 ];
 
@@ -30,7 +32,7 @@ const MCPS = [
     id: "sales-outreach",
     name: "Sales Cold Emails",
     icon: "📧",
-    requiredProviders: ["openai"], // At least one of these
+    requiredProviders: ["anthropic", "apollo"], // All required
   },
 ];
 
@@ -134,8 +136,8 @@ export default function SetupPage() {
   const hasKey = (provider: string) => keys.some((k) => k.provider === provider);
 
   const getMcpStatus = (mcp: typeof MCPS[0]) => {
-    const hasRequiredKey = mcp.requiredProviders.some((p) => hasKey(p));
-    return hasRequiredKey ? "ready" : "needs-setup";
+    const hasAllKeys = mcp.requiredProviders.every((p) => hasKey(p));
+    return hasAllKeys ? "ready" : "needs-setup";
   };
 
   if (loading) {
@@ -199,6 +201,16 @@ export default function SetupPage() {
                       )}
                     </div>
                     <p className="text-sm text-gray-500">{provider.description}</p>
+                    {!isConfigured && (
+                      <a
+                        href={provider.getKeyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary-600 hover:text-primary-700 hover:underline"
+                      >
+                        Get API key →
+                      </a>
+                    )}
                   </div>
                   {isConfigured && (
                     <button
@@ -264,7 +276,7 @@ export default function SetupPage() {
                   <div>
                     <h3 className="font-medium text-gray-900">{mcp.name}</h3>
                     <p className="text-sm text-gray-500">
-                      Requires: {mcp.requiredProviders.map((p) => PROVIDERS.find((pr) => pr.id === p)?.name).join(" or ")}
+                      Requires: {mcp.requiredProviders.map((p) => PROVIDERS.find((pr) => pr.id === p)?.name).join(" + ")}
                     </p>
                   </div>
                 </div>
