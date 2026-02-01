@@ -3,36 +3,30 @@ import { eq, and, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { campaigns } from "../db/schema.js";
 import { clerkAuth, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
-import { extractDomain, normalizeUrl } from "../lib/domain.js";
+import { normalizeUrl } from "../lib/domain.js";
 
 const router = Router();
 
 /**
  * GET /campaigns - List all campaigns for org
- * Optional query param: brandUrl to filter by brand
+ * Query param: brandId to filter by brand (from brand-service)
  */
 router.get("/campaigns", clerkAuth, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
-    const { brandUrl } = req.query;
+    const { brandId } = req.query;
     
-    const results = await db
+    let results = await db
       .select()
       .from(campaigns)
       .where(eq(campaigns.orgId, req.orgId!))
       .orderBy(desc(campaigns.createdAt));
 
-    // Filter by brandUrl domain if provided
-    let filtered = results;
-    if (brandUrl && typeof brandUrl === "string") {
-      const filterDomain = extractDomain(normalizeUrl(brandUrl));
-      filtered = results.filter(c => {
-        if (!c.brandUrl) return false;
-        const campaignDomain = extractDomain(normalizeUrl(c.brandUrl));
-        return campaignDomain === filterDomain;
-      });
+    // Filter by brandId if provided
+    if (brandId && typeof brandId === "string") {
+      results = results.filter(c => c.brandId === brandId);
     }
 
-    res.json({ campaigns: filtered });
+    res.json({ campaigns: results });
   } catch (error) {
     console.error("List campaigns error:", error);
     res.status(500).json({ error: "Internal server error" });

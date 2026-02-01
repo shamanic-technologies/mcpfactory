@@ -6,7 +6,7 @@ import { campaignService } from "../lib/service-client.js";
 interface CampaignDetails {
   id: string;
   name: string;
-  brandId?: string;  // Deprecated - may not exist for new campaigns
+  brandId?: string;  // Set by brand-profile worker after brand creation
   brandDomain?: string;
   brandName?: string;
   brandUrl?: string;

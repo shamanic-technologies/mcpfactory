@@ -17,30 +17,19 @@ const router = Router();
  * GET /internal/campaigns - List all campaigns for org
  * Query params:
  * - brandId: optional, filter by brand ID (from brand-service)
- * - brandUrl: optional, filter by brand URL (matches by domain) - legacy, use brandId
  */
 router.get("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const brandId = req.query.brandId as string;
-    const brandUrl = req.query.brandUrl as string;
     
     let orgCampaigns = await db.query.campaigns.findMany({
       where: eq(campaigns.orgId, req.orgId!),
       orderBy: (campaigns, { desc }) => [desc(campaigns.createdAt)],
     });
 
-    // Filter by brandId if provided (preferred)
+    // Filter by brandId if provided
     if (brandId) {
       orgCampaigns = orgCampaigns.filter(c => c.brandId === brandId);
-    }
-    // Fallback to brandUrl domain matching
-    else if (brandUrl) {
-      const filterDomain = extractDomain(brandUrl);
-      orgCampaigns = orgCampaigns.filter(c => {
-        if (!c.brandUrl) return false;
-        const campaignDomain = extractDomain(c.brandUrl);
-        return campaignDomain === filterDomain;
-      });
     }
 
     res.json({ campaigns: orgCampaigns });
