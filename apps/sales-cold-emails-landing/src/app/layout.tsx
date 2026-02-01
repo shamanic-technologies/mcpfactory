@@ -169,7 +169,7 @@ const faqJsonLd = {
       name: "How much does cold email automation cost?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "MCP Factory offers 1,000 free emails to start. The Pro plan is $20/month for 10,000 emails. You also pay for the underlying services (Apollo for leads, Anthropic for AI) at their standard rates - typically around $0.02 per email total.",
+        text: "MCP Factory offers 500 free emails to start. Plans: Hobby $16/mo (3,000 emails), Standard $83/mo (100,000 emails), Growth $333/mo (500,000 emails). Plus BYOK costs: Apollo ~$0.01/lead, Anthropic ~$0.01/email.",
       },
     },
     {
