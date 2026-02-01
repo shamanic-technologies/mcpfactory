@@ -196,9 +196,13 @@ export default function Home() {
             <br />
             <span className="text-gray-800">That Actually Work</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Open-source cold email automation. Find leads, generate personalized emails, 
-            send at scale. Works with ChatGPT, Claude, and Cursor.
+          <p className="text-xl text-gray-600 mb-4 max-w-2xl mx-auto">
+            The <span className="font-semibold text-primary-500">DFY</span>,{" "}
+            <span className="font-semibold text-accent-500">BYOK</span> cold email platform.
+          </p>
+          <p className="text-lg text-gray-500 mb-8 max-w-2xl mx-auto">
+            You give us your URL + target audience. We handle lead finding, email generation, 
+            sending, and optimization. Works with ChatGPT, Claude, and Cursor.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
@@ -247,6 +251,45 @@ export default function Home() {
           >
             Star on GitHub
           </a>
+        </div>
+      </section>
+
+      {/* DFY + BYOK */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+            What makes us different?
+          </h2>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-gradient-to-br from-primary-50 to-blue-50 rounded-2xl p-6 border border-primary-100">
+              <div className="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 border border-primary-200">
+                <span className="text-3xl">🎯</span>
+              </div>
+              <h3 className="font-bold text-xl mb-2 text-gray-800">DFY (Done For You)</h3>
+              <p className="text-gray-600 mb-4">
+                Competitors give you tools. We do the work.
+              </p>
+              <div className="text-sm text-gray-500 space-y-1">
+                <p>You say: <span className="font-mono bg-white/80 px-2 py-0.5 rounded text-primary-700">&quot;Target CTOs at SaaS companies&quot;</span></p>
+                <p>We: Find leads → Generate emails → Send → Optimize → Report</p>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-accent-50 to-purple-50 rounded-2xl p-6 border border-accent-100">
+              <div className="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center mb-4 border border-accent-200">
+                <span className="text-3xl">🔑</span>
+              </div>
+              <h3 className="font-bold text-xl mb-2 text-gray-800">BYOK (Bring Your Own Keys)</h3>
+              <p className="text-gray-600 mb-4">
+                Use your own API keys. Pay only for what you use.
+              </p>
+              <div className="text-sm text-gray-500 space-y-1">
+                <p>~$0.02/email (Apollo + Anthropic)</p>
+                <p>No hidden markups. Full transparency.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

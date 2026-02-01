@@ -3,7 +3,7 @@ import "./globals.css";
 
 const SITE_URL = "https://salescoldemail.mcpfactory.org";
 const SITE_NAME = "Sales Cold Emails | MCP Factory";
-const SITE_DESCRIPTION = "Open-source cold email automation. Find leads, generate personalized emails, send at scale. 100% open-source, works with ChatGPT, Claude, and Cursor.";
+const SITE_DESCRIPTION = "The DFY, BYOK cold email platform. You give us your URL + target audience. We handle lead finding, email generation, sending, and optimization. 100% open-source.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -32,6 +32,9 @@ export const metadata: Metadata = {
     "Model Context Protocol",
     "open source",
     "BYOK",
+    "bring your own key",
+    "DFY",
+    "done for you",
   ],
   authors: [{ name: "MCP Factory" }],
   creator: "MCP Factory",
@@ -46,8 +49,8 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: "Sales Cold Emails - Open Source Cold Email Automation",
-    description: "100% open-source cold email automation. Find leads, generate personalized emails, send at scale.",
+    title: "Sales Cold Emails - The DFY, BYOK Cold Email Platform",
+    description: "Done-for-you cold email automation. You give us your URL, we handle everything. 100% open-source, BYOK pricing.",
     images: [
       {
         url: "https://mcpfactory.org/og-image.jpg",
@@ -59,8 +62,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sales Cold Emails - Open Source Cold Email Automation",
-    description: "100% open-source cold email automation. Find leads, generate personalized emails, send at scale.",
+    title: "Sales Cold Emails - The DFY, BYOK Cold Email Platform",
+    description: "Done-for-you cold email automation. You give us your URL, we handle everything. 100% open-source, BYOK pricing.",
     images: ["https://mcpfactory.org/og-image.jpg"],
     creator: "@mcpfactory",
   },
