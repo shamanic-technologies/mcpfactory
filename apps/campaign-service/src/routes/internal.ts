@@ -9,6 +9,7 @@ import { db } from "../db/index.js";
 import { campaigns, campaignRuns, orgs, brands } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
 import { getAggregatedStats, getLeadsForCampaignRuns, aggregateCompaniesFromLeads } from "../lib/service-client.js";
+import { getOrCreateBrand } from "./brands.js";
 
 const router = Router();
 
@@ -108,6 +109,7 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
     
     const {
       name,
+      brandUrl,
       personTitles,
       qOrganizationKeywordTags,
       organizationLocations,
@@ -129,6 +131,14 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       return res.status(400).json({ error: "Campaign name is required" });
     }
 
+    if (!brandUrl) {
+      return res.status(400).json({ error: "brandUrl is required" });
+    }
+
+    // Get or create brand from brandUrl
+    const brand = await getOrCreateBrand(req.orgId!, brandUrl);
+    console.log(`[internal/campaigns] Using brand: ${brand.domain} (id: ${brand.id})`);
+
     // Validate recurrence
     const validRecurrences = ["oneoff", "daily", "weekly", "monthly"];
     if (!recurrence || !validRecurrences.includes(recurrence)) {
@@ -146,6 +156,7 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
 
     const insertData = {
       orgId: req.orgId!,
+      brandId: brand.id,
       createdByUserId: req.userId || null, // From x-clerk-user-id header
       name,
       personTitles,
