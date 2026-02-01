@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { PlusIcon } from "@heroicons/react/24/outline";
 
 interface Campaign {
   id: string;
@@ -25,6 +24,7 @@ export default function BrandCampaignsPage() {
   const brandId = params.brandId as string;
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [debug, setDebug] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchCampaigns() {
@@ -32,17 +32,28 @@ export default function BrandCampaignsPage() {
         const token = await getToken();
         
         // Fetch campaigns filtered by brandId via API gateway
-        // brandId in the URL is the brand-service ID
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/campaigns?brandId=${brandId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/v1/campaigns?brandId=${brandId}`;
+        console.log("[BrandCampaigns] Fetching:", url);
+        
+        const res = await fetch(url, { 
+          headers: { Authorization: `Bearer ${token}` } 
+        });
+        
         if (res.ok) {
           const data = await res.json();
+          console.log("[BrandCampaigns] Response:", data);
           setCampaigns(data.campaigns || []);
+          if (data.campaigns?.length === 0) {
+            setDebug(`No campaigns found for brandId: ${brandId}`);
+          }
+        } else {
+          const errorText = await res.text();
+          console.error("[BrandCampaigns] Error:", res.status, errorText);
+          setDebug(`Error ${res.status}: ${errorText}`);
         }
       } catch (error) {
         console.error("Failed to fetch campaigns:", error);
+        setDebug(`Fetch error: ${error}`);
       } finally {
         setLoading(false);
       }
@@ -65,13 +76,6 @@ export default function BrandCampaignsPage() {
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Campaigns</h1>
-        <Link
-          href={`/mcp/sales-outreach?brandId=${brandId}`}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
-        >
-          <PlusIcon className="h-5 w-5" />
-          New Campaign
-        </Link>
       </div>
 
       {campaigns.length === 0 ? (
@@ -91,15 +95,11 @@ export default function BrandCampaignsPage() {
           </svg>
           <h3 className="mt-4 text-lg font-medium text-gray-900">No campaigns yet</h3>
           <p className="mt-2 text-sm text-gray-500">
-            Create your first campaign for this brand.
+            Campaigns for this brand will appear here once created via the Sales Cold Emails MCP.
           </p>
-          <Link
-            href={`/mcp/sales-outreach?brandId=${brandId}`}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
-          >
-            <PlusIcon className="h-5 w-5" />
-            Create Campaign
-          </Link>
+          {debug && (
+            <p className="mt-2 text-xs text-gray-400 font-mono">{debug}</p>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
