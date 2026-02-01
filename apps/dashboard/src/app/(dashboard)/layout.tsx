@@ -38,7 +38,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         
         {/* Desktop sidebar */}
         {!isInsideMcp && !isInsideBrand && (
-          <div className="hidden md:block">
+          <div className="hidden md:flex h-full">
             <Sidebar />
           </div>
         )}

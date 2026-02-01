@@ -12,7 +12,7 @@ export function Sidebar() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 overflow-y-auto">
+    <aside className="w-64 h-full bg-white border-r border-gray-200 flex flex-col flex-shrink-0 overflow-y-auto">
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1">
         <Link
