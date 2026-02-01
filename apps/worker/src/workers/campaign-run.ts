@@ -17,6 +17,18 @@ interface SalesProfileResponse {
     companyName: string | null;
     valueProposition: string | null;
     companyOverview: string | null;
+    targetAudience: string | null;
+    customerPainPoints: string[];
+    keyFeatures: string[];
+    productDifferentiators: string[];
+    competitors: string[];
+    socialProof: {
+      caseStudies: string[];
+      testimonials: string[];
+      results: string[];
+    };
+    callToAction: string | null;
+    additionalContext: string | null;
   };
 }
 
@@ -52,7 +64,7 @@ export function startCampaignRunWorker(): Worker {
         console.log(`[campaign-run] Campaign ${campaignId} clientUrl: ${clientUrl}`);
         
         // 3. Get client sales profile from company-service
-        let clientData = { companyName: "", companyDescription: "" };
+        let clientData: LeadSearchJobData["clientData"] = { companyName: "" };
         if (clientUrl) {
           try {
             console.log(`[campaign-run] Getting sales profile for: ${clientUrl}`);
@@ -65,9 +77,19 @@ export function startCampaignRunWorker(): Worker {
             ) as SalesProfileResponse;
             
             if (profileResult?.profile) {
+              const p = profileResult.profile;
               clientData = {
-                companyName: profileResult.profile.companyName || "",
-                companyDescription: profileResult.profile.valueProposition || profileResult.profile.companyOverview || "",
+                companyName: p.companyName || "",
+                companyOverview: p.companyOverview || undefined,
+                valueProposition: p.valueProposition || undefined,
+                targetAudience: p.targetAudience || undefined,
+                customerPainPoints: p.customerPainPoints?.length ? p.customerPainPoints : undefined,
+                keyFeatures: p.keyFeatures?.length ? p.keyFeatures : undefined,
+                productDifferentiators: p.productDifferentiators?.length ? p.productDifferentiators : undefined,
+                competitors: p.competitors?.length ? p.competitors : undefined,
+                socialProof: p.socialProof || undefined,
+                callToAction: p.callToAction || undefined,
+                additionalContext: p.additionalContext || undefined,
               };
               console.log(`[campaign-run] Client company: ${clientData.companyName} (cached: ${profileResult.cached})`);
             }

@@ -16,46 +16,78 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
     const {
       campaignRunId,
       apolloEnrichmentId,
+      // Lead person info
       leadFirstName,
       leadLastName,
       leadTitle,
-      leadCompany,
-      leadIndustry,
+      leadEmail,
+      leadLinkedinUrl,
+      // Lead company info
+      leadCompanyName,
+      leadCompanyDomain,
+      leadCompanyIndustry,
+      leadCompanySize,
+      leadCompanyRevenueUsd,
+      // Client (our company) info
       clientCompanyName,
-      clientCompanyDescription,
-      clientValue,
+      clientCompanyOverview,
+      clientValueProposition,
+      clientTargetAudience,
+      clientCustomerPainPoints,
+      clientKeyFeatures,
+      clientProductDifferentiators,
+      clientCompetitors,
+      clientSocialProof,
+      clientCallToAction,
+      clientAdditionalContext,
     } = req.body;
 
     if (!campaignRunId || !apolloEnrichmentId) {
       return res.status(400).json({ error: "campaignRunId and apolloEnrichmentId required" });
     }
 
-    if (!leadFirstName || !leadCompany) {
-      return res.status(400).json({ error: "leadFirstName and leadCompany required" });
+    if (!leadFirstName || !leadCompanyName) {
+      return res.status(400).json({ error: "leadFirstName and leadCompanyName required" });
     }
 
-    if (!clientCompanyName || !clientCompanyDescription) {
-      return res.status(400).json({ error: "clientCompanyName and clientCompanyDescription required" });
+    if (!clientCompanyName) {
+      return res.status(400).json({ error: "clientCompanyName required" });
     }
 
     // Get Anthropic API key from keys-service
     const anthropicApiKey = await getByokKey(req.clerkOrgId!, "anthropic");
 
-    // Generate email
+    // Generate email with all available data
     const params: GenerateEmailParams = {
+      // Lead person info
       leadFirstName,
       leadLastName,
       leadTitle,
-      leadCompany,
-      leadIndustry,
+      leadEmail,
+      leadLinkedinUrl,
+      // Lead company info
+      leadCompanyName,
+      leadCompanyDomain,
+      leadCompanyIndustry,
+      leadCompanySize,
+      leadCompanyRevenueUsd,
+      // Client (our company) info
       clientCompanyName,
-      clientCompanyDescription,
-      clientValue,
+      clientCompanyOverview,
+      clientValueProposition,
+      clientTargetAudience,
+      clientCustomerPainPoints,
+      clientKeyFeatures,
+      clientProductDifferentiators,
+      clientCompetitors,
+      clientSocialProof,
+      clientCallToAction,
+      clientAdditionalContext,
     };
 
     const result = await generateEmail(anthropicApiKey, params);
 
-    // Store in database
+    // Store in database (keeping existing schema - storing key fields)
     const [generation] = await db
       .insert(emailGenerations)
       .values({
@@ -64,10 +96,10 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
         apolloEnrichmentId,
         leadFirstName,
         leadLastName,
-        leadCompany,
+        leadCompany: leadCompanyName,
         leadTitle,
         clientCompanyName,
-        clientCompanyDescription,
+        clientCompanyDescription: clientValueProposition || clientCompanyOverview || "",
         subject: result.subject,
         bodyHtml: result.bodyHtml,
         bodyText: result.bodyText,

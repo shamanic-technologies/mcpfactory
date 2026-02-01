@@ -27,24 +27,39 @@ export function startEmailGenerateWorker(): Worker {
       console.log(`[email-generate] Generating email for enrichment ${apolloEnrichmentId}`);
       
       try {
-        // Call email generation service
+        // Call email generation service with all available data
         const result = await emailGenerationService.generate(clerkOrgId, {
           campaignRunId,
           apolloEnrichmentId,
+          // Lead person info
           leadFirstName: leadData.firstName,
           leadLastName: leadData.lastName,
           leadTitle: leadData.title,
-          leadCompany: leadData.company,
-          leadIndustry: leadData.industry,
+          leadEmail: leadData.email,
+          leadLinkedinUrl: leadData.linkedinUrl,
+          // Lead company info
+          leadCompanyName: leadData.companyName,
+          leadCompanyDomain: leadData.companyDomain,
+          leadCompanyIndustry: leadData.companyIndustry,
+          leadCompanySize: leadData.companySize,
+          leadCompanyRevenueUsd: leadData.companyRevenueUsd,
+          // Client (our company) info
           clientCompanyName: clientData.companyName,
-          clientCompanyDescription: clientData.companyDescription,
+          clientCompanyOverview: clientData.companyOverview,
+          clientValueProposition: clientData.valueProposition,
+          clientTargetAudience: clientData.targetAudience,
+          clientCustomerPainPoints: clientData.customerPainPoints,
+          clientKeyFeatures: clientData.keyFeatures,
+          clientProductDifferentiators: clientData.productDifferentiators,
+          clientCompetitors: clientData.competitors,
+          clientSocialProof: clientData.socialProof,
+          clientCallToAction: clientData.callToAction,
+          clientAdditionalContext: clientData.additionalContext,
         }) as GenerationResult;
         
         console.log(`[email-generate] Generated email with subject: ${result.subject}`);
         
-        // Queue email send job
-        // Note: We'd need the lead's email from the enrichment data
-        // This is simplified - in production we'd pass the email through the job chain
+        // Queue email send job with lead's email
         const queues = getQueues();
         await queues[QUEUE_NAMES.EMAIL_SEND].add(
           `send-${result.id}`,
@@ -52,7 +67,7 @@ export function startEmailGenerateWorker(): Worker {
             campaignRunId,
             clerkOrgId,
             emailGenerationId: result.id,
-            toEmail: "", // Would come from lead data
+            toEmail: leadData.email || "",
             subject: result.subject,
             bodyHtml: result.bodyHtml,
           } as EmailSendJobData

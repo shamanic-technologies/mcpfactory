@@ -68,12 +68,30 @@ export interface EmailGenerateJobData {
     firstName: string;
     lastName?: string;
     title?: string;
-    company: string;
-    industry?: string;
+    email?: string;
+    linkedinUrl?: string;
+    companyName: string;
+    companyDomain?: string;
+    companyIndustry?: string;
+    companySize?: string;
+    companyRevenueUsd?: string;
   };
   clientData: {
     companyName: string;
-    companyDescription: string;
+    companyOverview?: string;
+    valueProposition?: string;
+    targetAudience?: string;
+    customerPainPoints?: string[];
+    keyFeatures?: string[];
+    productDifferentiators?: string[];
+    competitors?: string[];
+    socialProof?: {
+      caseStudies?: string[];
+      testimonials?: string[];
+      results?: string[];
+    };
+    callToAction?: string;
+    additionalContext?: string;
   };
 }
 

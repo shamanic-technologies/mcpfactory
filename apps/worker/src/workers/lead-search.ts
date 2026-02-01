@@ -10,8 +10,12 @@ interface ApolloEnrichment {
   lastName: string;
   title: string;
   email: string;
+  linkedinUrl?: string;
   organizationName: string;
+  organizationDomain?: string;
   organizationIndustry: string;
+  organizationSize?: string;
+  organizationRevenueUsd?: string;
 }
 
 /**
@@ -52,10 +56,15 @@ export function startLeadSearchWorker(): Worker {
               firstName: enrichment.firstName,
               lastName: enrichment.lastName,
               title: enrichment.title,
-              company: enrichment.organizationName,
-              industry: enrichment.organizationIndustry,
+              email: enrichment.email,
+              linkedinUrl: enrichment.linkedinUrl,
+              companyName: enrichment.organizationName,
+              companyDomain: enrichment.organizationDomain,
+              companyIndustry: enrichment.organizationIndustry,
+              companySize: enrichment.organizationSize,
+              companyRevenueUsd: enrichment.organizationRevenueUsd,
             },
-            clientData: clientData || { companyName: "", companyDescription: "" },
+            clientData: clientData || { companyName: "" },
           } as EmailGenerateJobData,
         }));
         
