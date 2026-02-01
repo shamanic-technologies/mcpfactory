@@ -41,7 +41,7 @@ export const emailGenerations = pgTable(
     bodyText: text("body_text"),
     
     // Model info
-    model: text("model").notNull().default("claude-opus-4-5-20251101"),
+    model: text("model").notNull().default("claude-opus-4-5"),
     tokensInput: integer("tokens_input"),
     tokensOutput: integer("tokens_output"),
     costUsd: decimal("cost_usd", { precision: 10, scale: 6 }),
