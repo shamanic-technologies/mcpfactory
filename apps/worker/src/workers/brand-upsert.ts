@@ -6,7 +6,7 @@ import { campaignService } from "../lib/service-client.js";
 interface CampaignDetails {
   id: string;
   name: string;
-  brandId?: string;
+  brandId?: string;  // Deprecated - may not exist for new campaigns
   brandDomain?: string;
   brandName?: string;
   brandUrl?: string;
@@ -26,10 +26,10 @@ interface CampaignDetails {
  * 
  * First step in campaign run chain:
  * 1. Creates a campaign_run record
- * 2. Gets campaign details (brand should already exist from campaign creation)
- * 3. Queues brand-profile job
+ * 2. Gets campaign details with brandUrl
+ * 3. Queues brand-profile job (brand-service will create brand if needed)
  * 
- * Non-concurrent to avoid race conditions on brand creation
+ * Non-concurrent to avoid race conditions
  */
 export function startBrandUpsertWorker(): Worker {
   const connection = getRedis();
@@ -47,19 +47,21 @@ export function startBrandUpsertWorker(): Worker {
         const campaignRunId = runResult.run.id;
         console.log(`[brand-upsert] Created run ${campaignRunId}`);
         
-        // 2. Get campaign details including brand info
+        // 2. Get campaign details including brandUrl
         const campaignResult = await campaignService.getCampaign(campaignId, clerkOrgId) as { campaign: CampaignDetails };
         const campaign = campaignResult.campaign;
         
-        // Get brand info - brand should already exist from campaign creation
-        const brandId = campaign.brandId;
+        // Get brandUrl - this is now the source of truth
+        // Fall back to requestRaw.brandUrl for backwards compatibility
         const brandUrl = campaign.brandUrl || campaign.requestRaw?.brandUrl;
         
-        if (!brandId || !brandUrl) {
-          throw new Error(`Campaign ${campaignId} has no brand associated`);
+        if (!brandUrl) {
+          throw new Error(`Campaign ${campaignId} has no brandUrl`);
         }
         
-        console.log(`[brand-upsert] Brand: ${campaign.brandDomain || brandUrl} (id: ${brandId})`);
+        // Extract domain for logging
+        const brandDomain = new URL(brandUrl).hostname.replace(/^www\./, '');
+        console.log(`[brand-upsert] Brand: ${brandDomain} (${brandUrl})`);
         
         // 3. Build search params
         const searchParams = {
@@ -72,6 +74,7 @@ export function startBrandUpsertWorker(): Worker {
         };
         
         // 4. Queue brand-profile job
+        // brand-service will upsert the brand when fetching/creating sales profile
         const queues = getQueues();
         await queues[QUEUE_NAMES.BRAND_PROFILE].add(
           `profile-${campaignRunId}`,
@@ -79,15 +82,14 @@ export function startBrandUpsertWorker(): Worker {
             campaignId,
             campaignRunId,
             clerkOrgId,
-            brandId,
-            brandUrl,
+            brandUrl,  // No brandId needed - brand-service uses clerkOrgId + brandUrl
             searchParams,
           } as BrandProfileJobData
         );
         
         console.log(`[brand-upsert] Queued brand-profile for run ${campaignRunId}`);
         
-        return { campaignRunId, brandId };
+        return { campaignRunId, brandUrl };
       } catch (error) {
         console.error(`[brand-upsert] Error:`, error);
         throw error;

@@ -39,15 +39,15 @@ export function startBrandProfileWorker(): Worker {
   const worker = new Worker<BrandProfileJobData>(
     QUEUE_NAMES.BRAND_PROFILE,
     async (job: Job<BrandProfileJobData>) => {
-      const { campaignId, campaignRunId, clerkOrgId, brandId, brandUrl, searchParams } = job.data;
+      const { campaignRunId, clerkOrgId, brandUrl, searchParams } = job.data;
       
-      console.log(`[brand-profile] Fetching profile for brand ${brandId} (${brandUrl})`);
+      // Extract domain from brandUrl for logging and fallback
+      const brandDomain = new URL(brandUrl).hostname.replace(/^www\./, '');
+      console.log(`[brand-profile] Fetching profile for ${brandDomain} (${brandUrl})`);
       
       try {
-        // Extract domain from brandUrl for fallback
-        const brandDomain = new URL(brandUrl).hostname.replace(/^www\./, '');
-        
         // 1. Get sales profile from brand-service
+        // brand-service will create the brand if it doesn't exist (getOrCreateBrand)
         let clientData: LeadSearchJobData["clientData"] = { companyName: brandDomain };
         
         try {
@@ -60,7 +60,7 @@ export function startBrandProfileWorker(): Worker {
           if (profileResult?.profile) {
             const p = profileResult.profile;
             clientData = {
-              companyName: p.companyName || "",
+              companyName: p.companyName || brandDomain,
               companyOverview: p.companyOverview || undefined,
               valueProposition: p.valueProposition || undefined,
               targetAudience: p.targetAudience || undefined,
@@ -76,7 +76,8 @@ export function startBrandProfileWorker(): Worker {
           }
         } catch (profileError) {
           console.error(`[brand-profile] Failed to get profile:`, profileError);
-          // Continue with empty client data rather than failing
+          // Continue with domain as company name rather than failing
+          console.log(`[brand-profile] Using domain as fallback: ${brandDomain}`);
         }
         
         // 2. Queue lead-search job
@@ -86,7 +87,6 @@ export function startBrandProfileWorker(): Worker {
           {
             campaignRunId,
             clerkOrgId,
-            brandId,
             searchParams,
             clientData,
           } as LeadSearchJobData
@@ -95,7 +95,7 @@ export function startBrandProfileWorker(): Worker {
         console.log(`[brand-profile] Queued lead-search for run ${campaignRunId}`);
         console.log(`[brand-profile] Search params:`, JSON.stringify(searchParams));
         
-        return { campaignRunId, brandId, hasProfile: !!clientData.companyName };
+        return { campaignRunId, brandUrl, hasProfile: !!clientData.companyName };
       } catch (error) {
         console.error(`[brand-profile] Error:`, error);
         throw error;

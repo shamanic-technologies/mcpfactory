@@ -41,7 +41,7 @@ export interface BrandProfileJobData {
   campaignId: string;
   campaignRunId: string;
   clerkOrgId: string;
-  brandId: string;
+  brandId?: string;  // Deprecated - brand-service uses clerkOrgId + brandUrl
   brandUrl: string;
   searchParams: {
     personTitles?: string[];

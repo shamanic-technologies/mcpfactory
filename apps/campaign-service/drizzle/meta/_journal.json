@@ -8,6 +8,20 @@
       "when": 1769840956848,
       "tag": "0000_jazzy_captain_midlands",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769840956849,
+      "tag": "0001_add_brands",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769900000000,
+      "tag": "0002_add_brand_url",
+      "breakpoints": true
     }
   ]
 }

@@ -6,10 +6,10 @@
 import { Router } from "express";
 import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { campaigns, campaignRuns, orgs, brands } from "../db/schema.js";
+import { campaigns, campaignRuns, orgs } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
 import { getAggregatedStats, getLeadsForCampaignRuns, aggregateCompaniesFromLeads } from "../lib/service-client.js";
-import { getOrCreateBrand } from "./brands.js";
+import { extractDomain } from "../lib/domain.js";
 
 const router = Router();
 
@@ -33,16 +33,17 @@ router.get("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) => 
 /**
  * GET /internal/campaigns/all - List all campaigns across all orgs (for scheduler)
  * No serviceAuth - uses internal network trust
- * Returns campaigns with clerkOrgId and brand info for downstream service calls
+ * Returns campaigns with clerkOrgId and brandUrl for downstream service calls
  */
 router.get("/campaigns/all", async (_req, res) => {
   try {
-    // Join with orgs to get clerkOrgId, and brands for brand info
+    // Join with orgs to get clerkOrgId
+    // brandUrl is now stored directly on campaigns, no need to join brands table
     const allCampaigns = await db
       .select({
         id: campaigns.id,
         orgId: campaigns.orgId,
-        brandId: campaigns.brandId,
+        brandId: campaigns.brandId,  // Deprecated, kept for compatibility
         name: campaigns.name,
         status: campaigns.status,
         recurrence: campaigns.recurrence,
@@ -58,16 +59,20 @@ router.get("/campaigns/all", async (_req, res) => {
         requestRaw: campaigns.requestRaw,
         createdAt: campaigns.createdAt,
         clerkOrgId: orgs.clerkOrgId,
-        brandDomain: brands.domain,
-        brandName: brands.name,
-        brandUrl: brands.brandUrl,
+        brandUrl: campaigns.brandUrl,
       })
       .from(campaigns)
       .innerJoin(orgs, eq(campaigns.orgId, orgs.id))
-      .leftJoin(brands, eq(campaigns.brandId, brands.id))
       .orderBy(campaigns.createdAt);
 
-    res.json({ campaigns: allCampaigns });
+    // Add brandDomain derived from brandUrl for compatibility
+    const enrichedCampaigns = allCampaigns.map(c => ({
+      ...c,
+      brandDomain: c.brandUrl ? extractDomain(c.brandUrl) : null,
+      brandName: c.brandUrl ? extractDomain(c.brandUrl) : null,  // Use domain as name fallback
+    }));
+
+    res.json({ campaigns: enrichedCampaigns });
   } catch (error) {
     console.error("List all campaigns error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -102,6 +107,9 @@ router.get("/campaigns/:id", serviceAuth, async (req: AuthenticatedRequest, res)
 /**
  * POST /internal/campaigns - Create a new campaign
  * createdByUserId is optional - MCP API key auth may not have user context
+ * 
+ * Brand is NOT created here. The worker will call brand-service to upsert the brand.
+ * We only store the brandUrl in the campaign.
  */
 router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
@@ -135,10 +143,6 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       return res.status(400).json({ error: "brandUrl is required" });
     }
 
-    // Get or create brand from brandUrl
-    const brand = await getOrCreateBrand(req.orgId!, brandUrl);
-    console.log(`[internal/campaigns] Using brand: ${brand.domain} (id: ${brand.id})`);
-
     // Validate recurrence
     const validRecurrences = ["oneoff", "daily", "weekly", "monthly"];
     if (!recurrence || !validRecurrences.includes(recurrence)) {
@@ -154,10 +158,14 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       });
     }
 
+    // Store brandUrl directly - brand-service will be called by worker to upsert brand
+    const brandDomain = extractDomain(brandUrl);
+    console.log(`[internal/campaigns] Using brandUrl: ${brandUrl} (domain: ${brandDomain})`);
+
     const insertData = {
       orgId: req.orgId!,
-      brandId: brand.id,
-      createdByUserId: req.userId || null, // From x-clerk-user-id header
+      brandUrl,  // Store URL directly, no brandId needed
+      createdByUserId: req.userId || null,
       name,
       personTitles,
       qOrganizationKeywordTags,
@@ -175,7 +183,7 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       notifyFrequency,
       notifyChannel,
       notifyDestination,
-      status: "ongoing",  // Campaigns start immediately
+      status: "ongoing",
     };
     
     console.log("Insert data:", JSON.stringify(insertData));

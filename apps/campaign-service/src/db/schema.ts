@@ -63,12 +63,18 @@ export const campaigns = pgTable(
     orgId: uuid("org_id")
       .notNull()
       .references(() => orgs.id, { onDelete: "cascade" }),
+    // DEPRECATED: brandId is being phased out. Use brandUrl instead.
+    // Brand data now lives in brand-service, not campaign-service.
     brandId: uuid("brand_id")
-      .references(() => brands.id, { onDelete: "cascade" }),  // Nullable for migration
+      .references(() => brands.id, { onDelete: "set null" }),  // Nullable, deprecated
     createdByUserId: uuid("created_by_user_id")
       .references(() => users.id),  // Optional - MCP calls don't have user context
     
     name: text("name").notNull(),
+    
+    // Brand URL - the single source of truth for which brand this campaign is for
+    // brand-service will be called to get brand details using clerkOrgId + brandUrl
+    brandUrl: text("brand_url"),
     
     // Apollo targeting criteria (using Apollo API naming)
     personTitles: text("person_titles").array(),           // ["CEO", "CTO", "Founder"]
