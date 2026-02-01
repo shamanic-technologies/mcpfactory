@@ -6,6 +6,11 @@ import { campaignService, companyService } from "../lib/service-client.js";
 interface CampaignDetails {
   id: string;
   name: string;
+  // Brand info
+  brandId?: string;
+  brandDomain?: string;
+  brandName?: string;
+  brandUrl?: string;
   // Apollo targeting criteria
   personTitles?: string[];
   organizationLocations?: string[];
@@ -13,9 +18,10 @@ interface CampaignDetails {
   organizationNumEmployeesRanges?: string[];
   qOrganizationIndustryTagIds?: string[];
   qKeywords?: string;
-  // Raw request storage
+  // Legacy: raw request storage (for backwards compat)
   requestRaw?: {
     clientUrl?: string;
+    brandUrl?: string;
   };
 }
 
@@ -64,23 +70,27 @@ export function startCampaignRunWorker(): Worker {
         const runResult = await campaignService.createRun(campaignId, clerkOrgId) as { run: { id: string } };
         const campaignRunId = runResult.run.id;
         
-        // 2. Get campaign details to find clientUrl
+        // 2. Get campaign details including brand info
         const campaignResult = await campaignService.getCampaign(campaignId, clerkOrgId) as { campaign: CampaignDetails };
         const campaign = campaignResult.campaign;
-        const clientUrl = campaign.requestRaw?.clientUrl;
         
-        console.log(`[campaign-run] Campaign ${campaignId} clientUrl: ${clientUrl}`);
+        // Get brandUrl from either new brandUrl field or legacy requestRaw
+        const brandUrl = campaign.brandUrl || campaign.requestRaw?.brandUrl || campaign.requestRaw?.clientUrl;
+        const brandId = campaign.brandId;
+        
+        console.log(`[campaign-run] Campaign ${campaignId} brandId: ${brandId}, brandUrl: ${brandUrl}`);
         
         // 3. Get client sales profile from company-service
         let clientData: LeadSearchJobData["clientData"] = { companyName: "" };
-        if (clientUrl) {
+        if (brandUrl) {
           try {
-            console.log(`[campaign-run] Getting sales profile for: ${clientUrl}`);
+            console.log(`[campaign-run] Getting sales profile for brand: ${brandId || brandUrl}`);
             
             // Company-service handles fetching the API key internally
+            // Pass brandId if available, otherwise fall back to URL
             const profileResult = await companyService.getSalesProfile(
               clerkOrgId, 
-              clientUrl, 
+              brandUrl, 
               "byok"
             ) as SalesProfileResponse;
             
