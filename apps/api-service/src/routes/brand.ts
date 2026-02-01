@@ -95,6 +95,37 @@ router.get("/brands", authenticate, requireOrg, async (req: AuthenticatedRequest
 });
 
 /**
+ * GET /v1/brands/:id
+ * Get a single brand by ID from brand-service
+ */
+router.get("/brands/:id", authenticate, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const response = await fetch(
+      `${BRAND_SERVICE_URL}/brands/${id}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": BRAND_SERVICE_API_KEY,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: "Unknown error" }));
+      throw new Error(error.error || `Failed to fetch brand: ${response.status}`);
+    }
+
+    const result = await response.json();
+    res.json(result);
+  } catch (error: any) {
+    console.error("Get brand by id error:", error);
+    res.status(500).json({ error: error.message || "Failed to get brand" });
+  }
+});
+
+/**
  * GET /v1/brand/sales-profiles
  * Get all sales profiles (brands) for the organization
  * NOTE: Must be before /:id route to avoid matching "sales-profiles" as an id
