@@ -15,6 +15,9 @@ RUN rm -rf node_modules
 # Install all dependencies from monorepo
 RUN pnpm install -r --no-frozen-lockfile
 
+# Build shared packages (needed at runtime via pnpm deploy)
+RUN pnpm --filter "./shared/*" build
+
 # Build only client-service
 RUN pnpm --filter @mcpfactory/client-service build
 
