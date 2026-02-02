@@ -328,7 +328,7 @@ router.get("/campaigns/:id/leads", authenticate, requireOrg, async (req: Authent
 
 /**
  * GET /v1/campaigns/:id/companies
- * Get all companies for a campaign
+ * Get all companies for a campaign, with aggregated enrichment costs
  */
 router.get("/campaigns/:id/companies", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
@@ -340,8 +340,62 @@ router.get("/campaigns/:id/companies", authenticate, requireOrg, async (req: Aut
       {
         headers: { "x-clerk-org-id": req.orgId! },
       }
+    ) as { companies: Array<Record<string, unknown>> };
+
+    const companies = result.companies || [];
+
+    // Collect all enrichmentRunIds across all companies
+    const allRunIds = companies.flatMap(
+      (c) => (c.enrichmentRunIds as string[] | undefined) || []
     );
-    res.json(result);
+
+    let runMap = new Map<string, RunWithCosts>();
+    if (allRunIds.length > 0) {
+      try {
+        runMap = await getRunsBatch(allRunIds);
+      } catch (err) {
+        console.warn("Failed to fetch company enrichment run costs:", err);
+      }
+    }
+
+    // Aggregate costs per company
+    const companiesWithCosts = companies.map((company) => {
+      const runIds = (company.enrichmentRunIds as string[] | undefined) || [];
+      let totalCostInUsdCents = 0;
+      const costs: Array<{ costName: string; quantity: number; totalCostInUsdCents: number }> = [];
+      const costAgg = new Map<string, { quantity: number; totalCostInUsdCents: number }>();
+
+      for (const runId of runIds) {
+        const run = runMap.get(runId);
+        if (!run) continue;
+        totalCostInUsdCents += parseFloat(run.totalCostInUsdCents) || 0;
+        for (const cost of run.costs) {
+          const existing = costAgg.get(cost.costName);
+          if (existing) {
+            existing.quantity += parseFloat(cost.quantity) || 0;
+            existing.totalCostInUsdCents += parseFloat(cost.totalCostInUsdCents) || 0;
+          } else {
+            costAgg.set(cost.costName, {
+              quantity: parseFloat(cost.quantity) || 0,
+              totalCostInUsdCents: parseFloat(cost.totalCostInUsdCents) || 0,
+            });
+          }
+        }
+      }
+
+      for (const [costName, agg] of costAgg) {
+        costs.push({ costName, ...agg });
+      }
+
+      const { enrichmentRunIds: _, ...companyWithoutRunIds } = company;
+      return {
+        ...companyWithoutRunIds,
+        totalCostInUsdCents: totalCostInUsdCents > 0 ? String(totalCostInUsdCents) : null,
+        costs,
+      };
+    });
+
+    res.json({ companies: companiesWithCosts });
   } catch (error: any) {
     console.error("Get campaign companies error:", error);
     res.status(500).json({ error: error.message || "Failed to get campaign companies" });
