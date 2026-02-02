@@ -31,3 +31,17 @@ describe('runs-client package exports', () => {
     expect(fs.existsSync(distPath)).toBe(true);
   });
 });
+
+/**
+ * Regression: RUNS_SERVICE_URL defaulted to localhost:3006, causing
+ * ECONNREFUSED in production containers where no local runs-service exists.
+ * Default must point to the production URL like other external services.
+ */
+describe('runs-client default URL', () => {
+  it('compiled output should default to runs.mcpfactory.org, not localhost', () => {
+    const distPath = path.join(__dirname, '../../dist/index.js');
+    const compiled = fs.readFileSync(distPath, 'utf-8');
+    expect(compiled).toContain('https://runs.mcpfactory.org');
+    expect(compiled).not.toContain('localhost:3006');
+  });
+});
