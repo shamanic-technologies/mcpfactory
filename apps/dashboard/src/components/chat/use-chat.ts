@@ -114,7 +114,15 @@ export function useChat({ apiKey }: UseChatOptions) {
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantId
-                      ? { ...m, buttons: event.buttons }
+                      ? {
+                          ...m,
+                          buttons: event.buttons,
+                          // Strip trailing "- [Label]" lines that are now rendered as buttons
+                          content: m.content.replace(
+                            /(\n\s*-\s*\[.*?\]\s*)+\s*$/,
+                            ""
+                          ),
+                        }
                       : m
                   )
                 );
