@@ -29,6 +29,9 @@ pnpm-debug.log*
 # Testing
 coverage/
 
+# MCP
+.mcp.json
+
 # Misc
 *.tsbuildinfo
 .eslintcache
