@@ -80,6 +80,15 @@ export default function BrandMcpSalesOutreachPage() {
       willingToMeet: 0, interested: 0, notInterested: 0, outOfOffice: 0, unsubscribe: 0 }
   );
 
+  function formatCost(cents: string | null | undefined): string | null {
+    if (!cents) return null;
+    const val = parseFloat(cents);
+    if (isNaN(val) || val === 0) return null;
+    const usd = val / 100;
+    if (usd < 0.01) return "<$0.01";
+    return `$${usd.toFixed(2)}`;
+  }
+
   function getStatusColor(status: string): string {
     switch (status) {
       case "ongoing": return "bg-green-100 text-green-700 border-green-200";
@@ -154,6 +163,9 @@ export default function BrandMcpSalesOutreachPage() {
                     <span>{stats.leadsFound || 0} leads</span>
                     <span>{stats.emailsSent || 0} sent</span>
                     <span>{stats.emailsReplied || 0} replies</span>
+                    {formatCost(stats.totalCostInUsdCents) && (
+                      <span className="text-gray-400">{formatCost(stats.totalCostInUsdCents)}</span>
+                    )}
                   </div>
                 )}
               </Link>
