@@ -36,12 +36,12 @@ Add to .cursor/mcp.json:
 
 ## Available Tools
 - mcpfactory_status: Check connection status
-- mcpfactory_scrape_company: Extract company info from URL
-- mcpfactory_search_leads: Find leads via Apollo
-- mcpfactory_qualify_reply: Classify email replies with AI
 - mcpfactory_create_campaign: Create cold email campaign
 - mcpfactory_list_campaigns: List campaigns
+- mcpfactory_stop_campaign: Stop a running campaign
+- mcpfactory_resume_campaign: Resume a stopped campaign
 - mcpfactory_campaign_stats: Get campaign stats
+- mcpfactory_campaign_debug: Get detailed campaign debug info
 
 ## Authentication
 Include API key as Bearer token:
@@ -150,18 +150,6 @@ export default function McpUsagePage() {
               <td>Check connection status and configuration</td>
             </tr>
             <tr>
-              <td><code>mcpfactory_scrape_company</code></td>
-              <td>Extract company info from a URL</td>
-            </tr>
-            <tr>
-              <td><code>mcpfactory_search_leads</code></td>
-              <td>Find leads matching criteria via Apollo</td>
-            </tr>
-            <tr>
-              <td><code>mcpfactory_qualify_reply</code></td>
-              <td>Classify email replies with AI</td>
-            </tr>
-            <tr>
               <td><code>mcpfactory_create_campaign</code></td>
               <td>Create a cold email campaign</td>
             </tr>
@@ -170,8 +158,20 @@ export default function McpUsagePage() {
               <td>List all your campaigns</td>
             </tr>
             <tr>
+              <td><code>mcpfactory_stop_campaign</code></td>
+              <td>Stop a running campaign</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_resume_campaign</code></td>
+              <td>Resume a stopped campaign</td>
+            </tr>
+            <tr>
               <td><code>mcpfactory_campaign_stats</code></td>
               <td>Get campaign statistics</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_campaign_debug</code></td>
+              <td>Get detailed campaign debug info</td>
             </tr>
           </tbody>
         </table>

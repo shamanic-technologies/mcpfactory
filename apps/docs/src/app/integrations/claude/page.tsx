@@ -45,9 +45,10 @@ claude mcp add mcpfactory --transport http https://mcp.mcpfactory.org/mcp
 
 ## Available Tools
 - mcpfactory_status: Check connection
-- mcpfactory_scrape_company: Extract company info
-- mcpfactory_search_leads: Find leads via Apollo
 - mcpfactory_create_campaign: Launch campaign
+- mcpfactory_list_campaigns: List campaigns
+- mcpfactory_stop_campaign: Stop a campaign
+- mcpfactory_resume_campaign: Resume a campaign
 - mcpfactory_campaign_stats: Get performance
 
 ## Get API Key
@@ -137,20 +138,20 @@ export default function ClaudeIntegrationPage() {
               <td>Check connection and configuration</td>
             </tr>
             <tr>
-              <td><code>mcpfactory_scrape_company</code></td>
-              <td>Extract company info from a URL</td>
-            </tr>
-            <tr>
-              <td><code>mcpfactory_search_leads</code></td>
-              <td>Find leads matching your criteria</td>
-            </tr>
-            <tr>
               <td><code>mcpfactory_create_campaign</code></td>
               <td>Launch a cold email campaign</td>
             </tr>
             <tr>
               <td><code>mcpfactory_list_campaigns</code></td>
               <td>List all your campaigns</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_stop_campaign</code></td>
+              <td>Stop a running campaign</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_resume_campaign</code></td>
+              <td>Resume a stopped campaign</td>
             </tr>
             <tr>
               <td><code>mcpfactory_campaign_stats</code></td>
@@ -168,16 +169,10 @@ targeting CTOs at SaaS companies with 50-200 employees.
 Budget: $10/day max. Run for 5 days as a trial."`}</code>
         </pre>
 
-        <h3>Find Leads</h3>
+        <h3>Check Campaign Status</h3>
         <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
-          <code className="text-gray-800">{`"Find 50 marketing directors at e-commerce 
-companies in the United States"`}</code>
-        </pre>
-
-        <h3>Analyze Company</h3>
-        <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
-          <code className="text-gray-800">{`"Scrape acme.com and tell me about their 
-business, products, and target audience"`}</code>
+          <code className="text-gray-800">{`"What's the status of my sales campaign?
+How many emails sent, opened, and replied?"`}</code>
         </pre>
 
         <h2>Troubleshooting</h2>

@@ -7,32 +7,6 @@ export const toolDefinitions = {
     description: "Check MCPFactory connection status and configuration",
     schema: z.object({}),
   },
-  mcpfactory_qualify_reply: {
-    description: "Qualify an email reply using AI. Classifies the reply as interested, not_interested, out_of_office, etc.",
-    schema: z.object({
-      from_email: z.string().describe("Email address of the sender"),
-      to_email: z.string().describe("Email address of the recipient"),
-      subject: z.string().optional().describe("Email subject line"),
-      body: z.string().describe("Email body text"),
-      campaign_id: z.string().optional().describe("Optional campaign ID for tracking"),
-    }),
-  },
-  mcpfactory_scrape_company: {
-    description: "Scrape company information from a URL. Extracts company name, description, industry, size, etc.",
-    schema: z.object({
-      url: z.string().describe("Company website URL to scrape"),
-    }),
-  },
-  mcpfactory_search_leads: {
-    description: "Search for leads using Apollo.io. Find people matching specific criteria.",
-    schema: z.object({
-      person_titles: z.array(z.string()).describe("Job titles to search for (e.g., ['CEO', 'CTO', 'Founder'])"),
-      organization_locations: z.array(z.string()).optional().describe("Locations to search in"),
-      organization_industries: z.array(z.string()).optional().describe("Industries to target"),
-      organization_num_employees_ranges: z.array(z.string()).optional().describe("Employee count ranges"),
-      per_page: z.number().optional().describe("Number of results per page (default: 10, max: 100)"),
-    }),
-  },
   mcpfactory_create_campaign: {
     description: "Create and immediately start a cold email campaign targeting specific leads. Campaign starts in 'ongoing' status.",
     schema: z.object({
@@ -91,15 +65,6 @@ export async function handleToolCall(
     case "mcpfactory_status":
       return handleStatus();
 
-    case "mcpfactory_qualify_reply":
-      return handleQualifyReply(args);
-
-    case "mcpfactory_scrape_company":
-      return handleScrapeCompany(args);
-
-    case "mcpfactory_search_leads":
-      return handleSearchLeads(args);
-
     case "mcpfactory_create_campaign":
       return handleCreateCampaign(args);
 
@@ -155,61 +120,6 @@ async function handleStatus() {
     apiUrl: status.apiUrl,
     user: result.data,
   };
-}
-
-async function handleQualifyReply(args: Record<string, unknown>) {
-  const result = await callApi("/v1/qualify", {
-    method: "POST",
-    body: {
-      sourceService: "mcp",
-      sourceOrgId: "mcp-user",
-      sourceRefId: args.campaign_id,
-      fromEmail: args.from_email,
-      toEmail: args.to_email,
-      subject: args.subject,
-      bodyText: args.body,
-    },
-  });
-
-  if (result.error) {
-    throw new Error(result.error);
-  }
-
-  return result.data;
-}
-
-async function handleScrapeCompany(args: Record<string, unknown>) {
-  const result = await callApi("/v1/company/scrape", {
-    method: "POST",
-    body: {
-      url: args.url,
-    },
-  });
-
-  if (result.error) {
-    throw new Error(result.error);
-  }
-
-  return result.data;
-}
-
-async function handleSearchLeads(args: Record<string, unknown>) {
-  const result = await callApi("/v1/leads/search", {
-    method: "POST",
-    body: {
-      person_titles: args.person_titles,
-      organization_locations: args.organization_locations,
-      organization_industries: args.organization_industries,
-      organization_num_employees_ranges: args.organization_num_employees_ranges,
-      per_page: args.per_page || 10,
-    },
-  });
-
-  if (result.error) {
-    throw new Error(result.error);
-  }
-
-  return result.data;
 }
 
 async function handleCreateCampaign(args: Record<string, unknown>) {
