@@ -1,12 +1,20 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import request from "supertest";
 
-// Mock runs-client before importing app
-const mockEnsureOrganization = vi.fn().mockResolvedValue("runs-org-uuid");
-const mockListRuns = vi.fn().mockResolvedValue({ runs: [] });
-const mockCreateRun = vi.fn();
-const mockUpdateRun = vi.fn();
-const mockGetRun = vi.fn();
+// vi.hoisted ensures these are available when vi.mock factory runs (hoisted to top)
+const {
+  mockEnsureOrganization,
+  mockListRuns,
+  mockCreateRun,
+  mockUpdateRun,
+  mockGetRun,
+} = vi.hoisted(() => ({
+  mockEnsureOrganization: vi.fn(),
+  mockListRuns: vi.fn(),
+  mockCreateRun: vi.fn(),
+  mockUpdateRun: vi.fn(),
+  mockGetRun: vi.fn(),
+}));
 
 vi.mock("@mcpfactory/runs-client", () => ({
   ensureOrganization: mockEnsureOrganization,
