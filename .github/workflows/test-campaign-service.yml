@@ -24,6 +24,11 @@ jobs:
       - name: Run unit tests
         run: pnpm --filter @mcpfactory/campaign-service test:unit
       
+      - name: Push schema to dev DB
+        run: pnpm --filter @mcpfactory/campaign-service exec drizzle-kit push --force
+        env:
+          CAMPAIGN_SERVICE_DATABASE_URL: ${{ secrets.CAMPAIGN_SERVICE_DATABASE_URL_DEV }}
+
       - name: Run integration tests
         run: pnpm --filter @mcpfactory/campaign-service test:integration
         env:
