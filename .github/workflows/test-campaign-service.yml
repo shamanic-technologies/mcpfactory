@@ -23,14 +23,31 @@ jobs:
       - run: pnpm install
       - name: Run unit tests
         run: pnpm --filter @mcpfactory/campaign-service test:unit
-      
-      - name: Push schema to dev DB
+
+      - name: Create Neon branch for PR
+        if: github.event_name == 'pull_request'
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID_CAMPAIGN }}
+          branch_name: pr-${{ github.event.number }}-campaign
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Set database URL
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "CAMPAIGN_SERVICE_DATABASE_URL=${{ steps.neon.outputs.db_url_pooled }}" >> "$GITHUB_ENV"
+          else
+            echo "CAMPAIGN_SERVICE_DATABASE_URL=${{ secrets.CAMPAIGN_SERVICE_DATABASE_URL_DEV }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Push schema to DB
         run: pnpm --filter @mcpfactory/campaign-service exec drizzle-kit push --force
         env:
-          CAMPAIGN_SERVICE_DATABASE_URL: ${{ secrets.CAMPAIGN_SERVICE_DATABASE_URL_DEV }}
+          CAMPAIGN_SERVICE_DATABASE_URL: ${{ env.CAMPAIGN_SERVICE_DATABASE_URL }}
 
       - name: Run integration tests
         run: pnpm --filter @mcpfactory/campaign-service test:integration
         env:
-          CAMPAIGN_SERVICE_DATABASE_URL: ${{ secrets.CAMPAIGN_SERVICE_DATABASE_URL_DEV }}
+          CAMPAIGN_SERVICE_DATABASE_URL: ${{ env.CAMPAIGN_SERVICE_DATABASE_URL }}
           SERVICE_SECRET_KEY: test-secret

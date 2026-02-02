@@ -33,8 +33,30 @@ jobs:
       - name: Run unit tests
         run: pnpm --filter @mcpfactory/client-service test:unit
 
+      - name: Create Neon branch for PR
+        if: github.event_name == 'pull_request'
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID_CLIENT }}
+          branch_name: pr-${{ github.event.number }}-client
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Set database URL
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "CLIENT_SERVICE_DATABASE_URL=${{ steps.neon.outputs.db_url_pooled }}" >> "$GITHUB_ENV"
+          else
+            echo "CLIENT_SERVICE_DATABASE_URL=${{ secrets.CLIENT_SERVICE_DATABASE_URL_DEV }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Push schema to DB
+        run: pnpm --filter @mcpfactory/client-service exec drizzle-kit push --force
+        env:
+          CLIENT_SERVICE_DATABASE_URL: ${{ env.CLIENT_SERVICE_DATABASE_URL }}
+
       - name: Run integration tests
         run: pnpm --filter @mcpfactory/client-service test:integration
         env:
-          CLIENT_SERVICE_DATABASE_URL: ${{ secrets.CLIENT_SERVICE_DATABASE_URL_DEV }}
+          CLIENT_SERVICE_DATABASE_URL: ${{ env.CLIENT_SERVICE_DATABASE_URL }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
