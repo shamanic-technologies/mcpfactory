@@ -66,6 +66,9 @@ importers:
 
   apps/apollo-service:
     dependencies:
+      '@mcpfactory/runs-client':
+        specifier: workspace:*
+        version: link:../../shared/runs-client
       '@sentry/node':
         specifier: ^8.0.0
         version: 8.55.0
@@ -118,6 +121,9 @@ importers:
       '@clerk/backend':
         specifier: ^1.0.0
         version: 1.14.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mcpfactory/runs-client':
+        specifier: workspace:*
+        version: link:../../shared/runs-client
       '@sentry/node':
         specifier: ^8.0.0
         version: 8.55.0
@@ -323,6 +329,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.30.0
         version: 0.30.1
+      '@mcpfactory/runs-client':
+        specifier: workspace:*
+        version: link:../../shared/runs-client
       '@sentry/node':
         specifier: ^8.0.0
         version: 8.55.0
@@ -529,6 +538,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@mcpfactory/runs-client':
+        specifier: workspace:*
+        version: link:../../shared/runs-client
       '@sentry/node':
         specifier: ^8.0.0
         version: 8.55.0
@@ -666,6 +678,18 @@ importers:
 
   shared/byok:
     devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(jiti@1.21.7)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.3
+
+  shared/runs-client:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.30
       tsup:
         specifier: ^8.0.0
         version: 8.5.1(jiti@1.21.7)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)

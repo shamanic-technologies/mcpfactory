@@ -1,7 +1,7 @@
 import { Worker, Job } from "bullmq";
 import { getRedis } from "../lib/redis.js";
 import { getQueues, QUEUE_NAMES, BrandUpsertJobData, BrandProfileJobData } from "../queues/index.js";
-import { campaignService } from "../lib/service-client.js";
+import { campaignService, runsService } from "../lib/service-client.js";
 
 interface CampaignDetails {
   id: string;
@@ -42,10 +42,15 @@ export function startBrandUpsertWorker(): Worker {
       console.log(`[brand-upsert] Starting for campaign ${campaignId}`);
       
       try {
-        // 1. Create a campaign run record
-        const runResult = await campaignService.createRun(campaignId, clerkOrgId) as { run: { id: string } };
-        const campaignRunId = runResult.run.id;
-        console.log(`[brand-upsert] Created run ${campaignRunId}`);
+        // 1. Create a run in runs-service
+        const runsOrgId = await runsService.ensureOrganization(clerkOrgId);
+        const run = await runsService.createRun({
+          organizationId: runsOrgId,
+          serviceName: "campaign-service",
+          taskName: campaignId,
+        });
+        const campaignRunId = run.id;
+        console.log(`[brand-upsert] Created run ${campaignRunId} in runs-service`);
         
         // 2. Get campaign details including brandUrl
         const campaignResult = await campaignService.getCampaign(campaignId, clerkOrgId) as { campaign: CampaignDetails };

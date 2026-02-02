@@ -1,11 +1,10 @@
 import { db, sql } from "../../src/db/index.js";
-import { orgs, users, campaigns, campaignRuns } from "../../src/db/schema.js";
+import { orgs, users, campaigns } from "../../src/db/schema.js";
 
 /**
  * Clean all test data from the database
  */
 export async function cleanTestData() {
-  await db.delete(campaignRuns);
   await db.delete(campaigns);
   await db.delete(users);
   await db.delete(orgs);
@@ -42,9 +41,9 @@ export async function insertTestUser(data: { clerkUserId?: string } = {}) {
  */
 export async function insertTestCampaign(
   orgId: string,
-  data: { 
-    name?: string; 
-    status?: string; 
+  data: {
+    name?: string;
+    status?: string;
     recurrence?: string;
     personTitles?: string[];
     organizationLocations?: string[];
@@ -62,26 +61,6 @@ export async function insertTestCampaign(
     })
     .returning();
   return campaign;
-}
-
-/**
- * Insert a test campaign run
- */
-export async function insertTestCampaignRun(
-  campaignId: string,
-  orgId: string,
-  data: { status?: string } = {}
-) {
-  const [run] = await db
-    .insert(campaignRuns)
-    .values({
-      campaignId,
-      orgId,
-      runStartedAt: new Date(),
-      status: data.status || "running",
-    })
-    .returning();
-  return run;
 }
 
 /**

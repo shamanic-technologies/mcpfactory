@@ -4,6 +4,7 @@ import { apolloPeopleSearches, apolloPeopleEnrichments } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
 import { searchPeople, ApolloSearchParams, ApolloPerson } from "../lib/apollo-client.js";
 import { getByokKey } from "../lib/keys-client.js";
+import { ensureOrganization, createRun, updateRun, addCosts } from "@mcpfactory/runs-client";
 
 const router = Router();
 
@@ -30,6 +31,23 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
       per_page: searchParams.perPage || 25,
     };
 
+    // Create a child run in runs-service for this search
+    let searchRunId: string | undefined;
+    if (campaignRunId) {
+      try {
+        const runsOrgId = await ensureOrganization(req.clerkOrgId!);
+        const searchRun = await createRun({
+          organizationId: runsOrgId,
+          serviceName: "apollo-service",
+          taskName: "people-search",
+          parentRunId: campaignRunId,
+        });
+        searchRunId = searchRun.id;
+      } catch (err) {
+        console.warn("[apollo] Failed to create search run in runs-service:", err);
+      }
+    }
+
     const result = await searchPeople(apolloApiKey, apolloParams);
 
     // Get total entries (new API format has it at root level)
@@ -47,16 +65,17 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
           requestParams: apolloParams,
           peopleCount: result.people.length,
           totalEntries,
-          costUsd: "0", // Apollo search is usually free
           responseRaw: result,
         })
         .returning();
 
       searchId = search.id;
 
-      // Store enrichment records for each person
-      const enrichmentPromises = result.people.map((person: ApolloPerson) =>
-        db.insert(apolloPeopleEnrichments).values({
+      // Store enrichment records and track each in runs-service
+      const runsOrgId = await ensureOrganization(req.clerkOrgId!);
+
+      for (const person of result.people as ApolloPerson[]) {
+        await db.insert(apolloPeopleEnrichments).values({
           orgId: req.orgId!,
           campaignRunId,
           searchId: search.id,
@@ -72,12 +91,35 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
           organizationIndustry: person.organization?.industry,
           organizationSize: person.organization?.estimated_num_employees?.toString(),
           organizationRevenueUsd: person.organization?.annual_revenue?.toString(),
-          costUsd: "0",
           responseRaw: person,
-        })
-      );
+        });
 
-      await Promise.all(enrichmentPromises);
+        // Create grandchild run + post costs in runs-service
+        if (searchRunId) {
+          try {
+            const enrichRun = await createRun({
+              organizationId: runsOrgId,
+              serviceName: "apollo-service",
+              taskName: "enrichment",
+              parentRunId: searchRunId,
+            });
+            await addCosts(enrichRun.id, [{ costName: "apollo-enrichment-credit", quantity: 1 }]);
+            await updateRun(enrichRun.id, "completed");
+          } catch (err) {
+            console.warn("[apollo] Failed to track enrichment run:", err);
+          }
+        }
+      }
+
+      // Mark search run as completed
+      if (searchRunId) {
+        try {
+          await addCosts(searchRunId, [{ costName: "apollo-search-credit", quantity: 1 }]);
+          await updateRun(searchRunId, "completed");
+        } catch (err) {
+          console.warn("[apollo] Failed to complete search run:", err);
+        }
+      }
     }
 
     // Transform to camelCase for worker consumption

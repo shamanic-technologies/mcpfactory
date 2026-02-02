@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, uniqueIndex, index, date, decimal, jsonb, integer, numeric } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, uniqueIndex, index, date, decimal, jsonb } from "drizzle-orm/pg-core";
 
 // Local users table (maps to Clerk)
 export const users = pgTable(
@@ -89,103 +89,9 @@ export const campaigns = pgTable(
   ]
 );
 
-// Campaign runs table (each execution of a campaign)
-export const campaignRuns = pgTable(
-  "campaign_runs",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    campaignId: uuid("campaign_id")
-      .notNull()
-      .references(() => campaigns.id, { onDelete: "cascade" }),
-    orgId: uuid("org_id")
-      .notNull()
-      .references(() => orgs.id),
-    
-    runStartedAt: timestamp("run_started_at", { withTimezone: true }).notNull(),
-    runEndedAt: timestamp("run_ended_at", { withTimezone: true }),
-    
-    status: text("status").notNull().default("running"),  // running, completed, failed, stopped
-    errorMessage: text("error_message"),
-    
-    // Stats are computed from apollo-service, emailgeneration-service, postmark-service tables
-    // No denormalized stats here
-    
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [
-    index("idx_campaign_runs_campaign").on(table.campaignId),
-    index("idx_campaign_runs_org").on(table.orgId),
-  ]
-);
-
-// Task type registry
-export const tasks = pgTable(
-  "tasks",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: text("name").notNull().unique(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  }
-);
-
-// Task runs (individual executions)
-export const tasksRuns = pgTable(
-  "tasks_runs",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    taskId: uuid("task_id")
-      .notNull()
-      .references(() => tasks.id),
-    orgId: uuid("org_id")
-      .notNull()
-      .references(() => orgs.id),
-    userId: uuid("user_id")
-      .references(() => users.id),
-    status: text("status").notNull().default("running"), // running, completed, failed
-    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
-    endedAt: timestamp("ended_at", { withTimezone: true }),
-    error: text("error"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [
-    index("idx_tasks_runs_task").on(table.taskId),
-    index("idx_tasks_runs_org").on(table.orgId),
-    index("idx_tasks_runs_status").on(table.status),
-  ]
-);
-
-// Cost line items per task run
-export const tasksRunsCosts = pgTable(
-  "tasks_runs_costs",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    taskRunId: uuid("task_run_id")
-      .notNull()
-      .references(() => tasksRuns.id, { onDelete: "cascade" }),
-    costName: text("cost_name").notNull(),
-    units: integer("units").notNull(),
-    costPerUnitInUsdCents: numeric("cost_per_unit_in_usd_cents", { precision: 12, scale: 10 }).notNull(),
-    totalCostInUsdCents: numeric("total_cost_in_usd_cents", { precision: 12, scale: 10 }).notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [
-    index("idx_tasks_runs_costs_run").on(table.taskRunId),
-    index("idx_tasks_runs_costs_name").on(table.costName),
-  ]
-);
-
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Org = typeof orgs.$inferSelect;
 export type NewOrg = typeof orgs.$inferInsert;
 export type Campaign = typeof campaigns.$inferSelect;
 export type NewCampaign = typeof campaigns.$inferInsert;
-export type CampaignRun = typeof campaignRuns.$inferSelect;
-export type NewCampaignRun = typeof campaignRuns.$inferInsert;
-export type Task = typeof tasks.$inferSelect;
-export type NewTask = typeof tasks.$inferInsert;
-export type TaskRun = typeof tasksRuns.$inferSelect;
-export type NewTaskRun = typeof tasksRuns.$inferInsert;
-export type TaskRunCost = typeof tasksRunsCosts.$inferSelect;
-export type NewTaskRunCost = typeof tasksRunsCosts.$inferInsert;

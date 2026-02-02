@@ -1,12 +1,26 @@
 /**
  * Generic service client for calling other microservices
- * 
+ *
  * Each service has its own API key env var:
  * - POSTMARK_SERVICE_API_KEY for postmark-service
  * - BRAND_SERVICE_API_KEY for brand-service
  * - CAMPAIGN_SERVICE_API_KEY for campaign-service
+ * - RUNS_SERVICE_API_KEY for runs-service
  * - etc.
  */
+
+import {
+  ensureOrganization,
+  createRun,
+  updateRun as updateRunInService,
+  addCosts,
+  listRuns,
+  getRun,
+  type Run,
+  type CreateRunParams,
+  type CostItem,
+  type ListRunsParams,
+} from "@mcpfactory/runs-client";
 
 interface ServiceCallOptions {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
@@ -183,12 +197,12 @@ export const postmarkService = {
 export const brandService = {
   url: process.env.BRAND_SERVICE_URL || "https://brand.mcpfactory.org",
   apiKey: process.env.BRAND_SERVICE_API_KEY,
-  
+
   /**
    * Get or extract sales profile for a brand
    * On first call, creates org and extracts profile
    * On subsequent calls, returns cached profile
-   * 
+   *
    * @param clerkOrgId - Clerk organization ID
    * @param brandUrl - Brand website URL
    * @param keyType - "byok" for user's key, "platform" for MCP Factory's key
@@ -196,7 +210,7 @@ export const brandService = {
   async getSalesProfile(clerkOrgId: string, brandUrl: string, keyType: "byok" | "platform" = "byok") {
     return callService(this.url, "/sales-profile", {
       method: "POST",
-      body: { 
+      body: {
         clerkOrgId,
         url: brandUrl,
         keyType,
@@ -204,4 +218,14 @@ export const brandService = {
       apiKey: this.apiKey,
     });
   },
+};
+
+// Runs service - centralized run tracking and cost management
+export const runsService = {
+  ensureOrganization,
+  createRun,
+  updateRun: updateRunInService,
+  addCosts,
+  listRuns,
+  getRun,
 };
