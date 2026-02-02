@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
-import type { ChatMessage } from "./use-chat";
+import type { ChatMessage, InputRequest } from "./use-chat";
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
@@ -15,6 +15,84 @@ function TypingIndicator() {
       <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0ms]" />
       <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]" />
       <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:300ms]" />
+    </div>
+  );
+}
+
+function InputWidget({
+  request,
+  onSubmit,
+}: {
+  request: InputRequest;
+  onSubmit: (value: string) => void;
+}) {
+  const [value, setValue] = useState("");
+  const [error, setError] = useState("");
+
+  const validate = useCallback(
+    (v: string): boolean => {
+      if (!v.trim()) {
+        setError("This field is required");
+        return false;
+      }
+      if (request.input_type === "url") {
+        try {
+          new URL(v.trim());
+        } catch {
+          setError("Please enter a valid URL");
+          return false;
+        }
+      }
+      if (request.input_type === "email") {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())) {
+          setError("Please enter a valid email");
+          return false;
+        }
+      }
+      setError("");
+      return true;
+    },
+    [request.input_type]
+  );
+
+  const handleSubmit = useCallback(() => {
+    if (validate(value)) {
+      onSubmit(value.trim());
+    }
+  }, [value, validate, onSubmit]);
+
+  return (
+    <div className="mt-2 ml-9">
+      <label className="block text-xs font-medium text-gray-700 mb-1">
+        {request.label}
+      </label>
+      <div className="flex items-center gap-2">
+        <input
+          type={request.input_type}
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
+            if (error) setError("");
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
+          placeholder={request.placeholder}
+          className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-transparent ${
+            error ? "border-red-300" : "border-gray-200"
+          }`}
+        />
+        <button
+          onClick={handleSubmit}
+          className="px-3 py-2 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition"
+        >
+          Submit
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
 }
@@ -101,6 +179,14 @@ export function ChatMessages({ messages, onButtonClick }: ChatMessagesProps) {
                 </button>
               ))}
             </div>
+          )}
+
+          {/* Input request widget */}
+          {msg.inputRequest && !msg.isStreaming && (
+            <InputWidget
+              request={msg.inputRequest}
+              onSubmit={onButtonClick}
+            />
           )}
         </div>
       ))}
