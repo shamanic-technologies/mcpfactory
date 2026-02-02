@@ -124,6 +124,11 @@ export async function getOrCreateSessionKey(token: string): Promise<SessionApiKe
   return apiCall<SessionApiKey>("/api-keys/session", { token, method: "POST" });
 }
 
+// Activity tracking
+export async function trackActivity(token: string): Promise<{ ok: boolean }> {
+  return apiCall<{ ok: boolean }>("/activity", { token, method: "POST" });
+}
+
 // Campaigns
 export interface Campaign {
   id: string;

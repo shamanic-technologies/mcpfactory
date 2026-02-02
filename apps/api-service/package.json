@@ -16,7 +16,8 @@
     "@clerk/backend": "^1.0.0",
     "@sentry/node": "^8.0.0",
     "cors": "^2.8.5",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "svix": "^1.84.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

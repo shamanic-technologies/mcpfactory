@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { Header } from "@/components/header";
 import { OrgActivator } from "@/components/org-activator";
+import { UserActivityTracker } from "@/components/user-activity-tracker";
 import { MobileSidebarProvider, useMobileSidebar } from "@/components/mobile-sidebar-context";
 import { ChatWidget } from "@/components/chat/chat-widget";
 
@@ -19,6 +20,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
       <OrgActivator />
+      <UserActivityTracker />
       <Header />
       <div className="flex flex-1 overflow-hidden relative">
         {/* Mobile sidebar overlay */}

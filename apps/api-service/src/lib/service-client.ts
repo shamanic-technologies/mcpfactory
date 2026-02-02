@@ -26,6 +26,10 @@ export const externalServices = {
     url: process.env.POSTMARK_SERVICE_URL || "http://localhost:3009",
     apiKey: process.env.POSTMARK_SERVICE_API_KEY || "",
   },
+  lifecycle: {
+    url: process.env.LIFECYCLE_EMAILS_SERVICE_URL || "http://localhost:3008",
+    apiKey: process.env.LIFECYCLE_EMAILS_SERVICE_API_KEY || "",
+  },
 };
 
 interface ServiceCallOptions {
