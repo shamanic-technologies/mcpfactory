@@ -53,27 +53,6 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* FAB — Foxy icon when closed, X when open */}
-      <button
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary-500 text-white shadow-lg hover:bg-primary-600 hover:shadow-xl transition-all flex items-center justify-center"
-      >
-        {isOpen ? (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="w-5 h-5"
-          >
-            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-          </svg>
-        ) : (
-          <div className="w-9 h-9 rounded-full overflow-hidden">
-            <img src="/favicon.jpg" alt="Foxy" className="w-full h-full object-cover" />
-          </div>
-        )}
-      </button>
-
       {/* Chat panel */}
       {isOpen && (
         <>
@@ -83,7 +62,7 @@ export function ChatWidget() {
             onClick={handleClose}
           />
 
-          <div className="fixed bottom-0 right-0 md:bottom-6 md:right-6 z-50 w-full md:w-96 h-[80vh] md:h-[600px] md:max-h-[80vh] bg-white md:rounded-xl shadow-xl border border-gray-200 flex flex-col">
+          <div className="fixed bottom-0 right-0 md:bottom-24 md:right-6 z-50 w-full md:w-96 h-[80vh] md:h-[600px] md:max-h-[80vh] bg-white md:rounded-xl shadow-xl border border-gray-200 flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
               <div className="flex items-center gap-2">
@@ -120,6 +99,27 @@ export function ChatWidget() {
           </div>
         </>
       )}
+
+      {/* FAB — Foxy icon when closed, X when open (rendered last to stay on top) */}
+      <button
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary-500 text-white shadow-lg hover:bg-primary-600 hover:shadow-xl transition-all flex items-center justify-center"
+      >
+        {isOpen ? (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-5 h-5"
+          >
+            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+          </svg>
+        ) : (
+          <div className="w-9 h-9 rounded-full overflow-hidden">
+            <img src="/favicon.jpg" alt="Foxy" className="w-full h-full object-cover" />
+          </div>
+        )}
+      </button>
     </>
   );
 }
