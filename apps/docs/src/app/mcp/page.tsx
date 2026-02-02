@@ -43,6 +43,8 @@ Add to .cursor/mcp.json:
 - mcpfactory_resume_campaign: Resume a stopped campaign
 - mcpfactory_campaign_stats: Get campaign stats
 - mcpfactory_campaign_debug: Get detailed campaign debug info
+- mcpfactory_list_brands: List your brands
+- mcpfactory_suggest_icp: Suggest ideal customer profile for a brand URL
 
 ## Authentication
 Include API key as Bearer token:
@@ -173,6 +175,14 @@ export default function McpUsagePage() {
             <tr>
               <td><code>mcpfactory_campaign_debug</code></td>
               <td>Get detailed campaign debug info</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_list_brands</code></td>
+              <td>List all your brands</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_suggest_icp</code></td>
+              <td>Suggest ideal customer profile for a brand URL</td>
             </tr>
           </tbody>
         </table>
