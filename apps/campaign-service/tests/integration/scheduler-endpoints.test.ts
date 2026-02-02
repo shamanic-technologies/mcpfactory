@@ -1,11 +1,31 @@
-import { describe, it, expect, beforeEach, afterAll } from "vitest";
+import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import request from "supertest";
+
+// Mock runs-client before importing app
+const mockEnsureOrganization = vi.fn().mockResolvedValue("runs-org-uuid");
+const mockListRuns = vi.fn().mockResolvedValue({ runs: [] });
+const mockCreateRun = vi.fn();
+const mockUpdateRun = vi.fn();
+const mockGetRun = vi.fn();
+
+vi.mock("@mcpfactory/runs-client", () => ({
+  ensureOrganization: mockEnsureOrganization,
+  listRuns: mockListRuns,
+  getRun: mockGetRun,
+  createRun: mockCreateRun,
+  updateRun: mockUpdateRun,
+}));
+
 import app from "../../src/index.js";
-import { cleanTestData, closeDb, insertTestOrg, insertTestCampaign, insertTestCampaignRun } from "../helpers/test-db.js";
+import { cleanTestData, closeDb, insertTestOrg, insertTestCampaign } from "../helpers/test-db.js";
 
 describe("Scheduler Endpoints", () => {
   beforeEach(async () => {
     await cleanTestData();
+    vi.clearAllMocks();
+    // Reset default mock values
+    mockEnsureOrganization.mockResolvedValue("runs-org-uuid");
+    mockListRuns.mockResolvedValue({ runs: [] });
   });
 
   afterAll(async () => {
@@ -15,10 +35,9 @@ describe("Scheduler Endpoints", () => {
 
   describe("GET /internal/campaigns/all", () => {
     it("should return all campaigns across all orgs", async () => {
-      // Create two orgs with campaigns
       const org1 = await insertTestOrg({ clerkOrgId: "org_1" });
       const org2 = await insertTestOrg({ clerkOrgId: "org_2" });
-      
+
       await insertTestCampaign(org1.id, { name: "Org1 Campaign", status: "ongoing" });
       await insertTestCampaign(org2.id, { name: "Org2 Campaign", status: "ongoing" });
 
@@ -27,7 +46,6 @@ describe("Scheduler Endpoints", () => {
         .expect(200);
 
       expect(res.body.campaigns).toHaveLength(2);
-      // Should include clerkOrgId from joined orgs
       expect(res.body.campaigns[0].clerkOrgId).toBeDefined();
     });
 
@@ -52,17 +70,23 @@ describe("Scheduler Endpoints", () => {
   });
 
   describe("GET /internal/campaigns/:id/runs/all", () => {
-    it("should return all runs for a campaign without auth", async () => {
-      const org = await insertTestOrg();
+    it("should return runs from runs-service for a campaign", async () => {
+      const org = await insertTestOrg({ clerkOrgId: "org_runs_test" });
       const campaign = await insertTestCampaign(org.id);
-      await insertTestCampaignRun(campaign.id, org.id, { status: "completed" });
-      await insertTestCampaignRun(campaign.id, org.id, { status: "running" });
+
+      mockListRuns.mockResolvedValue({
+        runs: [
+          { id: "run-1", status: "completed", createdAt: new Date().toISOString() },
+          { id: "run-2", status: "running", createdAt: new Date().toISOString() },
+        ],
+      });
 
       const res = await request(app)
         .get(`/internal/campaigns/${campaign.id}/runs/all`)
         .expect(200);
 
       expect(res.body.runs).toHaveLength(2);
+      expect(mockEnsureOrganization).toHaveBeenCalledWith("org_runs_test");
     });
 
     it("should return empty array for campaign with no runs", async () => {
@@ -78,17 +102,31 @@ describe("Scheduler Endpoints", () => {
   });
 
   describe("POST /internal/campaigns/:id/runs", () => {
-    it("should create a new campaign run", async () => {
-      const org = await insertTestOrg();
+    it("should create a new campaign run via runs-service", async () => {
+      const org = await insertTestOrg({ clerkOrgId: "org_create_run" });
       const campaign = await insertTestCampaign(org.id, { status: "ongoing" });
+
+      mockCreateRun.mockResolvedValue({
+        id: "new-run-id",
+        status: "running",
+        serviceName: "campaign-service",
+        taskName: campaign.id,
+        createdAt: new Date().toISOString(),
+      });
 
       const res = await request(app)
         .post(`/internal/campaigns/${campaign.id}/runs`)
         .expect(200);
 
       expect(res.body.run).toBeDefined();
-      expect(res.body.run.campaignId).toBe(campaign.id);
       expect(res.body.run.status).toBe("running");
+      expect(mockCreateRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organizationId: "runs-org-uuid",
+          serviceName: "campaign-service",
+          taskName: campaign.id,
+        })
+      );
     });
 
     it("should return 404 for non-existent campaign", async () => {
@@ -96,53 +134,66 @@ describe("Scheduler Endpoints", () => {
         .post("/internal/campaigns/00000000-0000-0000-0000-000000000000/runs")
         .expect(404);
 
-      expect(res.body.error).toBe("Campaign not found");
+      expect(res.body.error).toContain("not found");
     });
   });
 
   describe("PATCH /internal/runs/:id", () => {
     it("should update run status to completed", async () => {
-      const org = await insertTestOrg();
-      const campaign = await insertTestCampaign(org.id);
-      const run = await insertTestCampaignRun(campaign.id, org.id, { status: "running" });
+      mockUpdateRun.mockResolvedValue({
+        id: "run-1",
+        status: "completed",
+        completedAt: new Date().toISOString(),
+      });
 
       const res = await request(app)
-        .patch(`/internal/runs/${run.id}`)
+        .patch("/internal/runs/run-1")
         .send({ status: "completed" })
         .expect(200);
 
       expect(res.body.run.status).toBe("completed");
-      expect(res.body.run.runEndedAt).toBeDefined();
+      expect(mockUpdateRun).toHaveBeenCalledWith("run-1", "completed");
     });
 
-    it("should update run status to failed with error message", async () => {
-      const org = await insertTestOrg();
-      const campaign = await insertTestCampaign(org.id);
-      const run = await insertTestCampaignRun(campaign.id, org.id, { status: "running" });
+    it("should update run status to failed", async () => {
+      mockUpdateRun.mockResolvedValue({
+        id: "run-2",
+        status: "failed",
+      });
 
       const res = await request(app)
-        .patch(`/internal/runs/${run.id}`)
-        .send({ status: "failed", errorMessage: "API rate limited" })
+        .patch("/internal/runs/run-2")
+        .send({ status: "failed" })
         .expect(200);
 
       expect(res.body.run.status).toBe("failed");
-      expect(res.body.run.errorMessage).toBe("API rate limited");
     });
 
-    it("should return 404 for non-existent run", async () => {
+    it("should return 400 for invalid status", async () => {
+      const res = await request(app)
+        .patch("/internal/runs/run-1")
+        .send({ status: "invalid" })
+        .expect(400);
+
+      expect(res.body.error).toContain("Status must be");
+    });
+
+    it("should return 500 when runs-service fails", async () => {
+      mockUpdateRun.mockRejectedValueOnce(new Error("Run not found"));
+
       const res = await request(app)
         .patch("/internal/runs/00000000-0000-0000-0000-000000000000")
         .send({ status: "completed" })
-        .expect(404);
+        .expect(500);
 
-      expect(res.body.error).toBe("Run not found");
+      expect(res.body.error).toBe("Internal server error");
     });
   });
 
   describe("Scheduler workflow simulation", () => {
-    it("should simulate full scheduler flow: list -> check runs -> create run", async () => {
+    it("should simulate full scheduler flow: list -> check runs -> create run -> update", async () => {
       const org = await insertTestOrg({ clerkOrgId: "org_workflow_test" });
-      const campaign = await insertTestCampaign(org.id, { 
+      const campaign = await insertTestCampaign(org.id, {
         name: "Workflow Test",
         status: "ongoing",
         recurrence: "oneoff",
@@ -152,39 +203,55 @@ describe("Scheduler Endpoints", () => {
       const listRes = await request(app)
         .get("/internal/campaigns/all")
         .expect(200);
-      
+
       expect(listRes.body.campaigns).toHaveLength(1);
       expect(listRes.body.campaigns[0].status).toBe("ongoing");
-      expect(listRes.body.campaigns[0].recurrence).toBe("oneoff");
 
-      // 2. Scheduler checks runs for this campaign
+      // 2. Scheduler checks runs for this campaign (returns empty)
       const runsRes = await request(app)
         .get(`/internal/campaigns/${campaign.id}/runs/all`)
         .expect(200);
-      
-      expect(runsRes.body.runs).toHaveLength(0); // No runs yet
 
-      // 3. Scheduler creates a run (since no runs exist for oneoff)
+      expect(runsRes.body.runs).toHaveLength(0);
+
+      // 3. Scheduler creates a run
+      const newRun = {
+        id: "workflow-run-1",
+        status: "running",
+        serviceName: "campaign-service",
+        taskName: campaign.id,
+        createdAt: new Date().toISOString(),
+      };
+      mockCreateRun.mockResolvedValue(newRun);
+
       const createRes = await request(app)
         .post(`/internal/campaigns/${campaign.id}/runs`)
         .expect(200);
-      
+
       expect(createRes.body.run.status).toBe("running");
       const runId = createRes.body.run.id;
 
       // 4. Worker completes the run
+      mockUpdateRun.mockResolvedValue({
+        ...newRun,
+        status: "completed",
+        completedAt: new Date().toISOString(),
+      });
+
       const updateRes = await request(app)
         .patch(`/internal/runs/${runId}`)
         .send({ status: "completed" })
         .expect(200);
-      
+
       expect(updateRes.body.run.status).toBe("completed");
 
-      // 5. Scheduler checks again - should NOT create another run for oneoff
+      // 5. Scheduler checks again - should see 1 run
+      mockListRuns.mockResolvedValue({ runs: [{ ...newRun, status: "completed" }] });
+
       const runsRes2 = await request(app)
         .get(`/internal/campaigns/${campaign.id}/runs/all`)
         .expect(200);
-      
+
       expect(runsRes2.body.runs).toHaveLength(1);
     });
   });

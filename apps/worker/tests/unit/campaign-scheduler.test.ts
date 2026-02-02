@@ -7,6 +7,11 @@ vi.mock("../../src/lib/service-client.js", () => ({
     getCampaignRuns: vi.fn(),
     createRun: vi.fn(),
   },
+  runsService: {
+    ensureOrganization: vi.fn(),
+    listRuns: vi.fn(),
+    updateRun: vi.fn(),
+  },
 }));
 
 // Mock the queues - we need to create a trackable mock
@@ -17,9 +22,13 @@ vi.mock("../../src/queues/index.js", () => ({
     "campaign-run": {
       add: mockQueueAdd,
     },
+    "brand-upsert": {
+      add: mockQueueAdd,
+    },
   }),
   QUEUE_NAMES: {
     CAMPAIGN_RUN: "campaign-run",
+    BRAND_UPSERT: "brand-upsert",
     LEAD_SEARCH: "lead-search",
     EMAIL_GENERATE: "email-generate",
     EMAIL_SEND: "email-send",
@@ -31,7 +40,7 @@ vi.mock("../../src/lib/redis.js", () => ({
   getRedis: vi.fn(() => ({})),
 }));
 
-import { campaignService } from "../../src/lib/service-client.js";
+import { campaignService, runsService } from "../../src/lib/service-client.js";
 import { getQueues } from "../../src/queues/index.js";
 import { startCampaignScheduler } from "../../src/schedulers/campaign-scheduler.js";
 
@@ -58,14 +67,14 @@ describe("Campaign Scheduler Logic", () => {
       ];
 
       vi.mocked(campaignService.listCampaigns).mockResolvedValue({ campaigns });
-      vi.mocked(campaignService.getCampaignRuns).mockResolvedValue({ runs: [] });
+      vi.mocked(runsService.listRuns).mockResolvedValue({ runs: [] });
 
       // Simulate the scheduler logic
       const ongoingCampaigns = campaigns.filter((c) => c.status === "ongoing");
       expect(ongoingCampaigns).toHaveLength(1);
 
-      // Check runs
-      const runsResult = await campaignService.getCampaignRuns("camp-1");
+      // Check runs via runs-service
+      const runsResult = await runsService.listRuns({ organizationId: "org-id", serviceName: "campaign-service", taskName: "camp-1" });
       expect(runsResult.runs).toHaveLength(0);
 
       // Should run because no runs exist
@@ -74,14 +83,14 @@ describe("Campaign Scheduler Logic", () => {
 
     it("should NOT queue oneoff campaign with existing runs", async () => {
       const existingRuns = [
-        { id: "run-1", campaignId: "camp-1", status: "completed", createdAt: new Date().toISOString() },
+        { id: "run-1", status: "completed", createdAt: new Date().toISOString() },
       ];
 
-      vi.mocked(campaignService.getCampaignRuns).mockResolvedValue({ runs: existingRuns });
+      vi.mocked(runsService.listRuns).mockResolvedValue({ runs: existingRuns });
 
-      const runsResult = await campaignService.getCampaignRuns("camp-1");
+      const runsResult = await runsService.listRuns({ organizationId: "org-id", serviceName: "campaign-service", taskName: "camp-1" });
       expect(runsResult.runs).toHaveLength(1);
-      
+
       // For oneoff, should not run if runs exist
       const shouldRun = runsResult.runs.length === 0;
       expect(shouldRun).toBe(false);
@@ -92,50 +101,50 @@ describe("Campaign Scheduler Logic", () => {
       yesterday.setDate(yesterday.getDate() - 1);
 
       const existingRuns = [
-        { id: "run-1", campaignId: "camp-1", status: "completed", createdAt: yesterday.toISOString() },
+        { id: "run-1", status: "completed", createdAt: yesterday.toISOString() },
       ];
 
-      vi.mocked(campaignService.getCampaignRuns).mockResolvedValue({ runs: existingRuns });
+      vi.mocked(runsService.listRuns).mockResolvedValue({ runs: existingRuns });
 
-      const runsResult = await campaignService.getCampaignRuns("camp-1");
-      
+      const runsResult = await runsService.listRuns({ organizationId: "org-id", serviceName: "campaign-service", taskName: "camp-1" });
+
       // Check if any run today
       const today = new Date().toISOString().split("T")[0];
       const hasRunToday = runsResult.runs.some(
         (r: { createdAt: string }) => r.createdAt.split("T")[0] === today
       );
-      
+
       expect(hasRunToday).toBe(false);
     });
 
     it("should NOT queue daily campaign if already ran today", async () => {
       const existingRuns = [
-        { id: "run-1", campaignId: "camp-1", status: "completed", createdAt: new Date().toISOString() },
+        { id: "run-1", status: "completed", createdAt: new Date().toISOString() },
       ];
 
-      vi.mocked(campaignService.getCampaignRuns).mockResolvedValue({ runs: existingRuns });
+      vi.mocked(runsService.listRuns).mockResolvedValue({ runs: existingRuns });
 
-      const runsResult = await campaignService.getCampaignRuns("camp-1");
-      
+      const runsResult = await runsService.listRuns({ organizationId: "org-id", serviceName: "campaign-service", taskName: "camp-1" });
+
       const today = new Date().toISOString().split("T")[0];
       const hasRunToday = runsResult.runs.some(
         (r: { createdAt: string }) => r.createdAt.split("T")[0] === today
       );
-      
+
       expect(hasRunToday).toBe(true);
     });
   });
 
   describe("Queue integration", () => {
-    it("should add job to campaign-run queue", async () => {
+    it("should add job to brand-upsert queue", async () => {
       const queues = getQueues();
-      
-      await queues["campaign-run"].add("test-job", {
+
+      await queues["brand-upsert"].add("test-job", {
         campaignId: "camp-123",
         clerkOrgId: "org_test",
       });
 
-      expect(queues["campaign-run"].add).toHaveBeenCalledWith("test-job", {
+      expect(queues["brand-upsert"].add).toHaveBeenCalledWith("test-job", {
         campaignId: "camp-123",
         clerkOrgId: "org_test",
       });
@@ -194,6 +203,8 @@ describe("Campaign Scheduler Logic", () => {
   describe("startCampaignScheduler integration", () => {
     beforeEach(() => {
       mockQueueAdd.mockClear();
+      // Default: ensureOrganization returns an org ID
+      vi.mocked(runsService.ensureOrganization).mockResolvedValue("runs-org-id");
     });
 
     it("should queue oneoff campaign with no existing runs", async () => {
@@ -209,7 +220,7 @@ describe("Campaign Scheduler Logic", () => {
       ];
 
       vi.mocked(campaignService.listCampaigns).mockResolvedValue({ campaigns });
-      vi.mocked(campaignService.getCampaignRuns).mockResolvedValue({ runs: [] });
+      vi.mocked(runsService.listRuns).mockResolvedValue({ runs: [] });
 
       // Start scheduler with very short interval
       const interval = startCampaignScheduler(100000); // Long interval, we test first poll
@@ -244,11 +255,11 @@ describe("Campaign Scheduler Logic", () => {
       ];
 
       const existingRuns = [
-        { id: "run-1", campaignId: "camp-existing", status: "completed", createdAt: new Date().toISOString() },
+        { id: "run-1", status: "completed", createdAt: new Date().toISOString() },
       ];
 
       vi.mocked(campaignService.listCampaigns).mockResolvedValue({ campaigns });
-      vi.mocked(campaignService.getCampaignRuns).mockResolvedValue({ runs: existingRuns });
+      vi.mocked(runsService.listRuns).mockResolvedValue({ runs: existingRuns });
 
       const interval = startCampaignScheduler(100000);
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -274,11 +285,11 @@ describe("Campaign Scheduler Logic", () => {
       ];
 
       const oldRuns = [
-        { id: "run-old", campaignId: "camp-daily", status: "completed", createdAt: yesterday.toISOString() },
+        { id: "run-old", status: "completed", createdAt: yesterday.toISOString() },
       ];
 
       vi.mocked(campaignService.listCampaigns).mockResolvedValue({ campaigns });
-      vi.mocked(campaignService.getCampaignRuns).mockResolvedValue({ runs: oldRuns });
+      vi.mocked(runsService.listRuns).mockResolvedValue({ runs: oldRuns });
 
       const interval = startCampaignScheduler(100000);
       await new Promise((resolve) => setTimeout(resolve, 100));
