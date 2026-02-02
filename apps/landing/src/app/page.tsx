@@ -77,9 +77,14 @@ export default function Home() {
                 <br />
                 <span className="text-gray-800">to Revenue</span>
               </h1>
-              <p className="text-xl md:text-2xl text-gray-600 mb-4">
+              <p className="text-xl md:text-2xl text-gray-600 mb-2">
                 The <span className="font-semibold text-primary-500">DFY</span>,{" "}
                 <span className="font-semibold text-accent-500">BYOK</span> MCP Platform
+              </p>
+              <p className="text-sm text-gray-400 mb-4">
+                <span className="text-primary-400">Done For You</span>
+                {" · "}
+                <span className="text-accent-400">Bring Your Own Keys</span>
               </p>
               <p className="text-lg text-gray-500 mb-8 max-w-xl">
                 You give us your URL + budget. We handle lead finding, content generation,
@@ -110,7 +115,7 @@ export default function Home() {
               <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                 <div className="bg-white/80 backdrop-blur border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
                   <span className="text-gray-500 text-sm">Free tier</span>
-                  <span className="block font-bold text-gray-900">$0 + BYOK costs</span>
+                  <span className="block font-bold text-gray-900">$0 + your API costs</span>
                 </div>
                 <div className="bg-white/80 backdrop-blur border border-primary-200 rounded-xl px-4 py-2 shadow-sm">
                   <span className="text-primary-500 text-sm">Pro</span>
