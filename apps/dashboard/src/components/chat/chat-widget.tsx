@@ -13,7 +13,7 @@ export function ChatWidget() {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [keyLoading, setKeyLoading] = useState(false);
 
-  const { messages, isLoading, sendMessage, reset } = useChat({ apiKey });
+  const { messages, isLoading, sendMessage } = useChat({ apiKey });
 
   // Fetch or create a session key when the panel opens
   useEffect(() => {
@@ -63,23 +63,28 @@ export function ChatWidget() {
     setIsOpen(false);
   }, []);
 
-  const handleNewChat = useCallback(() => {
-    reset();
-  }, [reset]);
-
   return (
     <>
-      {/* FAB */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary-500 text-white shadow-lg hover:bg-primary-600 hover:shadow-xl transition-all flex items-center justify-center"
-        >
+      {/* FAB — Foxy icon when closed, X when open */}
+      <button
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary-500 text-white shadow-lg hover:bg-primary-600 hover:shadow-xl transition-all flex items-center justify-center"
+      >
+        {isOpen ? (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-5 h-5"
+          >
+            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+          </svg>
+        ) : (
           <div className="w-9 h-9 rounded-full overflow-hidden">
             <img src="/favicon.jpg" alt="Foxy" className="w-full h-full object-cover" />
           </div>
-        </button>
-      )}
+        )}
+      </button>
 
       {/* Chat panel */}
       {isOpen && (
@@ -107,35 +112,6 @@ export function ChatWidget() {
                   </p>
                   <p className="text-xs text-gray-500">MCP Factory Assistant</p>
                 </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={handleNewChat}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 transition text-gray-500"
-                  title="New chat"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="w-4 h-4"
-                  >
-                    <path d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={handleClose}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 transition text-gray-500"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="w-4 h-4"
-                  >
-                    <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-                  </svg>
-                </button>
               </div>
             </div>
 
