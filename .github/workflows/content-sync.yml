@@ -1,0 +1,38 @@
+name: Content Sync Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-readme-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build content package
+        run: pnpm --filter @mcpfactory/content build
+
+      - name: Generate README and check for drift
+        run: |
+          cp README.md README.md.before
+          pnpm generate:readme
+          if ! diff -q README.md README.md.before > /dev/null 2>&1; then
+            echo "::error::README.md is out of sync with shared/content/. Run 'pnpm generate:readme' and commit."
+            diff README.md.before README.md || true
+            exit 1
+          fi
+          echo "README.md is in sync."

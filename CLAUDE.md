@@ -63,6 +63,7 @@ Each package under `packages/` is a standalone MCP server published to npm (e.g.
 - `shared/types/` — Shared TypeScript type definitions
 - `shared/auth/` — API key validation utilities
 - `shared/byok/` — BYOK key management
+- `shared/content/` — **Single source of truth for all marketing/docs content** (see Content Sync Rules below)
 
 ## Key Patterns
 
@@ -100,3 +101,35 @@ Dashboard uses `"use client"` components with React hooks for state. Data fetchi
 - **Monitoring:** Sentry
 - **CI:** GitHub Actions (build → parallel test jobs, lint with continue-on-error)
 - **Deploy:** Railway (private networking between services)
+
+## Content Sync Rules
+
+All marketing/docs content lives in `shared/content/src/`. The 4 public surfaces import from `@mcpfactory/content` instead of hardcoding values.
+
+### SSoT module files
+- `shared/content/src/urls.ts` — All public URLs (dashboard, docs, API, GitHub, MCP endpoint)
+- `shared/content/src/mcps.ts` — MCP package definitions (name, description, quota, availability)
+- `shared/content/src/pricing.ts` — Pricing tiers, BYOK cost estimates, rate limits
+- `shared/content/src/features.ts` — Feature descriptions, FAQ, steps, supported AI clients, BYOK providers
+- `shared/content/src/brand.ts` — Brand name, tagline, hero text
+
+### Public surfaces (import from @mcpfactory/content)
+1. `apps/landing/` — mcpfactory.org
+2. `apps/docs/` — docs.mcpfactory.org
+3. `apps/sales-cold-emails-landing/` — salescoldemail.mcpfactory.org
+4. `README.md` — **GENERATED** (do not edit directly)
+
+### When you change content
+
+If you modify MCP packages, pricing, URLs, features, BYOK providers, or API endpoints:
+
+1. Update the data in `shared/content/src/`
+2. Run `pnpm generate:readme` to regenerate README.md
+3. Verify apps build: `pnpm build:landing && pnpm build:docs`
+4. Commit the regenerated README.md alongside your changes
+
+### Content rules
+- **NEVER** hardcode pricing, MCP names, quotas, or URLs in page components
+- **ALWAYS** import from `@mcpfactory/content`
+- **README.md is GENERATED** — edit `shared/content/` then run `pnpm generate:readme`
+- The landing page uses simplified 2-tier pricing (`LANDING_PRICING`), sales landing uses full 4-tier (`SALES_PRICING_TIERS`) — this is intentional

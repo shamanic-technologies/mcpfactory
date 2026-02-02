@@ -1,131 +1,12 @@
 import Image from "next/image";
-
-const DASHBOARD_URL = "https://dashboard.mcpfactory.org";
-const GITHUB_URL = "https://github.com/shamanic-technologies/mcpfactory";
-
-const FEATURES = [
-  {
-    icon: "🎯",
-    title: "Find Qualified Leads",
-    description: "Search 275M+ contacts via Apollo. Target by role, company size, industry, and more.",
-  },
-  {
-    icon: "✨",
-    title: "Personalized Emails",
-    description: "Each email is unique. AI researches the recipient and crafts a personalized message.",
-  },
-  {
-    icon: "📊",
-    title: "Automatic A/B Testing",
-    description: "Test subject lines, CTAs, and messaging. Optimizes based on real results.",
-  },
-  {
-    icon: "📬",
-    title: "Smart Sending",
-    description: "Optimal send times, throttling, and warmup. Maximize deliverability automatically.",
-  },
-  {
-    icon: "💬",
-    title: "Reply Detection",
-    description: "Qualifies replies as interested, not interested, or out of office. Focus on hot leads.",
-  },
-  {
-    icon: "📈",
-    title: "Real-time Analytics",
-    description: "Track opens, clicks, replies, and meetings. See what's working in real-time.",
-  },
-];
-
-const STEPS = [
-  {
-    number: 1,
-    title: "Connect Your AI",
-    description: "Add MCP Factory to ChatGPT, Claude, or Cursor",
-    code: "https://mcp.mcpfactory.org/mcp",
-  },
-  {
-    number: 2,
-    title: "Describe Your Campaign",
-    description: "Tell the AI who to target and what to say",
-    example: '"Send cold emails to CTOs at B2B SaaS companies about our dev tool"',
-  },
-  {
-    number: 3,
-    title: "We Handle The Rest",
-    description: "Finds leads, writes emails, sends, and optimizes",
-  },
-  {
-    number: 4,
-    title: "You Get Meetings",
-    description: "Reply to interested prospects and close deals",
-  },
-];
-
-const FAQ = [
-  {
-    question: "Is this really open source?",
-    answer: "Yes! 100% open source under MIT license. You can self-host it, fork it, or contribute. Check out the GitHub repo.",
-  },
-  {
-    question: "How many emails can I send?",
-    answer: "Free: 500 emails (one-time). Hobby: 3,000/month. Standard: 100,000/month. Growth: 500,000/month. Plus BYOK costs for leads and AI.",
-  },
-  {
-    question: "What are BYOK costs?",
-    answer: "BYOK = Bring Your Own Key. You pay Apollo for leads (~$0.01/lead) and Anthropic for AI (~$0.01/email) directly at their rates. Full transparency, no markup.",
-  },
-  {
-    question: "Will my emails land in spam?",
-    answer: "We use best practices: proper warmup, optimal send times, throttling, and your own domain. Most users see 95%+ inbox placement.",
-  },
-  {
-    question: "What AI assistants work with this?",
-    answer: "ChatGPT (Plus, Pro, Team), Claude (Web, Desktop, Code), and Cursor IDE. Any MCP-compatible client works.",
-  },
-];
-
-const PRICING = [
-  {
-    name: "Free",
-    description: "Try it out",
-    price: 0,
-    period: "one-time",
-    emails: "500",
-    features: ["500 emails (one-time)", "2 concurrent requests", "Basic rate limits"],
-    cta: "Get Started",
-    popular: false,
-  },
-  {
-    name: "Hobby",
-    description: "For side projects",
-    price: 16,
-    period: "/month",
-    emails: "3,000",
-    features: ["3,000 emails/month", "5 concurrent requests", "Basic support"],
-    cta: "Subscribe",
-    popular: false,
-  },
-  {
-    name: "Standard",
-    description: "For scaling teams",
-    price: 83,
-    period: "/month",
-    emails: "100,000",
-    features: ["100,000 emails/month", "50 concurrent requests", "Standard support"],
-    cta: "Subscribe",
-    popular: true,
-  },
-  {
-    name: "Growth",
-    description: "High volume",
-    price: 333,
-    period: "/month",
-    emails: "500,000",
-    features: ["500,000 emails/month", "100 concurrent requests", "Priority support"],
-    cta: "Subscribe",
-    popular: false,
-  },
-];
+import {
+  URLS,
+  SALES_FEATURES,
+  SALES_STEPS,
+  SALES_FAQ,
+  SALES_PRICING_TIERS,
+  BYOK_COST_ESTIMATES,
+} from "@mcpfactory/content";
 
 export default function Home() {
   return (
@@ -145,7 +26,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <a
-              href={GITHUB_URL}
+              href={URLS.github}
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-600 hover:text-primary-600 text-sm transition hidden sm:flex items-center gap-1"
@@ -156,19 +37,19 @@ export default function Home() {
               GitHub
             </a>
             <a
-              href="https://docs.mcpfactory.org/sales-outreach"
+              href={`${URLS.docs}/sales-outreach`}
               className="text-gray-600 hover:text-primary-600 text-sm transition hidden sm:block"
             >
               Docs
             </a>
             <a
-              href={`${DASHBOARD_URL}/sign-in`}
+              href={URLS.signIn}
               className="text-gray-600 hover:text-primary-600 text-sm font-medium transition"
             >
               Sign In
             </a>
             <a
-              href={`${DASHBOARD_URL}/sign-up`}
+              href={URLS.signUp}
               className="bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-600 shadow-md"
             >
               Start Free
@@ -181,7 +62,7 @@ export default function Home() {
       <section className="gradient-bg py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <a
-            href={GITHUB_URL}
+            href={URLS.github}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-1.5 rounded-full text-sm font-medium mb-6 hover:bg-gray-800 transition"
@@ -201,19 +82,19 @@ export default function Home() {
             <span className="font-semibold text-accent-600">Your Own API Keys</span>.
           </p>
           <p className="text-lg text-gray-500 mb-8 max-w-2xl mx-auto">
-            You give us your URL + target audience. We handle lead finding, email generation, 
+            You give us your URL + target audience. We handle lead finding, email generation,
             sending, and optimization. Works with ChatGPT, Claude, and Cursor.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <a
-              href={`${DASHBOARD_URL}/sign-up`}
+              href={URLS.signUp}
               className="px-8 py-4 bg-primary-500 text-white rounded-full hover:bg-primary-600 font-medium text-lg shadow-lg"
             >
               Start Free
             </a>
             <a
-              href={GITHUB_URL}
+              href={URLS.github}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border border-gray-200 text-gray-700 rounded-full hover:border-gray-300 font-medium"
@@ -244,7 +125,7 @@ export default function Home() {
             </div>
           </div>
           <a
-            href={GITHUB_URL}
+            href={URLS.github}
             target="_blank"
             rel="noopener noreferrer"
             className="px-6 py-2 bg-white text-gray-900 rounded-full font-medium hover:bg-gray-100 text-sm"
@@ -260,7 +141,7 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
             What makes us different?
           </h2>
-          
+
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-gradient-to-br from-primary-50 to-blue-50 rounded-2xl p-6 border border-primary-100">
               <div className="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 border border-primary-200">
@@ -275,7 +156,7 @@ export default function Home() {
                 <p>We: Find leads → Generate emails → Send → Optimize → Report</p>
               </div>
             </div>
-            
+
             <div className="bg-gradient-to-br from-accent-50 to-purple-50 rounded-2xl p-6 border border-accent-100">
               <div className="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center mb-4 border border-accent-200">
                 <span className="text-3xl">🔑</span>
@@ -285,7 +166,7 @@ export default function Home() {
                 Use your own API keys. Pay only for what you use.
               </p>
               <div className="text-sm text-gray-500 space-y-1">
-                <p>~$0.02/email (Apollo + Anthropic)</p>
+                <p>{BYOK_COST_ESTIMATES.totalPerEmail} (Apollo + Anthropic)</p>
                 <p>No hidden markups. Full transparency.</p>
               </div>
             </div>
@@ -304,9 +185,9 @@ export default function Home() {
               From lead finding to meeting booking. Fully automated.
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {FEATURES.map((feature) => (
+            {SALES_FEATURES.map((feature) => (
               <div key={feature.title} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
                 <div className="text-4xl mb-4">{feature.icon}</div>
                 <h3 className="font-bold text-lg mb-2 text-gray-800">{feature.title}</h3>
@@ -328,9 +209,9 @@ export default function Home() {
               No complex setup. Just connect and go.
             </p>
           </div>
-          
+
           <div className="space-y-12">
-            {STEPS.map((step) => (
+            {SALES_STEPS.map((step) => (
               <div key={step.number} className="flex gap-6">
                 <div className="w-12 h-12 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold text-lg shrink-0 shadow-md">
                   {step.number}
@@ -366,9 +247,9 @@ export default function Home() {
               Start for free, then scale as you grow.
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {PRICING.map((plan) => (
+            {SALES_PRICING_TIERS.map((plan) => (
               <div
                 key={plan.name}
                 className={`rounded-2xl p-6 ${
@@ -404,7 +285,7 @@ export default function Home() {
                   ))}
                 </ul>
                 <a
-                  href={`${DASHBOARD_URL}/sign-up`}
+                  href={URLS.signUp}
                   className={`block text-center py-2 px-4 rounded-full font-medium text-sm ${
                     plan.popular
                       ? "bg-white text-primary-600 hover:bg-primary-50"
@@ -416,9 +297,9 @@ export default function Home() {
               </div>
             ))}
           </div>
-          
+
           <p className="text-center text-gray-500 mt-8 text-sm">
-            + BYOK costs: Apollo (~$0.01/lead) + Anthropic (~$0.01/email)
+            + BYOK costs: Apollo ({BYOK_COST_ESTIMATES.apolloPerLead}) + Anthropic ({BYOK_COST_ESTIMATES.anthropicPerEmail})
           </p>
         </div>
       </section>
@@ -431,9 +312,9 @@ export default function Home() {
               Frequently Asked Questions
             </h2>
           </div>
-          
+
           <div className="space-y-6">
-            {FAQ.map((item) => (
+            {SALES_FAQ.map((item) => (
               <div key={item.question} className="border border-gray-200 rounded-xl p-6">
                 <h3 className="font-bold text-lg mb-2 text-gray-800">{item.question}</h3>
                 <p className="text-gray-600">{item.answer}</p>
@@ -454,13 +335,13 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href={`${DASHBOARD_URL}/sign-up`}
+              href={URLS.signUp}
               className="inline-block px-8 py-4 bg-primary-500 text-white rounded-full hover:bg-primary-600 font-medium text-lg shadow-lg"
             >
               Start Free
             </a>
             <a
-              href={GITHUB_URL}
+              href={URLS.github}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-full hover:bg-gray-800 font-medium text-lg"
@@ -489,14 +370,14 @@ export default function Home() {
           </div>
           <p className="text-sm mb-4">Open-source cold email automation</p>
           <div className="flex justify-center gap-6 text-sm">
-            <a href="https://mcpfactory.org" className="hover:text-primary-400 transition">
+            <a href={URLS.landing} className="hover:text-primary-400 transition">
               Main Site
             </a>
-            <a href="https://docs.mcpfactory.org" className="hover:text-primary-400 transition">
+            <a href={URLS.docs} className="hover:text-primary-400 transition">
               Docs
             </a>
             <a
-              href={GITHUB_URL}
+              href={URLS.github}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-primary-400 transition"

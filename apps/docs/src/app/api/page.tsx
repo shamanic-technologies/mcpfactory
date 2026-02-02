@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { CopyForLLM } from "@/components/copy-for-llm";
+import { URLS, API_RATE_LIMITS } from "@mcpfactory/content";
 
 export const metadata: Metadata = {
   title: "API Reference",
@@ -70,8 +71,8 @@ export default function ApiOverviewPage() {
         </pre>
         <p>
           Get your API key at{" "}
-          <a href="https://dashboard.mcpfactory.org/api-keys">
-            dashboard.mcpfactory.org/api-keys
+          <a href={URLS.apiKeys}>
+            {URLS.apiKeys.replace("https://", "")}
           </a>
         </p>
 
@@ -265,11 +266,11 @@ Content-Type: application/json
           <tbody>
             <tr>
               <td>Free</td>
-              <td>100 requests/minute</td>
+              <td>{API_RATE_LIMITS.free}</td>
             </tr>
             <tr>
               <td>Pro</td>
-              <td>1,000 requests/minute</td>
+              <td>{API_RATE_LIMITS.pro}</td>
             </tr>
           </tbody>
         </table>

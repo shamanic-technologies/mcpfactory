@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { CopyForLLM } from "@/components/copy-for-llm";
+import { DOCS_PRICING, BYOK_COST_ESTIMATES, BYOK_PROVIDERS } from "@mcpfactory/content";
 
 export const metadata: Metadata = {
   title: "Sales Outreach MCP",
@@ -93,25 +94,15 @@ export default function SalesOutreachDocs() {
             <tr>
               <th>Key</th>
               <th>Purpose</th>
-              <th>Get it from</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>OpenAI or Anthropic</td>
-              <td>Email generation</td>
-              <td>openai.com / anthropic.com</td>
-            </tr>
-            <tr>
-              <td>Apollo</td>
-              <td>Lead finding & enrichment</td>
-              <td>apollo.io</td>
-            </tr>
-            <tr>
-              <td>Resend</td>
-              <td>Email sending</td>
-              <td>resend.com</td>
-            </tr>
+            {BYOK_PROVIDERS.map((provider) => (
+              <tr key={provider.name}>
+                <td>{provider.name}</td>
+                <td>{provider.purpose}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
 
@@ -204,19 +195,19 @@ export default function SalesOutreachDocs() {
           <tbody>
             <tr>
               <td>Free</td>
-              <td>$0 + BYOK costs</td>
-              <td>1,000 emails</td>
+              <td>{DOCS_PRICING.free.detail}</td>
+              <td>{DOCS_PRICING.free.emails}</td>
             </tr>
             <tr>
               <td>Pro</td>
-              <td>$20/mo + BYOK costs</td>
-              <td>10,000 emails</td>
+              <td>{DOCS_PRICING.pro.detail}</td>
+              <td>{DOCS_PRICING.pro.emails}</td>
             </tr>
           </tbody>
         </table>
 
         <p>
-          <strong>Estimated BYOK cost:</strong> ~$0.02/email (OpenAI + Apollo + Resend)
+          <strong>Estimated BYOK cost:</strong> {BYOK_COST_ESTIMATES.totalPerEmail} (OpenAI + Apollo + Resend)
         </p>
       </div>
     </div>

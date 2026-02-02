@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MCP_PACKAGES } from "@mcpfactory/content";
 
 const NAV_ITEMS = [
   {
@@ -37,15 +38,11 @@ const NAV_ITEMS = [
   },
   {
     title: "MCPs",
-    items: [
-      { name: "Sales Outreach", href: "/sales-outreach", available: true },
-      { name: "Influencer Pitch", href: "/influencer-pitch", available: false },
-      { name: "Thought Leader", href: "/thought-leader", available: false },
-      { name: "Podcaster Pitch", href: "/podcaster-pitch", available: false },
-      { name: "Journalist Pitch", href: "/journalist-pitch", available: false },
-      { name: "Google Ads", href: "/google-ads", available: false },
-      { name: "Reddit Ads", href: "/reddit-ads", available: false },
-    ],
+    items: MCP_PACKAGES.map((mcp) => ({
+      name: mcp.name,
+      href: `/${mcp.slug}`,
+      available: mcp.isAvailable,
+    })),
   },
 ];
 

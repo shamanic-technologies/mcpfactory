@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { LinkButton } from "./link-button";
-
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://dashboard.mcpfactory.org";
+import { URLS } from "@mcpfactory/content";
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -22,13 +21,13 @@ export function Navbar() {
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-4">
           <a
-            href="https://docs.mcpfactory.org"
+            href={URLS.docs}
             className="text-gray-600 hover:text-primary-600 text-sm transition"
           >
             Docs
           </a>
           <a
-            href="https://github.com/shamanic-technologies/mcpfactory"
+            href={URLS.github}
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-600 hover:text-primary-600 text-sm transition"
@@ -36,13 +35,13 @@ export function Navbar() {
             GitHub
           </a>
           <a
-            href={`${DASHBOARD_URL}/sign-in`}
+            href={URLS.signIn}
             className="text-gray-600 hover:text-primary-600 text-sm font-medium transition"
           >
             Sign In
           </a>
           <LinkButton
-            href={`${DASHBOARD_URL}/sign-up`}
+            href={URLS.signUp}
             className="bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-600 shadow-md hover:shadow-lg"
           >
             Get Started
@@ -52,7 +51,7 @@ export function Navbar() {
         {/* Mobile nav */}
         <div className="flex md:hidden items-center gap-2">
           <LinkButton
-            href={`${DASHBOARD_URL}/sign-up`}
+            href={URLS.signUp}
             className="bg-primary-500 text-white px-3 py-1.5 rounded-full text-sm font-medium"
           >
             Start
@@ -80,13 +79,13 @@ export function Navbar() {
         <div className="md:hidden border-t border-gray-100 bg-white">
           <div className="max-w-6xl mx-auto px-4 py-3 space-y-1">
             <a 
-              href="https://docs.mcpfactory.org" 
+              href={URLS.docs}
               className="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
             >
               Docs
             </a>
             <a 
-              href="https://github.com/shamanic-technologies/mcpfactory"
+              href={URLS.github}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
@@ -94,14 +93,14 @@ export function Navbar() {
               GitHub
             </a>
             <a 
-              href={`${DASHBOARD_URL}/sign-in`}
+              href={URLS.signIn}
               className="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
             >
               Sign In
             </a>
             <div className="pt-2 border-t border-gray-100">
               <LinkButton
-                href={`${DASHBOARD_URL}/sign-up`}
+                href={URLS.signUp}
                 className="w-full bg-primary-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-primary-600 text-center block"
               >
                 Get Started Free
