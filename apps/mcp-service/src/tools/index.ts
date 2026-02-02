@@ -54,6 +54,10 @@ export const toolDefinitions = {
       campaign_id: z.string().describe("Campaign ID to debug"),
     }),
   },
+  mcpfactory_list_brands: {
+    description: "List all your brands (companies/websites you promote through campaigns)",
+    schema: z.object({}),
+  },
   mcpfactory_suggest_icp: {
     description:
       "Analyze a brand's website and suggest an Ideal Customer Profile (ICP) with Apollo-compatible search parameters. Use this when the user doesn't know who to target and wants AI-generated targeting suggestions. Returns person_titles, q_organization_keyword_tags, and organization_locations that can be fed directly into mcpfactory_create_campaign.",
@@ -89,6 +93,9 @@ export async function handleToolCall(
 
     case "mcpfactory_resume_campaign":
       return handleResumeCampaign(args);
+
+    case "mcpfactory_list_brands":
+      return handleListBrands();
 
     case "mcpfactory_suggest_icp":
       return handleSuggestIcp(args);
@@ -208,6 +215,16 @@ async function handleResumeCampaign(args: Record<string, unknown>) {
   const result = await callApi(`/v1/campaigns/${args.campaign_id}/resume`, {
     method: "POST",
   });
+
+  if (result.error) {
+    throw new Error(result.error);
+  }
+
+  return result.data;
+}
+
+async function handleListBrands() {
+  const result = await callApi("/v1/brands");
 
   if (result.error) {
     throw new Error(result.error);
