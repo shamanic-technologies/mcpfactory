@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
-import { callExternalService, externalServices } from "../lib/service-client.js";
+import { callExternalService, callService, externalServices, services } from "../lib/service-client.js";
+import { getRunsBatch, type RunWithCosts } from "@mcpfactory/runs-client";
 
 // Brand service URL (for sales profiles)
 const BRAND_SERVICE_URL = process.env.BRAND_SERVICE_URL || "https://brand.mcpfactory.org";
@@ -226,6 +227,82 @@ router.post("/brand/icp-suggestion", authenticate, requireOrg, async (req: Authe
   } catch (error: any) {
     console.error("ICP suggestion error:", error.message);
     res.status(500).json({ error: error.message || "Failed to get ICP suggestion" });
+  }
+});
+
+/**
+ * GET /v1/brands/:id/runs
+ * Get all campaign runs for a brand (for update history)
+ */
+router.get("/brands/:id/runs", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Get campaigns for this brand
+    const campaignsResult = await callService<{ campaigns: Array<{ id: string; name: string }> }>(
+      services.campaign,
+      `/internal/campaigns?brandId=${id}`,
+      { headers: { "x-clerk-org-id": req.orgId! } }
+    );
+    const campaigns = campaignsResult.campaigns || [];
+
+    if (campaigns.length === 0) {
+      return res.json({ runs: [] });
+    }
+
+    // 2. Get runs for each campaign
+    interface RunEntry { id: string; status: string; startedAt: string; completedAt: string | null }
+    const allRuns: Array<RunEntry & { campaignId: string; campaignName: string }> = [];
+
+    for (const campaign of campaigns) {
+      try {
+        const runsResult = await callService<{ runs: RunEntry[] }>(
+          services.campaign,
+          `/internal/campaigns/${campaign.id}/runs`,
+          { headers: { "x-clerk-org-id": req.orgId! } }
+        );
+        for (const run of runsResult.runs || []) {
+          allRuns.push({ ...run, campaignId: campaign.id, campaignName: campaign.name });
+        }
+      } catch (err) {
+        console.warn(`Failed to get runs for campaign ${campaign.id}:`, err);
+      }
+    }
+
+    if (allRuns.length === 0) {
+      return res.json({ runs: [] });
+    }
+
+    // 3. Batch-fetch RunWithCosts
+    const runIds = allRuns.map((r) => r.id);
+    let runMap = new Map<string, RunWithCosts>();
+    try {
+      runMap = await getRunsBatch(runIds);
+    } catch (err) {
+      console.warn("Failed to fetch run costs for brand runs:", err);
+    }
+
+    // 4. Build response sorted by startedAt desc
+    const runs = allRuns
+      .map((run) => {
+        const withCosts = runMap.get(run.id);
+        return {
+          id: run.id,
+          campaignId: run.campaignId,
+          campaignName: run.campaignName,
+          status: withCosts?.status || run.status,
+          startedAt: withCosts?.startedAt || run.startedAt,
+          completedAt: withCosts?.completedAt || run.completedAt,
+          totalCostInUsdCents: withCosts?.totalCostInUsdCents || null,
+          costs: withCosts?.costs || [],
+        };
+      })
+      .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
+
+    res.json({ runs });
+  } catch (error: any) {
+    console.error("Get brand runs error:", error);
+    res.status(500).json({ error: error.message || "Failed to get brand runs" });
   }
 });
 
