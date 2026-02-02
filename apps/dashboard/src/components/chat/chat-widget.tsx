@@ -9,18 +9,15 @@ import { ChatInput } from "./chat-input";
 
 export function ChatWidget() {
   const { getToken } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [apiKey, setApiKey] = useState<string | null>(null);
-  const [keyLoading, setKeyLoading] = useState(false);
+  const [keyLoading, setKeyLoading] = useState(true);
 
   const { messages, isLoading, sendMessage } = useChat({ apiKey });
 
-  // Fetch or create a session key when the panel opens
+  // Fetch or create a Default API key on mount
   useEffect(() => {
-    if (!isOpen || apiKey) return;
-
     let cancelled = false;
-    setKeyLoading(true);
 
     (async () => {
       try {
@@ -28,20 +25,11 @@ export function ChatWidget() {
         if (!token || cancelled) return;
 
         const result = await getOrCreateSessionKey(token);
-        if (cancelled) return;
-
-        if (result.key) {
-          // Newly created key
+        if (!cancelled && result.key) {
           setApiKey(result.key);
-        } else {
-          // Key already exists — we only have the prefix.
-          // Re-create so we get the raw key for this session.
-          // For now, store null to signal the key exists but we can't use it.
-          // The chat-service should accept Clerk JWT as fallback auth.
-          setApiKey(null);
         }
       } catch (err) {
-        console.error("Failed to get session key:", err);
+        console.error("Failed to get API key:", err);
       } finally {
         if (!cancelled) setKeyLoading(false);
       }
@@ -50,7 +38,7 @@ export function ChatWidget() {
     return () => {
       cancelled = true;
     };
-  }, [isOpen, apiKey, getToken]);
+  }, [getToken]);
 
   const handleButtonClick = useCallback(
     (value: string) => {

@@ -38,6 +38,7 @@ export const apiKeys = pgTable(
       .references(() => orgs.id, { onDelete: "cascade" }),
     keyHash: text("key_hash").notNull().unique(),
     keyPrefix: text("key_prefix").notNull(), // First 8 chars for display
+    encryptedKey: text("encrypted_key"), // AES-256-GCM encrypted raw key for retrieval
     name: text("name"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     lastUsedAt: timestamp("last_used_at", { withTimezone: true }),

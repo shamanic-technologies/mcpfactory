@@ -26,39 +26,35 @@ export function ChatMessages({ messages, onButtonClick }: ChatMessagesProps) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  if (messages.length === 0) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full overflow-hidden">
-            <img src="/favicon.jpg" alt="Foxy" className="w-full h-full object-cover" />
-          </div>
-          <p className="font-display text-lg font-semibold text-gray-900">
-            Hey! I&apos;m Foxy
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Your MCP Factory assistant. How can I help?
-          </p>
-          <div className="flex flex-col gap-2 mt-4">
-            {["Send Sales Cold Emails", "Create an API Key", "Setup my MCP"].map(
-              (label) => (
-                <button
-                  key={label}
-                  onClick={() => onButtonClick(label)}
-                  className="px-4 py-2 text-sm font-medium rounded-full border border-primary-200 text-primary-600 bg-white hover:bg-primary-50 transition"
-                >
-                  {label}
-                </button>
-              )
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const welcomeButtons = ["Send Sales Cold Emails", "Create an API Key", "Setup my MCP"];
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Welcome message from Foxy */}
+      {messages.length === 0 && (
+        <div>
+          <div className="flex justify-start">
+            <div className="w-7 h-7 rounded-full overflow-hidden mr-2 flex-shrink-0 mt-1">
+              <img src="/favicon.jpg" alt="Foxy" className="w-full h-full object-cover" />
+            </div>
+            <div className="max-w-[80%] rounded-xl px-3 py-2 text-sm bg-gray-100 text-gray-900">
+              Hey! I&apos;m Foxy, your MCP Factory assistant. How can I help?
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2 ml-9">
+            {welcomeButtons.map((label) => (
+              <button
+                key={label}
+                onClick={() => onButtonClick(label)}
+                className="px-3 py-1.5 text-xs font-medium rounded-full border border-primary-200 text-primary-600 bg-white hover:bg-primary-50 transition"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {messages.map((msg) => (
         <div key={msg.id}>
           <div
