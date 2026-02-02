@@ -145,7 +145,7 @@ router.delete("/api-keys/:id", async (req: Request, res: Response) => {
 /**
  * POST /internal/api-keys/session
  * Get or create a "Default" API key for the org.
- * If one already exists, delete and recreate to return the raw key.
+ * Stores the key encrypted so it can be retrieved on future calls.
  */
 router.post("/api-keys/session", async (req: Request, res: Response) => {
   try {
@@ -157,15 +157,26 @@ router.post("/api-keys/session", async (req: Request, res: Response) => {
 
     const orgId = await ensureOrg(clerkOrgId);
 
-    // Delete existing Default key so we can issue a fresh raw key
     const existing = await db.query.apiKeys.findFirst({
       where: and(eq(apiKeys.orgId, orgId), eq(apiKeys.name, "Default")),
     });
 
+    // Return existing key (decrypt from storage)
+    if (existing?.encryptedKey) {
+      return res.json({
+        id: existing.id,
+        key: decrypt(existing.encryptedKey),
+        keyPrefix: existing.keyPrefix,
+        name: existing.name,
+      });
+    }
+
+    // Clean up legacy key without encryptedKey
     if (existing) {
       await db.delete(apiKeys).where(eq(apiKeys.id, existing.id));
     }
 
+    // Create new Default key with encrypted storage
     const rawKey = generateApiKey();
     const keyHash = hashApiKey(rawKey);
     const keyPrefix = getKeyPrefix(rawKey);
@@ -176,6 +187,7 @@ router.post("/api-keys/session", async (req: Request, res: Response) => {
         orgId,
         keyHash,
         keyPrefix,
+        encryptedKey: encrypt(rawKey),
         name: "Default",
       })
       .returning();
