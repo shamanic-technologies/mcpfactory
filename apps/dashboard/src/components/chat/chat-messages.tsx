@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 import type { ChatMessage } from "./use-chat";
 
 interface ChatMessagesProps {
@@ -38,6 +39,19 @@ export function ChatMessages({ messages, onButtonClick }: ChatMessagesProps) {
           <p className="text-sm text-gray-500 mt-1">
             Your MCP Factory assistant. How can I help?
           </p>
+          <div className="flex flex-col gap-2 mt-4">
+            {["Send Sales Cold Emails", "Create an API Key", "Setup my MCP"].map(
+              (label) => (
+                <button
+                  key={label}
+                  onClick={() => onButtonClick(label)}
+                  className="px-4 py-2 text-sm font-medium rounded-full border border-primary-200 text-primary-600 bg-white hover:bg-primary-50 transition"
+                >
+                  {label}
+                </button>
+              )
+            )}
+          </div>
         </div>
       </div>
     );
@@ -64,7 +78,17 @@ export function ChatMessages({ messages, onButtonClick }: ChatMessagesProps) {
                   : "bg-gray-100 text-gray-900"
               }`}
             >
-              {msg.content || (msg.isStreaming ? <TypingIndicator /> : null)}
+              {msg.content ? (
+                msg.role === "assistant" ? (
+                  <div className="max-w-none [&>p]:m-0 [&>p+p]:mt-2 [&>ul]:mt-1 [&>ul]:mb-0 [&>ul]:list-disc [&>ul]:pl-4 [&>ol]:mt-1 [&>ol]:mb-0 [&>ol]:list-decimal [&>ol]:pl-4 [&_strong]:font-semibold [&_li]:mt-0.5">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
+                ) : (
+                  msg.content
+                )
+              ) : (
+                msg.isStreaming ? <TypingIndicator /> : null
+              )}
             </div>
           </div>
 

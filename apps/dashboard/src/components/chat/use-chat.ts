@@ -110,6 +110,7 @@ export function useChat({ apiKey }: UseChatOptions) {
               }
 
               if (event.type === "buttons") {
+                console.log("[Foxy] buttons SSE event:", event.buttons);
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantId
