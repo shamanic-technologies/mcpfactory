@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { getCampaignStats, type CampaignStats } from "@/lib/api";
 
 interface Brand {
   id: string;
@@ -18,6 +19,15 @@ interface Campaign {
   name: string;
   status: string;
   createdAt: string;
+}
+
+function formatCost(cents: string | null | undefined): string | null {
+  if (!cents) return null;
+  const val = parseFloat(cents);
+  if (isNaN(val) || val === 0) return null;
+  const usd = val / 100;
+  if (usd < 0.01) return "<$0.01";
+  return `$${usd.toFixed(2)}`;
 }
 
 // Available MCPs
@@ -36,13 +46,14 @@ export default function BrandOverviewPage() {
   const brandId = params.brandId as string;
   const [brand, setBrand] = useState<Brand | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaignStats, setCampaignStats] = useState<Record<string, CampaignStats>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const token = await getToken();
-        
+
         // Fetch brand
         const brandRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/brands/${brandId}`,
@@ -60,7 +71,19 @@ export default function BrandOverviewPage() {
         );
         if (campaignsRes.ok) {
           const data = await campaignsRes.json();
-          setCampaigns(data.campaigns || []);
+          const loadedCampaigns = data.campaigns || [];
+          setCampaigns(loadedCampaigns);
+
+          // Fetch stats for each campaign
+          if (token && loadedCampaigns.length > 0) {
+            const stats: Record<string, CampaignStats> = {};
+            for (const campaign of loadedCampaigns) {
+              try {
+                stats[campaign.id] = await getCampaignStats(token, campaign.id);
+              } catch { /* Stats not available */ }
+            }
+            setCampaignStats(stats);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -157,15 +180,32 @@ export default function BrandOverviewPage() {
                 </div>
 
                 {/* Campaign Stats */}
-                <div className="flex items-center gap-6 mb-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span className="text-gray-600">{activeCampaigns.length} active</span>
-                  </div>
-                  <div className="text-gray-400">
-                    {mcpCampaigns.length} total campaigns
-                  </div>
-                </div>
+                {(() => {
+                  let mcpTotalCost = 0;
+                  for (const c of mcpCampaigns) {
+                    const s = campaignStats[c.id];
+                    if (s?.totalCostInUsdCents) {
+                      mcpTotalCost += parseFloat(s.totalCostInUsdCents) || 0;
+                    }
+                  }
+                  const costStr = mcpTotalCost > 0 ? String(mcpTotalCost) : null;
+                  return (
+                    <div className="flex items-center gap-6 mb-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span className="text-gray-600">{activeCampaigns.length} active</span>
+                      </div>
+                      <div className="text-gray-400">
+                        {mcpCampaigns.length} total campaigns
+                      </div>
+                      {formatCost(costStr) && (
+                        <div className="text-gray-400">
+                          Total: {formatCost(costStr)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* Recent Campaigns Preview */}
                 {mcpCampaigns.length > 0 && (
