@@ -4,6 +4,21 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
 
+interface RunCost {
+  costName: string;
+  quantity: string;
+  unitCostInUsdCents: string;
+  totalCostInUsdCents: string;
+}
+
+interface GenerationRun {
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+  totalCostInUsdCents: string;
+  costs: RunCost[];
+}
+
 interface Email {
   id: string;
   subject: string;
@@ -16,6 +31,28 @@ interface Email {
   leadIndustry: string;
   clientCompanyName: string;
   createdAt: string;
+  generationRun: GenerationRun | null;
+}
+
+function formatCostRounded(run: GenerationRun | null): string | null {
+  if (!run) return null;
+  const cents = parseFloat(run.totalCostInUsdCents);
+  if (isNaN(cents) || cents === 0) return null;
+  const usd = cents / 100;
+  if (usd < 0.01) return "<$0.01";
+  return `$${usd.toFixed(2)}`;
+}
+
+function formatCostDetailed(cents: string): string {
+  const val = parseFloat(cents) / 100;
+  return `$${val.toFixed(4)}`;
+}
+
+function formatDuration(startedAt: string, completedAt: string | null): string | null {
+  if (!completedAt) return null;
+  const ms = new Date(completedAt).getTime() - new Date(startedAt).getTime();
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
 }
 
 export default function CampaignEmailsPage() {
@@ -79,20 +116,28 @@ export default function CampaignEmailsPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {emails.map((email) => (
-              <button
-                key={email.id}
-                onClick={() => setSelectedEmail(email)}
-                className={`w-full text-left bg-white rounded-xl border p-4 hover:border-primary-300 hover:shadow-sm transition ${
-                  selectedEmail?.id === email.id ? 'border-primary-500 ring-1 ring-primary-500' : 'border-gray-200'
-                }`}
-              >
-                <p className="font-medium text-gray-800 truncate">{email.subject}</p>
-                <p className="text-sm text-gray-500 mt-1 truncate">
-                  To: {email.leadFirstName} {email.leadLastName} • {email.leadCompany}
-                </p>
-              </button>
-            ))}
+            {emails.map((email) => {
+              const cost = formatCostRounded(email.generationRun);
+              return (
+                <button
+                  key={email.id}
+                  onClick={() => setSelectedEmail(email)}
+                  className={`w-full text-left bg-white rounded-xl border p-4 hover:border-primary-300 hover:shadow-sm transition ${
+                    selectedEmail?.id === email.id ? 'border-primary-500 ring-1 ring-primary-500' : 'border-gray-200'
+                  }`}
+                >
+                  <p className="font-medium text-gray-800 truncate">{email.subject}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-sm text-gray-500 truncate">
+                      To: {email.leadFirstName} {email.leadLastName} • {email.leadCompany}
+                    </p>
+                    {cost && (
+                      <span className="text-xs text-gray-400 ml-2 shrink-0">{cost}</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -120,7 +165,7 @@ export default function CampaignEmailsPage() {
               </svg>
             </button>
           </div>
-          
+
           <div className="p-4 md:p-6">
             {/* Recipient Info */}
             <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
@@ -154,7 +199,7 @@ export default function CampaignEmailsPage() {
               </div>
               <div className="p-4">
                 {selectedEmail.bodyHtml ? (
-                  <div 
+                  <div
                     className="prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: selectedEmail.bodyHtml }}
                   />
@@ -165,6 +210,40 @@ export default function CampaignEmailsPage() {
                 )}
               </div>
             </div>
+
+            {/* Run & Cost Info */}
+            {selectedEmail.generationRun && (
+              <div className="mt-4 bg-white rounded-lg border border-gray-200 p-4">
+                <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                  <span className={`inline-block w-1.5 h-1.5 rounded-full ${
+                    selectedEmail.generationRun.status === "completed" ? "bg-green-400" :
+                    selectedEmail.generationRun.status === "failed" ? "bg-red-400" :
+                    "bg-yellow-400"
+                  }`} />
+                  <span>{selectedEmail.generationRun.status}</span>
+                  {formatDuration(selectedEmail.generationRun.startedAt, selectedEmail.generationRun.completedAt) && (
+                    <span>• {formatDuration(selectedEmail.generationRun.startedAt, selectedEmail.generationRun.completedAt)}</span>
+                  )}
+                  <span className="ml-auto font-medium text-gray-700">
+                    {formatCostDetailed(selectedEmail.generationRun.totalCostInUsdCents)}
+                  </span>
+                </div>
+                {selectedEmail.generationRun.costs.length > 0 && (
+                  <div className="space-y-1">
+                    {selectedEmail.generationRun.costs.map((cost) => (
+                      <div key={cost.costName} className="flex items-center justify-between text-xs text-gray-400">
+                        <span className="font-mono">{cost.costName}</span>
+                        <span>
+                          {Number(cost.quantity).toLocaleString()} × {formatCostDetailed(cost.unitCostInUsdCents)}
+                          {" = "}
+                          {formatCostDetailed(cost.totalCostInUsdCents)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Metadata */}
             <div className="mt-4 text-xs text-gray-400">
