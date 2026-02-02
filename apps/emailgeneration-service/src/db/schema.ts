@@ -36,7 +36,7 @@ export const emailGenerations = pgTable(
     orgId: uuid("org_id")
       .notNull()
       .references(() => orgs.id, { onDelete: "cascade" }),
-    campaignRunId: text("campaign_run_id").notNull(),
+    runId: text("run_id").notNull(),
     apolloEnrichmentId: text("apollo_enrichment_id").notNull(),
 
     // Lead info (for context)
@@ -67,7 +67,7 @@ export const emailGenerations = pgTable(
   },
   (table) => [
     index("idx_emailgen_org").on(table.orgId),
-    index("idx_emailgen_run").on(table.campaignRunId),
+    index("idx_emailgen_run").on(table.runId),
     index("idx_emailgen_enrichment").on(table.apolloEnrichmentId),
   ]
 );

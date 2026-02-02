@@ -20,7 +20,7 @@ interface ApolloEnrichment {
 }
 
 interface EmailGenerateJobData {
-  campaignRunId: string;
+  runId: string;
   clerkOrgId: string;
   apolloEnrichmentId: string;
   leadData: {
@@ -38,11 +38,11 @@ interface EmailGenerateJobData {
 
 function mapEnrichmentToJobData(
   enrichment: ApolloEnrichment,
-  campaignRunId: string,
+  runId: string,
   clerkOrgId: string
 ): EmailGenerateJobData {
   return {
-    campaignRunId,
+    runId,
     clerkOrgId,
     apolloEnrichmentId: enrichment.id,
     leadData: {
@@ -77,7 +77,7 @@ describe("Lead search worker data mapping", () => {
   it("should map enrichment to email-generate job data", () => {
     const jobData = mapEnrichmentToJobData(mockEnrichment, "run123", "org_abc");
 
-    expect(jobData.campaignRunId).toBe("run123");
+    expect(jobData.runId).toBe("run123");
     expect(jobData.clerkOrgId).toBe("org_abc");
     expect(jobData.apolloEnrichmentId).toBe("enrich123");
   });

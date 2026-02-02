@@ -49,8 +49,8 @@ export function startBrandUpsertWorker(): Worker {
           serviceName: "campaign-service",
           taskName: campaignId,
         });
-        const campaignRunId = run.id;
-        console.log(`[brand-upsert] Created run ${campaignRunId} in runs-service`);
+        const runId = run.id;
+        console.log(`[brand-upsert] Created run ${runId} in runs-service`);
         
         // 2. Get campaign details including brandUrl
         const campaignResult = await campaignService.getCampaign(campaignId, clerkOrgId) as { campaign: CampaignDetails };
@@ -82,19 +82,19 @@ export function startBrandUpsertWorker(): Worker {
         // brand-service will upsert the brand when fetching/creating sales profile
         const queues = getQueues();
         await queues[QUEUE_NAMES.BRAND_PROFILE].add(
-          `profile-${campaignRunId}`,
+          `profile-${runId}`,
           {
             campaignId,
-            campaignRunId,
+            runId,
             clerkOrgId,
             brandUrl,  // No brandId needed - brand-service uses clerkOrgId + brandUrl
             searchParams,
           } as BrandProfileJobData
         );
         
-        console.log(`[brand-upsert] Queued brand-profile for run ${campaignRunId}`);
-        
-        return { campaignRunId, brandUrl };
+        console.log(`[brand-upsert] Queued brand-profile for run ${runId}`);
+
+        return { runId, brandUrl };
       } catch (error) {
         console.error(`[brand-upsert] Error:`, error);
         throw error;

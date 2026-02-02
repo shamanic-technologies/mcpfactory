@@ -15,7 +15,7 @@ const router = Router();
 router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const {
-      campaignRunId,
+      runId,
       apolloEnrichmentId,
       // Lead person info
       leadFirstName,
@@ -43,8 +43,8 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
       clientAdditionalContext,
     } = req.body;
 
-    if (!campaignRunId || !apolloEnrichmentId) {
-      return res.status(400).json({ error: "campaignRunId and apolloEnrichmentId required" });
+    if (!runId || !apolloEnrichmentId) {
+      return res.status(400).json({ error: "runId and apolloEnrichmentId are required" });
     }
 
     if (!leadFirstName || !leadCompanyName) {
@@ -93,7 +93,7 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
       .insert(emailGenerations)
       .values({
         orgId: req.orgId!,
-        campaignRunId,
+        runId,
         apolloEnrichmentId,
         leadFirstName,
         leadLastName,
@@ -119,7 +119,7 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
         organizationId: runsOrgId,
         serviceName: "emailgeneration-service",
         taskName: "single-generation",
-        parentRunId: campaignRunId,
+        parentRunId: runId,
       });
 
       const costItems = [];
@@ -152,16 +152,16 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
 });
 
 /**
- * GET /generations/:campaignRunId - Get all generations for a campaign run
+ * GET /generations/:runId - Get all generations for a run
  */
-router.get("/generations/:campaignRunId", serviceAuth, async (req: AuthenticatedRequest, res) => {
+router.get("/generations/:runId", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
-    const { campaignRunId } = req.params;
+    const { runId } = req.params;
 
     const generations = await db.query.emailGenerations.findMany({
       where: (gens, { eq, and }) =>
         and(
-          eq(gens.campaignRunId, campaignRunId),
+          eq(gens.runId, runId),
           eq(gens.orgId, req.orgId!)
         ),
     });
@@ -200,18 +200,18 @@ router.get("/generations/by-enrichment/:apolloEnrichmentId", serviceAuth, async 
 });
 
 /**
- * POST /stats - Get aggregated stats for multiple campaign run IDs
- * Body: { campaignRunIds: string[] }
+ * POST /stats - Get aggregated stats for multiple run IDs
+ * Body: { runIds: string[] }
  */
 router.post("/stats", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
-    const { campaignRunIds } = req.body as { campaignRunIds: string[] };
+    const { runIds } = req.body as { runIds: string[] };
 
-    if (!campaignRunIds || !Array.isArray(campaignRunIds)) {
-      return res.status(400).json({ error: "campaignRunIds array required" });
+    if (!runIds || !Array.isArray(runIds)) {
+      return res.status(400).json({ error: "runIds array required" });
     }
 
-    if (campaignRunIds.length === 0) {
+    if (runIds.length === 0) {
       return res.json({ stats: { emailsGenerated: 0 } });
     }
 
@@ -219,7 +219,7 @@ router.post("/stats", serviceAuth, async (req: AuthenticatedRequest, res) => {
     const generations = await db.query.emailGenerations.findMany({
       where: (g, { and, eq, inArray }) =>
         and(
-          inArray(g.campaignRunId, campaignRunIds),
+          inArray(g.runId, runIds),
           eq(g.orgId, req.orgId!)
         ),
       columns: { id: true },

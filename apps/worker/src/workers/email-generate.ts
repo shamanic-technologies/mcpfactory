@@ -22,14 +22,14 @@ export function startEmailGenerateWorker(): Worker {
   const worker = new Worker<EmailGenerateJobData>(
     QUEUE_NAMES.EMAIL_GENERATE,
     async (job: Job<EmailGenerateJobData>) => {
-      const { campaignRunId, clerkOrgId, apolloEnrichmentId, leadData, clientData } = job.data;
+      const { runId, clerkOrgId, apolloEnrichmentId, leadData, clientData } = job.data;
       
       console.log(`[email-generate] Generating email for enrichment ${apolloEnrichmentId}`);
       
       try {
         // Call email generation service with all available data
         const result = await emailGenerationService.generate(clerkOrgId, {
-          campaignRunId,
+          runId,
           apolloEnrichmentId,
           // Lead person info
           leadFirstName: leadData.firstName,
@@ -64,7 +64,7 @@ export function startEmailGenerateWorker(): Worker {
         await queues[QUEUE_NAMES.EMAIL_SEND].add(
           `send-${result.id}`,
           {
-            campaignRunId,
+            runId,
             clerkOrgId,
             emailGenerationId: result.id,
             toEmail: leadData.email || "",
@@ -93,11 +93,11 @@ export function startEmailGenerateWorker(): Worker {
     console.log(`[email-generate] Job ${job.id} completed`);
     
     // Track completion and check if this was the last job
-    const { campaignRunId } = job.data;
-    const result = await markJobDone(campaignRunId, true);
+    const { runId } = job.data;
+    const result = await markJobDone(runId, true);
     
     if (result.isLast) {
-      await finalizeRun(campaignRunId, result);
+      await finalizeRun(runId, result);
     }
   });
   
@@ -106,11 +106,11 @@ export function startEmailGenerateWorker(): Worker {
     
     if (job) {
       // Track failure and check if this was the last job
-      const { campaignRunId } = job.data;
-      const result = await markJobDone(campaignRunId, false);
+      const { runId } = job.data;
+      const result = await markJobDone(runId, false);
       
       if (result.isLast) {
-        await finalizeRun(campaignRunId, result);
+        await finalizeRun(runId, result);
       }
     }
   });

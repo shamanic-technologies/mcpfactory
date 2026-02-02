@@ -28,7 +28,7 @@ export async function insertTestOrg(data: { clerkOrgId?: string } = {}) {
 export async function insertTestEmailGeneration(
   orgId: string,
   data: {
-    campaignRunId?: string;
+    runId?: string;
     apolloEnrichmentId?: string;
     subject?: string;
     bodyText?: string;
@@ -38,7 +38,7 @@ export async function insertTestEmailGeneration(
     .insert(emailGenerations)
     .values({
       orgId,
-      campaignRunId: data.campaignRunId || `test-run-${Date.now()}`,
+      runId: data.runId || `test-run-${Date.now()}`,
       apolloEnrichmentId: data.apolloEnrichmentId || `test-enrichment-${Date.now()}`,
       subject: data.subject || "Test Subject",
       bodyText: data.bodyText || "Test body content",

@@ -39,7 +39,7 @@ export interface BrandUpsertJobData {
 
 export interface BrandProfileJobData {
   campaignId: string;
-  campaignRunId: string;
+  runId: string;
   clerkOrgId: string;
   brandUrl: string;
   searchParams: {
@@ -53,7 +53,7 @@ export interface BrandProfileJobData {
 }
 
 export interface LeadSearchJobData {
-  campaignRunId: string;
+  runId: string;
   clerkOrgId: string;
   brandId?: string;
   searchParams: {
@@ -84,20 +84,20 @@ export interface LeadSearchJobData {
 }
 
 export interface LeadEnrichJobData {
-  campaignRunId: string;
+  runId: string;
   clerkOrgId: string;
   apolloPersonId: string;
   apolloEnrichmentId: string;
 }
 
 export interface CompanyScrapeJobData {
-  campaignRunId: string;
+  runId: string;
   clerkOrgId: string;
   companyUrl: string;
 }
 
 export interface EmailGenerateJobData {
-  campaignRunId: string;
+  runId: string;
   clerkOrgId: string;
   apolloEnrichmentId: string;
   leadData: {
@@ -132,7 +132,7 @@ export interface EmailGenerateJobData {
 }
 
 export interface EmailSendJobData {
-  campaignRunId: string;
+  runId: string;
   clerkOrgId: string;
   emailGenerationId: string;
   toEmail: string;

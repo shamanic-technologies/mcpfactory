@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 vi.mock("../../src/lib/service-client.js", () => ({
   campaignService: {
     listCampaigns: vi.fn(),
-    getCampaignRuns: vi.fn(),
+    getRuns: vi.fn(),
     createRun: vi.fn(),
   },
   runsService: {

@@ -54,7 +54,7 @@ describe("Email Generation Service Database", () => {
         .insert(emailGenerations)
         .values({
           orgId: org.id,
-          campaignRunId: "run_123",
+          runId: "run_123",
           apolloEnrichmentId: "enrich_456",
           leadFirstName: "John",
           leadLastName: "Doe",
