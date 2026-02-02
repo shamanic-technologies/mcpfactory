@@ -89,6 +89,9 @@ export const apolloPeopleEnrichments = pgTable(
     // Raw response
     responseRaw: jsonb("response_raw"),
 
+    // Link to runs-service enrichment run for cost tracking
+    enrichmentRunId: text("enrichment_run_id"),
+
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

@@ -90,6 +90,7 @@ export interface LeadData {
   organizationIndustry: string | null;
   organizationSize: string | null;
   linkedinUrl: string | null;
+  enrichmentRunId: string | null;
   createdAt: string;
 }
 

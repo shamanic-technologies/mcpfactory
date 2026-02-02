@@ -284,8 +284,42 @@ router.get("/campaigns/:id/leads", authenticate, requireOrg, async (req: Authent
       {
         headers: { "x-clerk-org-id": req.orgId! },
       }
-    );
-    res.json(result);
+    ) as { leads: Array<Record<string, unknown>> };
+
+    const leads = result.leads || [];
+
+    // Batch-fetch enrichment run costs from runs-service
+    const enrichmentRunIds = leads
+      .map((l) => l.enrichmentRunId as string | undefined)
+      .filter((id): id is string => !!id);
+
+    let runMap = new Map<string, RunWithCosts>();
+    if (enrichmentRunIds.length > 0) {
+      try {
+        runMap = await getRunsBatch(enrichmentRunIds);
+      } catch (err) {
+        console.warn("Failed to fetch lead enrichment run costs:", err);
+      }
+    }
+
+    // Attach run data to each lead
+    const leadsWithRuns = leads.map((lead) => {
+      const run = lead.enrichmentRunId ? runMap.get(lead.enrichmentRunId as string) : undefined;
+      return {
+        ...lead,
+        enrichmentRun: run
+          ? {
+              status: run.status,
+              startedAt: run.startedAt,
+              completedAt: run.completedAt,
+              totalCostInUsdCents: run.totalCostInUsdCents,
+              costs: run.costs,
+            }
+          : null,
+      };
+    });
+
+    res.json({ leads: leadsWithRuns });
   } catch (error: any) {
     console.error("Get campaign leads error:", error);
     res.status(500).json({ error: error.message || "Failed to get campaign leads" });
