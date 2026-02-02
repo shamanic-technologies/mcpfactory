@@ -82,7 +82,7 @@ interface ShouldRunResult {
   hasRunningRun: boolean;
 }
 
-async function getCampaignRuns(campaign: Campaign): Promise<Run[]> {
+async function getRunsForCampaign(campaign: Campaign): Promise<Run[]> {
   const runsOrgId = await runsService.ensureOrganization(campaign.clerkOrgId);
   const result = await runsService.listRuns({
     organizationId: runsOrgId,
@@ -95,7 +95,7 @@ async function getCampaignRuns(campaign: Campaign): Promise<Run[]> {
 
 async function shouldRunCampaign(campaign: Campaign): Promise<ShouldRunResult> {
   try {
-    let runs = await getCampaignRuns(campaign);
+    let runs = await getRunsForCampaign(campaign);
 
     // Cleanup stale runs (running for too long = probably crashed)
     const now = Date.now();
@@ -112,7 +112,7 @@ async function shouldRunCampaign(campaign: Campaign): Promise<ShouldRunResult> {
     }
 
     // Re-fetch runs after cleanup
-    runs = await getCampaignRuns(campaign);
+    runs = await getRunsForCampaign(campaign);
 
     // Check if any run is currently in progress
     const hasRunningRun = runs.some(r => r.status === "running");

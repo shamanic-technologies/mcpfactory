@@ -85,7 +85,7 @@ export const campaignService = {
     });
   },
   
-  async getCampaignRuns(campaignId: string) {
+  async getRuns(campaignId: string) {
     return callService(this.url, `/internal/campaigns/${campaignId}/runs/all`, {
       method: "GET",
       apiKey: this.apiKey,
@@ -155,7 +155,7 @@ export const postmarkService = {
    */
   async send(data: {
     orgId?: string;
-    campaignRunId?: string;
+    runId?: string;
     from: string;
     to: string;
     subject: string;
@@ -183,10 +183,10 @@ export const postmarkService = {
   },
   
   /**
-   * Get emails by campaign run
+   * Get emails by run
    */
-  async getByCampaignRun(campaignRunId: string) {
-    return callService(this.url, `/status/by-campaign/${campaignRunId}`, {
+  async getByRun(runId: string) {
+    return callService(this.url, `/status/by-run/${runId}`, {
       method: "GET",
       apiKey: this.apiKey,
     });

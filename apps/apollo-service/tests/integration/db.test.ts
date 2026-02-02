@@ -11,7 +11,7 @@ const mockOrg = { id: "org-uuid-1", clerkOrgId: "org_test123", createdAt: new Da
 const mockSearch = {
   id: "search-uuid-1",
   orgId: "org-uuid-1",
-  campaignRunId: "run_123",
+  runId: "run_123",
   peopleCount: 10,
   totalEntries: 100,
   createdAt: new Date(),
@@ -20,7 +20,7 @@ const mockEnrichment = {
   id: "enrichment-uuid-1",
   orgId: "org-uuid-1",
   searchId: "search-uuid-1",
-  campaignRunId: "run_123",
+  runId: "run_123",
   email: "lead@company.com",
   firstName: "John",
   lastName: "Doe",
@@ -118,19 +118,19 @@ describe("Apollo Service Database Schema", () => {
       const [org] = await mockDb.insert("orgs").values({ clerkOrgId: "test-org" }).returning();
       const [search] = await mockDb
         .insert("searches")
-        .values({ orgId: org.id, campaignRunId: "run_123", peopleCount: 0, totalEntries: 0 })
+        .values({ orgId: org.id, runId: "run_123", peopleCount: 0, totalEntries: 0 })
         .returning();
 
       expect(search.id).toBeDefined();
       expect(search.orgId).toBe(org.id);
-      expect(search.campaignRunId).toBe("run_123");
+      expect(search.runId).toBe("run_123");
     });
 
     it("should cascade delete when org is deleted", async () => {
       const [org] = await mockDb.insert("orgs").values({ clerkOrgId: "test-org-cascade" }).returning();
       const [search] = await mockDb
         .insert("searches")
-        .values({ orgId: org.id, campaignRunId: "run_cascade", peopleCount: 0, totalEntries: 0 })
+        .values({ orgId: org.id, runId: "run_cascade", peopleCount: 0, totalEntries: 0 })
         .returning();
 
       await mockDb.delete("orgs").where({ id: org.id });
@@ -145,14 +145,14 @@ describe("Apollo Service Database Schema", () => {
       const [org] = await mockDb.insert("orgs").values({ clerkOrgId: "test-org-enrich" }).returning();
       const [search] = await mockDb
         .insert("searches")
-        .values({ orgId: org.id, campaignRunId: "run_enrich", peopleCount: 0, totalEntries: 0 })
+        .values({ orgId: org.id, runId: "run_enrich", peopleCount: 0, totalEntries: 0 })
         .returning();
       const [enrichment] = await mockDb
         .insert("enrichments")
         .values({
           orgId: org.id,
           searchId: search.id,
-          campaignRunId: "run_enrich",
+          runId: "run_enrich",
           email: "lead@company.com",
           firstName: "John",
           lastName: "Doe",
@@ -168,14 +168,14 @@ describe("Apollo Service Database Schema", () => {
       const [org] = await mockDb.insert("orgs").values({ clerkOrgId: "test-org-cascade-search" }).returning();
       const [search] = await mockDb
         .insert("searches")
-        .values({ orgId: org.id, campaignRunId: "run_cascade_search", peopleCount: 0, totalEntries: 0 })
+        .values({ orgId: org.id, runId: "run_cascade_search", peopleCount: 0, totalEntries: 0 })
         .returning();
       const [enrichment] = await mockDb
         .insert("enrichments")
         .values({
           orgId: org.id,
           searchId: search.id,
-          campaignRunId: "run_cascade_search",
+          runId: "run_cascade_search",
           email: "test@test.com",
           firstName: "Test",
           lastName: "User",

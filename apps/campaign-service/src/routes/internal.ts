@@ -8,7 +8,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { campaigns, orgs } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
-import { getAggregatedStats, getLeadsForCampaignRuns, aggregateCompaniesFromLeads } from "../lib/service-client.js";
+import { getAggregatedStats, getLeadsForRuns, aggregateCompaniesFromLeads } from "../lib/service-client.js";
 import { extractDomain } from "../lib/domain.js";
 import { ensureOrganization, listRuns, getRun, createRun, updateRun, type Run } from "@mcpfactory/runs-client";
 
@@ -32,9 +32,9 @@ async function getClerkOrgIdFromCampaign(campaignId: string): Promise<string | n
 }
 
 /**
- * Helper: get campaign run IDs from runs-service for a given campaign
+ * Helper: get run IDs from runs-service for a given campaign
  */
-async function getCampaignRunIds(clerkOrgId: string, campaignId: string): Promise<string[]> {
+async function getRunIds(clerkOrgId: string, campaignId: string): Promise<string[]> {
   const runsOrgId = await ensureOrganization(clerkOrgId);
   const result = await listRuns({
     organizationId: runsOrgId,
@@ -45,9 +45,9 @@ async function getCampaignRunIds(clerkOrgId: string, campaignId: string): Promis
 }
 
 /**
- * Helper: get campaign runs from runs-service
+ * Helper: get runs from runs-service for a given campaign
  */
-async function getCampaignRuns(clerkOrgId: string, campaignId: string): Promise<Run[]> {
+async function getRunsForCampaign(clerkOrgId: string, campaignId: string): Promise<Run[]> {
   const runsOrgId = await ensureOrganization(clerkOrgId);
   const result = await listRuns({
     organizationId: runsOrgId,
@@ -365,7 +365,7 @@ router.get("/campaigns/:id/runs", serviceAuth, async (req: AuthenticatedRequest,
       return res.status(404).json({ error: "Campaign not found" });
     }
 
-    const runs = await getCampaignRuns(req.clerkOrgId!, id);
+    const runs = await getRunsForCampaign(req.clerkOrgId!, id);
 
     res.json({ runs });
   } catch (error) {
@@ -386,7 +386,7 @@ router.get("/campaigns/:id/runs/all", async (req, res) => {
       return res.status(404).json({ error: "Campaign or org not found" });
     }
 
-    const runs = await getCampaignRuns(clerkOrgId, id);
+    const runs = await getRunsForCampaign(clerkOrgId, id);
 
     res.json({ runs });
   } catch (error) {
@@ -464,7 +464,7 @@ router.get("/campaigns/:id/debug", serviceAuth, async (req: AuthenticatedRequest
     }
 
     // Get all runs for this campaign from runs-service
-    const runs = await getCampaignRuns(req.clerkOrgId!, id);
+    const runs = await getRunsForCampaign(req.clerkOrgId!, id);
 
     // Build debug response
     const debug = {
@@ -530,11 +530,11 @@ router.get("/campaigns/:id/stats", serviceAuth, async (req: AuthenticatedRequest
     }
 
     // Get all run IDs for this campaign from runs-service
-    const runs = await getCampaignRuns(req.clerkOrgId!, id);
-    const campaignRunIds = runs.map(r => r.id);
+    const runs = await getRunsForCampaign(req.clerkOrgId!, id);
+    const runIds = runs.map(r => r.id);
 
     // Aggregate stats from other services
-    const aggregated = await getAggregatedStats(campaignRunIds, req.clerkOrgId!);
+    const aggregated = await getAggregatedStats(runIds, req.clerkOrgId!);
 
     // Build response with run stats + aggregated stats
     const stats = {
@@ -587,10 +587,10 @@ router.get("/campaigns/:id/leads", serviceAuth, async (req: AuthenticatedRequest
     }
 
     // Get all run IDs for this campaign from runs-service
-    const campaignRunIds = await getCampaignRunIds(req.clerkOrgId!, id);
+    const runIds = await getRunIds(req.clerkOrgId!, id);
 
     // Fetch leads from apollo-service
-    const leads = await getLeadsForCampaignRuns(campaignRunIds, req.clerkOrgId!);
+    const leads = await getLeadsForRuns(runIds, req.clerkOrgId!);
 
     // Map to expected format
     const mappedLeads = leads.map(lead => ({
@@ -633,10 +633,10 @@ router.get("/campaigns/:id/companies", serviceAuth, async (req: AuthenticatedReq
     }
 
     // Get all run IDs for this campaign from runs-service
-    const campaignRunIds = await getCampaignRunIds(req.clerkOrgId!, id);
+    const runIds = await getRunIds(req.clerkOrgId!, id);
 
     // Fetch leads from apollo-service
-    const leads = await getLeadsForCampaignRuns(campaignRunIds, req.clerkOrgId!);
+    const leads = await getLeadsForRuns(runIds, req.clerkOrgId!);
 
     // Aggregate into companies
     const companies = aggregateCompaniesFromLeads(leads);

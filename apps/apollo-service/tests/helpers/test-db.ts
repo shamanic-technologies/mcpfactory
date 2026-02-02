@@ -26,12 +26,12 @@ export async function insertTestOrg(data: { clerkOrgId?: string } = {}) {
 /**
  * Insert a test people search
  */
-export async function insertTestSearch(orgId: string, data: { campaignRunId?: string } = {}) {
+export async function insertTestSearch(orgId: string, data: { runId?: string } = {}) {
   const [search] = await db
     .insert(apolloPeopleSearches)
     .values({
       orgId,
-      campaignRunId: data.campaignRunId || `test-run-${Date.now()}`,
+      runId: data.runId || `test-run-${Date.now()}`,
       peopleCount: 0,
       totalEntries: 0,
     })
@@ -51,7 +51,7 @@ export async function insertTestEnrichment(
     .insert(apolloPeopleEnrichments)
     .values({
       orgId,
-      campaignRunId: `test-run-${Date.now()}`,
+      runId: `test-run-${Date.now()}`,
       searchId,
       email: data.email || `test-${Date.now()}@example.com`,
       firstName: data.firstName || "Test",

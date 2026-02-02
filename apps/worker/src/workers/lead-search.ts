@@ -30,15 +30,15 @@ export function startLeadSearchWorker(): Worker {
   const worker = new Worker<LeadSearchJobData>(
     QUEUE_NAMES.LEAD_SEARCH,
     async (job: Job<LeadSearchJobData>) => {
-      const { campaignRunId, clerkOrgId, searchParams, clientData } = job.data;
+      const { runId, clerkOrgId, searchParams, clientData } = job.data;
       
-      console.log(`[lead-search] Searching leads for run ${campaignRunId}`);
+      console.log(`[lead-search] Searching leads for run ${runId}`);
       console.log(`[lead-search] Client: ${clientData?.companyName || "(no client data)"}`);
       
       try {
         // Call Apollo service to search
         const result = await apolloService.search(clerkOrgId, {
-          campaignRunId,
+          runId,
           ...searchParams,
         }) as { people: ApolloEnrichment[] };
         
@@ -49,7 +49,7 @@ export function startLeadSearchWorker(): Worker {
         const jobs = (result.people || []).map((enrichment: ApolloEnrichment) => ({
           name: `generate-${enrichment.id}`,
           data: {
-            campaignRunId,
+            runId,
             clerkOrgId,
             apolloEnrichmentId: enrichment.id,
             leadData: {
@@ -70,11 +70,11 @@ export function startLeadSearchWorker(): Worker {
         
         if (jobs.length > 0) {
           // Initialize run tracking with expected job count
-          await initRunTracking(campaignRunId, jobs.length);
+          await initRunTracking(runId, jobs.length);
           await queues[QUEUE_NAMES.EMAIL_GENERATE].addBulk(jobs);
         } else {
           // No leads found - finalize run immediately
-          await finalizeRun(campaignRunId, { total: 0, done: 0, failed: 0 });
+          await finalizeRun(runId, { total: 0, done: 0, failed: 0 });
         }
         
         return { leadsFound: result.people?.length || 0 };

@@ -10,11 +10,11 @@ const router = Router();
 
 /**
  * POST /search - Search for people via Apollo
- * campaignRunId is optional - if not provided, search is ad-hoc (MCP usage)
+ * runId is optional - if provided, links to a runs-service run (campaign workflow)
  */
 router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
-    const { campaignRunId, ...searchParams } = req.body;
+    const { runId, ...searchParams } = req.body;
 
     // Get Apollo API key from keys-service
     const apolloApiKey = await getByokKey(req.clerkOrgId!, "apollo");
@@ -33,14 +33,14 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
 
     // Create a child run in runs-service for this search
     let searchRunId: string | undefined;
-    if (campaignRunId) {
+    if (runId) {
       try {
         const runsOrgId = await ensureOrganization(req.clerkOrgId!);
         const searchRun = await createRun({
           organizationId: runsOrgId,
           serviceName: "apollo-service",
           taskName: "people-search",
-          parentRunId: campaignRunId,
+          parentRunId: runId,
         });
         searchRunId = searchRun.id;
       } catch (err) {
@@ -53,15 +53,15 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
     // Get total entries (new API format has it at root level)
     const totalEntries = result.total_entries ?? result.pagination?.total_entries ?? 0;
 
-    // Only store records if campaignRunId is provided (campaign workflow)
+    // Only store records if runId is provided (campaign workflow)
     let searchId: string | null = null;
-    if (campaignRunId) {
+    if (runId) {
       // Store search record
       const [search] = await db
         .insert(apolloPeopleSearches)
         .values({
           orgId: req.orgId!,
-          campaignRunId,
+          runId,
           requestParams: apolloParams,
           peopleCount: result.people.length,
           totalEntries,
@@ -77,7 +77,7 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
       for (const person of result.people as ApolloPerson[]) {
         await db.insert(apolloPeopleEnrichments).values({
           orgId: req.orgId!,
-          campaignRunId,
+          runId,
           searchId: search.id,
           apolloPersonId: person.id,
           firstName: person.first_name,
@@ -150,16 +150,16 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
 });
 
 /**
- * GET /searches/:campaignRunId - Get all searches for a campaign run
+ * GET /searches/:runId - Get all searches for a run
  */
-router.get("/searches/:campaignRunId", serviceAuth, async (req: AuthenticatedRequest, res) => {
+router.get("/searches/:runId", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
-    const { campaignRunId } = req.params;
+    const { runId } = req.params;
 
     const searches = await db.query.apolloPeopleSearches.findMany({
       where: (searches, { eq, and }) =>
         and(
-          eq(searches.campaignRunId, campaignRunId),
+          eq(searches.runId, runId),
           eq(searches.orgId, req.orgId!)
         ),
     });
@@ -172,16 +172,16 @@ router.get("/searches/:campaignRunId", serviceAuth, async (req: AuthenticatedReq
 });
 
 /**
- * GET /enrichments/:campaignRunId - Get all enrichments for a campaign run
+ * GET /enrichments/:runId - Get all enrichments for a run
  */
-router.get("/enrichments/:campaignRunId", serviceAuth, async (req: AuthenticatedRequest, res) => {
+router.get("/enrichments/:runId", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
-    const { campaignRunId } = req.params;
+    const { runId } = req.params;
 
     const enrichments = await db.query.apolloPeopleEnrichments.findMany({
       where: (enrichments, { eq, and }) =>
         and(
-          eq(enrichments.campaignRunId, campaignRunId),
+          eq(enrichments.runId, runId),
           eq(enrichments.orgId, req.orgId!)
         ),
     });
@@ -194,18 +194,18 @@ router.get("/enrichments/:campaignRunId", serviceAuth, async (req: Authenticated
 });
 
 /**
- * POST /stats - Get aggregated stats for multiple campaign run IDs
- * Body: { campaignRunIds: string[] }
+ * POST /stats - Get aggregated stats for multiple run IDs
+ * Body: { runIds: string[] }
  */
 router.post("/stats", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
-    const { campaignRunIds } = req.body as { campaignRunIds: string[] };
+    const { runIds } = req.body as { runIds: string[] };
 
-    if (!campaignRunIds || !Array.isArray(campaignRunIds)) {
-      return res.status(400).json({ error: "campaignRunIds array required" });
+    if (!runIds || !Array.isArray(runIds)) {
+      return res.status(400).json({ error: "runIds array required" });
     }
 
-    if (campaignRunIds.length === 0) {
+    if (runIds.length === 0) {
       return res.json({ stats: { leadsFound: 0, searchesCount: 0 } });
     }
 
@@ -213,7 +213,7 @@ router.post("/stats", serviceAuth, async (req: AuthenticatedRequest, res) => {
     const enrichments = await db.query.apolloPeopleEnrichments.findMany({
       where: (e, { and, eq, inArray }) =>
         and(
-          inArray(e.campaignRunId, campaignRunIds),
+          inArray(e.runId, runIds),
           eq(e.orgId, req.orgId!)
         ),
       columns: { id: true },
@@ -223,7 +223,7 @@ router.post("/stats", serviceAuth, async (req: AuthenticatedRequest, res) => {
     const searches = await db.query.apolloPeopleSearches.findMany({
       where: (s, { and, eq, inArray }) =>
         and(
-          inArray(s.campaignRunId, campaignRunIds),
+          inArray(s.runId, runIds),
           eq(s.orgId, req.orgId!)
         ),
       columns: { id: true, peopleCount: true },

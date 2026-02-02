@@ -118,16 +118,16 @@ async function fetchData<T>(url: string, clerkOrgId: string, apiKey?: string): P
   }
 }
 
-export async function getLeadsForCampaignRuns(
-  campaignRunIds: string[],
+export async function getLeadsForRuns(
+  runIds: string[],
   clerkOrgId: string
 ): Promise<LeadData[]> {
-  if (campaignRunIds.length === 0) return [];
+  if (runIds.length === 0) return [];
 
   const allLeads: LeadData[] = [];
 
-  // Fetch leads for each campaign run from apollo-service
-  for (const runId of campaignRunIds) {
+  // Fetch leads for each run from apollo-service
+  for (const runId of runIds) {
     const result = await fetchData<{ enrichments: LeadData[] }>(
       `${APOLLO_SERVICE_URL}/enrichments/${runId}`,
       clerkOrgId,
@@ -186,10 +186,10 @@ export function aggregateCompaniesFromLeads(leads: LeadData[]): CompanyData[] {
 }
 
 export async function getAggregatedStats(
-  campaignRunIds: string[],
+  runIds: string[],
   clerkOrgId: string
 ): Promise<AggregatedStats> {
-  if (campaignRunIds.length === 0) {
+  if (runIds.length === 0) {
     return {
       leadsFound: 0,
       emailsGenerated: 0,
@@ -206,7 +206,7 @@ export async function getAggregatedStats(
     };
   }
 
-  const body = { campaignRunIds };
+  const body = { runIds };
 
   // Fetch stats from all services in parallel
   const [apolloStats, emailGenStats, postmarkStats] = await Promise.all([

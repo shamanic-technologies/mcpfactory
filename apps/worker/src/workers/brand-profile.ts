@@ -40,7 +40,7 @@ export function startBrandProfileWorker(): Worker {
   const worker = new Worker<BrandProfileJobData>(
     QUEUE_NAMES.BRAND_PROFILE,
     async (job: Job<BrandProfileJobData>) => {
-      const { campaignId, campaignRunId, clerkOrgId, brandUrl, searchParams } = job.data;
+      const { campaignId, runId, clerkOrgId, brandUrl, searchParams } = job.data;
       
       // Extract domain from brandUrl for logging and fallback
       const brandDomain = new URL(brandUrl).hostname.replace(/^www\./, '');
@@ -97,19 +97,19 @@ export function startBrandProfileWorker(): Worker {
         // 2. Queue lead-search job
         const queues = getQueues();
         await queues[QUEUE_NAMES.LEAD_SEARCH].add(
-          `search-${campaignRunId}`,
+          `search-${runId}`,
           {
-            campaignRunId,
+            runId,
             clerkOrgId,
             searchParams,
             clientData,
           } as LeadSearchJobData
         );
         
-        console.log(`[brand-profile] Queued lead-search for run ${campaignRunId}`);
+        console.log(`[brand-profile] Queued lead-search for run ${runId}`);
         console.log(`[brand-profile] Search params:`, JSON.stringify(searchParams));
         
-        return { campaignRunId, brandUrl, hasProfile: !!clientData.companyName };
+        return { runId, brandUrl, hasProfile: !!clientData.companyName };
       } catch (error) {
         console.error(`[brand-profile] Error:`, error);
         throw error;
