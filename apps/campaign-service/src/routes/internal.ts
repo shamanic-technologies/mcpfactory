@@ -6,12 +6,56 @@
 import { Router } from "express";
 import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { campaigns, campaignRuns, orgs } from "../db/schema.js";
+import { campaigns, orgs } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
 import { getAggregatedStats, getLeadsForCampaignRuns, aggregateCompaniesFromLeads } from "../lib/service-client.js";
 import { extractDomain } from "../lib/domain.js";
+import { ensureOrganization, listRuns, getRun, createRun, updateRun, type Run } from "@mcpfactory/runs-client";
 
 const router = Router();
+
+/**
+ * Helper: get clerkOrgId from a campaign's org (for no-auth routes)
+ */
+async function getClerkOrgIdFromCampaign(campaignId: string): Promise<string | null> {
+  const campaign = await db.query.campaigns.findFirst({
+    where: eq(campaigns.id, campaignId),
+    columns: { orgId: true },
+  });
+  if (!campaign) return null;
+
+  const org = await db.query.orgs.findFirst({
+    where: eq(orgs.id, campaign.orgId),
+    columns: { clerkOrgId: true },
+  });
+  return org?.clerkOrgId || null;
+}
+
+/**
+ * Helper: get campaign run IDs from runs-service for a given campaign
+ */
+async function getCampaignRunIds(clerkOrgId: string, campaignId: string): Promise<string[]> {
+  const runsOrgId = await ensureOrganization(clerkOrgId);
+  const result = await listRuns({
+    organizationId: runsOrgId,
+    serviceName: "campaign-service",
+    taskName: campaignId,
+  });
+  return result.runs.map((r: Run) => r.id);
+}
+
+/**
+ * Helper: get campaign runs from runs-service
+ */
+async function getCampaignRuns(clerkOrgId: string, campaignId: string): Promise<Run[]> {
+  const runsOrgId = await ensureOrganization(clerkOrgId);
+  const result = await listRuns({
+    organizationId: runsOrgId,
+    serviceName: "campaign-service",
+    taskName: campaignId,
+  });
+  return result.runs;
+}
 
 /**
  * GET /internal/campaigns - List all campaigns for org
@@ -21,7 +65,7 @@ const router = Router();
 router.get("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const brandId = req.query.brandId as string;
-    
+
     let orgCampaigns = await db.query.campaigns.findMany({
       where: eq(campaigns.orgId, req.orgId!),
       orderBy: (campaigns, { desc }) => [desc(campaigns.createdAt)],
@@ -115,14 +159,14 @@ router.get("/campaigns/:id", serviceAuth, async (req: AuthenticatedRequest, res)
 /**
  * POST /internal/campaigns - Create a new campaign
  * createdByUserId is optional - MCP API key auth may not have user context
- * 
+ *
  * Brand is NOT created here. The worker will call brand-service to upsert the brand.
  * We only store the brandUrl in the campaign.
  */
 router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
     console.log("POST /internal/campaigns - orgId:", req.orgId, "userId:", req.userId, "body:", JSON.stringify(req.body));
-    
+
     const {
       name,
       brandUrl,
@@ -154,15 +198,15 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
     // Validate recurrence
     const validRecurrences = ["oneoff", "daily", "weekly", "monthly"];
     if (!recurrence || !validRecurrences.includes(recurrence)) {
-      return res.status(400).json({ 
-        error: `recurrence is required. Valid values: ${validRecurrences.join(", ")}` 
+      return res.status(400).json({
+        error: `recurrence is required. Valid values: ${validRecurrences.join(", ")}`
       });
     }
 
     // Validate at least one budget is set
     if (!maxBudgetDailyUsd && !maxBudgetWeeklyUsd && !maxBudgetMonthlyUsd) {
-      return res.status(400).json({ 
-        error: "At least one budget must be set (maxBudgetDailyUsd, maxBudgetWeeklyUsd, or maxBudgetMonthlyUsd)" 
+      return res.status(400).json({
+        error: "At least one budget must be set (maxBudgetDailyUsd, maxBudgetWeeklyUsd, or maxBudgetMonthlyUsd)"
       });
     }
 
@@ -193,7 +237,7 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       notifyDestination,
       status: "ongoing",
     };
-    
+
     console.log("Insert data:", JSON.stringify(insertData));
 
     const [campaign] = await db
@@ -321,10 +365,7 @@ router.get("/campaigns/:id/runs", serviceAuth, async (req: AuthenticatedRequest,
       return res.status(404).json({ error: "Campaign not found" });
     }
 
-    const runs = await db.query.campaignRuns.findMany({
-      where: eq(campaignRuns.campaignId, id),
-      orderBy: (runs, { desc }) => [desc(runs.createdAt)],
-    });
+    const runs = await getCampaignRuns(req.clerkOrgId!, id);
 
     res.json({ runs });
   } catch (error) {
@@ -340,10 +381,12 @@ router.get("/campaigns/:id/runs/all", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const runs = await db.query.campaignRuns.findMany({
-      where: eq(campaignRuns.campaignId, id),
-      orderBy: (runs, { desc }) => [desc(runs.createdAt)],
-    });
+    const clerkOrgId = await getClerkOrgIdFromCampaign(id);
+    if (!clerkOrgId) {
+      return res.status(404).json({ error: "Campaign or org not found" });
+    }
+
+    const runs = await getCampaignRuns(clerkOrgId, id);
 
     res.json({ runs });
   } catch (error) {
@@ -359,25 +402,17 @@ router.post("/campaigns/:id/runs", async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Verify campaign exists
-    const campaign = await db.query.campaigns.findFirst({
-      where: eq(campaigns.id, id),
-    });
-
-    if (!campaign) {
-      return res.status(404).json({ error: "Campaign not found" });
+    const clerkOrgId = await getClerkOrgIdFromCampaign(id);
+    if (!clerkOrgId) {
+      return res.status(404).json({ error: "Campaign or org not found" });
     }
 
-    // Create a new run
-    const [run] = await db
-      .insert(campaignRuns)
-      .values({
-        campaignId: id,
-        orgId: campaign.orgId,
-        status: "running",
-        runStartedAt: new Date(),
-      })
-      .returning();
+    const runsOrgId = await ensureOrganization(clerkOrgId);
+    const run = await createRun({
+      organizationId: runsOrgId,
+      serviceName: "campaign-service",
+      taskName: id,
+    });
 
     console.log(`Created campaign run ${run.id} for campaign ${id}`);
     res.json({ run });
@@ -393,23 +428,15 @@ router.post("/campaigns/:id/runs", async (req, res) => {
 router.patch("/runs/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, errorMessage } = req.body;
+    const { status } = req.body;
 
-    const [updated] = await db
-      .update(campaignRuns)
-      .set({
-        status,
-        errorMessage,
-        ...(status === "completed" || status === "failed" ? { runEndedAt: new Date() } : {}),
-      })
-      .where(eq(campaignRuns.id, id))
-      .returning();
-
-    if (!updated) {
-      return res.status(404).json({ error: "Run not found" });
+    if (status !== "completed" && status !== "failed") {
+      return res.status(400).json({ error: "Status must be 'completed' or 'failed'" });
     }
 
-    res.json({ run: updated });
+    const run = await updateRun(id, status);
+
+    res.json({ run });
   } catch (error) {
     console.error("Update campaign run error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -436,11 +463,8 @@ router.get("/campaigns/:id/debug", serviceAuth, async (req: AuthenticatedRequest
       return res.status(404).json({ error: "Campaign not found" });
     }
 
-    // Get all runs for this campaign with full details
-    const runs = await db.query.campaignRuns.findMany({
-      where: eq(campaignRuns.campaignId, id),
-      orderBy: (runs, { desc }) => [desc(runs.createdAt)],
-    });
+    // Get all runs for this campaign from runs-service
+    const runs = await getCampaignRuns(req.clerkOrgId!, id);
 
     // Build debug response
     const debug = {
@@ -465,26 +489,16 @@ router.get("/campaigns/:id/debug", serviceAuth, async (req: AuthenticatedRequest
       runs: runs.map(run => ({
         id: run.id,
         status: run.status,
-        startedAt: run.runStartedAt,
-        endedAt: run.runEndedAt,
+        startedAt: run.startedAt,
+        completedAt: run.completedAt,
         createdAt: run.createdAt,
-        errorMessage: run.errorMessage,
-        durationMs: run.runStartedAt && run.runEndedAt 
-          ? new Date(run.runEndedAt).getTime() - new Date(run.runStartedAt).getTime()
-          : null,
       })),
       summary: {
         totalRuns: runs.length,
         completed: runs.filter(r => r.status === "completed").length,
         failed: runs.filter(r => r.status === "failed").length,
         running: runs.filter(r => r.status === "running").length,
-        pending: runs.filter(r => r.status === "pending").length,
         lastRunAt: runs[0]?.createdAt || null,
-        errors: runs.filter(r => r.errorMessage).map(r => ({
-          runId: r.id,
-          error: r.errorMessage,
-          at: r.runEndedAt || r.createdAt,
-        })),
       },
     };
 
@@ -515,11 +529,8 @@ router.get("/campaigns/:id/stats", serviceAuth, async (req: AuthenticatedRequest
       return res.status(404).json({ error: "Campaign not found" });
     }
 
-    // Get all runs for this campaign
-    const runs = await db.query.campaignRuns.findMany({
-      where: eq(campaignRuns.campaignId, id),
-    });
-
+    // Get all run IDs for this campaign from runs-service
+    const runs = await getCampaignRuns(req.clerkOrgId!, id);
     const campaignRunIds = runs.map(r => r.id);
 
     // Aggregate stats from other services
@@ -575,12 +586,8 @@ router.get("/campaigns/:id/leads", serviceAuth, async (req: AuthenticatedRequest
       return res.status(404).json({ error: "Campaign not found" });
     }
 
-    // Get all runs for this campaign
-    const runs = await db.query.campaignRuns.findMany({
-      where: eq(campaignRuns.campaignId, id),
-    });
-
-    const campaignRunIds = runs.map(r => r.id);
+    // Get all run IDs for this campaign from runs-service
+    const campaignRunIds = await getCampaignRunIds(req.clerkOrgId!, id);
 
     // Fetch leads from apollo-service
     const leads = await getLeadsForCampaignRuns(campaignRunIds, req.clerkOrgId!);
@@ -625,12 +632,8 @@ router.get("/campaigns/:id/companies", serviceAuth, async (req: AuthenticatedReq
       return res.status(404).json({ error: "Campaign not found" });
     }
 
-    // Get all runs for this campaign
-    const runs = await db.query.campaignRuns.findMany({
-      where: eq(campaignRuns.campaignId, id),
-    });
-
-    const campaignRunIds = runs.map(r => r.id);
+    // Get all run IDs for this campaign from runs-service
+    const campaignRunIds = await getCampaignRunIds(req.clerkOrgId!, id);
 
     // Fetch leads from apollo-service
     const leads = await getLeadsForCampaignRuns(campaignRunIds, req.clerkOrgId!);

@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",
+    "@mcpfactory/runs-client": "workspace:*",
     "@sentry/node": "^8.0.0",
     "cors": "^2.8.5",
     "drizzle-orm": "^0.36.0",

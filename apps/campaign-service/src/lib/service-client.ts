@@ -19,7 +19,6 @@ interface ApolloStats {
 
 interface EmailGenStats {
   emailsGenerated: number;
-  totalCostUsd: string;
 }
 
 interface PostmarkStats {

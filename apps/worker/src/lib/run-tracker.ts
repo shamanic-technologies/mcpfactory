@@ -1,5 +1,5 @@
 import { getRedis } from "./redis.js";
-import { campaignService } from "./service-client.js";
+import { runsService } from "./service-client.js";
 
 const RUN_PREFIX = "run:";
 const TOTAL_KEY = ":total";
@@ -54,7 +54,7 @@ export async function markJobDone(
 }
 
 /**
- * Finalize a run - update status in campaign-service
+ * Finalize a run - update status in runs-service
  */
 export async function finalizeRun(
   runId: string, 
@@ -69,7 +69,7 @@ export async function finalizeRun(
   console.log(`[run-tracker] Finalizing run ${runId} with status=${status} (${stats.done - stats.failed} success, ${stats.failed} failed)`);
   
   try {
-    await campaignService.updateRun(runId, { status });
+    await runsService.updateRun(runId, status);
     
     // Cleanup Redis keys
     await redis.del(`${prefix}${TOTAL_KEY}`);

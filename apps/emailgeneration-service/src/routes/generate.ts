@@ -5,6 +5,7 @@ import { emailGenerations } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
 import { generateEmail, GenerateEmailParams } from "../lib/anthropic-client.js";
 import { getByokKey } from "../lib/keys-client.js";
+import { ensureOrganization, createRun, updateRun, addCosts } from "@mcpfactory/runs-client";
 
 const router = Router();
 
@@ -87,7 +88,7 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
 
     const result = await generateEmail(anthropicApiKey, params);
 
-    // Store in database (keeping existing schema - storing key fields)
+    // Store in database
     const [generation] = await db
       .insert(emailGenerations)
       .values({
@@ -106,11 +107,35 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
         model: "claude-opus-4-5",
         tokensInput: result.tokensInput,
         tokensOutput: result.tokensOutput,
-        costUsd: result.costUsd.toFixed(6),
         promptRaw: result.promptRaw,
         responseRaw: result.responseRaw,
       })
       .returning();
+
+    // Track run + costs in runs-service
+    try {
+      const runsOrgId = await ensureOrganization(req.clerkOrgId!);
+      const genRun = await createRun({
+        organizationId: runsOrgId,
+        serviceName: "emailgeneration-service",
+        taskName: "single-generation",
+        parentRunId: campaignRunId,
+      });
+
+      const costItems = [];
+      if (result.tokensInput) {
+        costItems.push({ costName: "anthropic-tokens-input", quantity: result.tokensInput });
+      }
+      if (result.tokensOutput) {
+        costItems.push({ costName: "anthropic-tokens-output", quantity: result.tokensOutput });
+      }
+      if (costItems.length > 0) {
+        await addCosts(genRun.id, costItems);
+      }
+      await updateRun(genRun.id, "completed");
+    } catch (err) {
+      console.warn("[emailgen] Failed to track run in runs-service:", err);
+    }
 
     res.json({
       id: generation.id,
@@ -119,7 +144,6 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
       bodyText: result.bodyText,
       tokensInput: result.tokensInput,
       tokensOutput: result.tokensOutput,
-      costUsd: result.costUsd,
     });
   } catch (error) {
     console.error("Generate error:", error);
@@ -188,7 +212,7 @@ router.post("/stats", serviceAuth, async (req: AuthenticatedRequest, res) => {
     }
 
     if (campaignRunIds.length === 0) {
-      return res.json({ stats: { emailsGenerated: 0, totalCostUsd: 0 } });
+      return res.json({ stats: { emailsGenerated: 0 } });
     }
 
     // Count email generations
@@ -198,15 +222,12 @@ router.post("/stats", serviceAuth, async (req: AuthenticatedRequest, res) => {
           inArray(g.campaignRunId, campaignRunIds),
           eq(g.orgId, req.orgId!)
         ),
-      columns: { id: true, costUsd: true },
+      columns: { id: true },
     });
-
-    const totalCostUsd = generations.reduce((sum, g) => sum + parseFloat(g.costUsd || "0"), 0);
 
     res.json({
       stats: {
         emailsGenerated: generations.length,
-        totalCostUsd: totalCostUsd.toFixed(4),
       },
     });
   } catch (error) {

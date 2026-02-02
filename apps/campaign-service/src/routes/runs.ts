@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { campaigns, campaignRuns } from "../db/schema.js";
+import { campaigns, orgs } from "../db/schema.js";
 import { clerkAuth, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
+import { ensureOrganization, listRuns, getRun, createRun, updateRun } from "@mcpfactory/runs-client";
 
 const router = Router();
 
@@ -25,12 +26,15 @@ router.get("/campaigns/:campaignId/runs", clerkAuth, requireOrg, async (req: Aut
       return res.status(404).json({ error: "Campaign not found" });
     }
 
-    const runs = await db.query.campaignRuns.findMany({
-      where: eq(campaignRuns.campaignId, campaignId),
-      orderBy: (campaignRuns, { desc }) => [desc(campaignRuns.runStartedAt)],
+    // Fetch runs from runs-service
+    const runsOrgId = await ensureOrganization(req.clerkOrgId!);
+    const result = await listRuns({
+      organizationId: runsOrgId,
+      serviceName: "campaign-service",
+      taskName: campaignId,
     });
 
-    res.json({ runs });
+    res.json({ runs: result.runs });
   } catch (error) {
     console.error("List runs error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -56,16 +60,7 @@ router.get("/campaigns/:campaignId/runs/:runId", clerkAuth, requireOrg, async (r
       return res.status(404).json({ error: "Campaign not found" });
     }
 
-    const run = await db.query.campaignRuns.findFirst({
-      where: and(
-        eq(campaignRuns.id, runId),
-        eq(campaignRuns.campaignId, campaignId)
-      ),
-    });
-
-    if (!run) {
-      return res.status(404).json({ error: "Run not found" });
-    }
+    const run = await getRun(runId);
 
     res.json({ run });
   } catch (error) {
@@ -81,8 +76,6 @@ router.post("/campaigns/:campaignId/runs", async (req, res) => {
   try {
     const { campaignId } = req.params;
 
-    // No auth needed - Railway private network
-
     const campaign = await db.query.campaigns.findFirst({
       where: eq(campaigns.id, campaignId),
     });
@@ -91,15 +84,21 @@ router.post("/campaigns/:campaignId/runs", async (req, res) => {
       return res.status(404).json({ error: "Campaign not found" });
     }
 
-    const [run] = await db
-      .insert(campaignRuns)
-      .values({
-        campaignId: campaign.id,
-        orgId: campaign.orgId,
-        runStartedAt: new Date(),
-        status: "running",
-      })
-      .returning();
+    // Look up clerkOrgId from the org
+    const org = await db.query.orgs.findFirst({
+      where: eq(orgs.id, campaign.orgId),
+    });
+
+    if (!org) {
+      return res.status(500).json({ error: "Organization not found" });
+    }
+
+    const runsOrgId = await ensureOrganization(org.clerkOrgId);
+    const run = await createRun({
+      organizationId: runsOrgId,
+      serviceName: "campaign-service",
+      taskName: campaignId,
+    });
 
     res.status(201).json({ run });
   } catch (error) {
@@ -114,29 +113,15 @@ router.post("/campaigns/:campaignId/runs", async (req, res) => {
 router.patch("/runs/:runId", async (req, res) => {
   try {
     const { runId } = req.params;
+    const { status } = req.body;
 
-    // No auth needed - Railway private network
-
-    const { status, errorMessage } = req.body;
-
-    const updateData: Record<string, unknown> = {};
-    if (status) updateData.status = status;
-    if (errorMessage) updateData.errorMessage = errorMessage;
-    if (status === "completed" || status === "failed" || status === "stopped") {
-      updateData.runEndedAt = new Date();
+    if (status !== "completed" && status !== "failed") {
+      return res.status(400).json({ error: "Status must be 'completed' or 'failed'" });
     }
 
-    const [updated] = await db
-      .update(campaignRuns)
-      .set(updateData)
-      .where(eq(campaignRuns.id, runId))
-      .returning();
+    const run = await updateRun(runId, status);
 
-    if (!updated) {
-      return res.status(404).json({ error: "Run not found" });
-    }
-
-    res.json({ run: updated });
+    res.json({ run });
   } catch (error) {
     console.error("Update run error:", error);
     res.status(500).json({ error: "Internal server error" });
