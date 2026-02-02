@@ -601,6 +601,7 @@ router.get("/campaigns/:id/leads", serviceAuth, async (req: AuthenticatedRequest
       title: lead.title,
       organizationName: lead.organizationName,
       linkedinUrl: lead.linkedinUrl,
+      enrichmentRunId: lead.enrichmentRunId,
       status: "found", // Default status since we don't track this yet
       createdAt: lead.createdAt,
     }));

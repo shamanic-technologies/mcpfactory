@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { apolloPeopleSearches, apolloPeopleEnrichments } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
@@ -75,7 +76,7 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
       const runsOrgId = await ensureOrganization(req.clerkOrgId!);
 
       for (const person of result.people as ApolloPerson[]) {
-        await db.insert(apolloPeopleEnrichments).values({
+        const [enrichment] = await db.insert(apolloPeopleEnrichments).values({
           orgId: req.orgId!,
           runId,
           searchId: search.id,
@@ -92,7 +93,7 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
           organizationSize: person.organization?.estimated_num_employees?.toString(),
           organizationRevenueUsd: person.organization?.annual_revenue?.toString(),
           responseRaw: person,
-        });
+        }).returning();
 
         // Create grandchild run + post costs in runs-service
         if (searchRunId) {
@@ -105,6 +106,11 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
             });
             await addCosts(enrichRun.id, [{ costName: "apollo-enrichment-credit", quantity: 1 }]);
             await updateRun(enrichRun.id, "completed");
+
+            // Link enrichment run to record for cost lookups
+            await db.update(apolloPeopleEnrichments)
+              .set({ enrichmentRunId: enrichRun.id })
+              .where(eq(apolloPeopleEnrichments.id, enrichment.id));
           } catch (err) {
             console.warn("[apollo] Failed to track enrichment run:", err);
           }
