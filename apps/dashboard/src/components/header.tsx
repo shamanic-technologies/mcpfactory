@@ -83,7 +83,7 @@ export function Header() {
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-xl py-1">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-xl py-1 z-[60]">
                 <div className="px-4 py-2 border-b border-gray-100">
                   <p className="text-sm font-medium text-gray-700">{user?.fullName}</p>
                   <p className="text-xs text-gray-500 truncate">{user?.primaryEmailAddress?.emailAddress}</p>
