@@ -31,6 +31,8 @@ const LLM_INSTRUCTIONS = `# MCP Factory + ChatGPT Integration
 - mcpfactory_stop_campaign: Stop a campaign
 - mcpfactory_resume_campaign: Resume a campaign
 - mcpfactory_campaign_stats: Get campaign performance
+- mcpfactory_list_brands: List your brands
+- mcpfactory_suggest_icp: Suggest ideal customer profile for a brand URL
 
 ## Example Prompts
 "Launch a cold email campaign for mybrand.com targeting CTOs at SaaS companies. $10/day budget."
@@ -117,6 +119,14 @@ export default function ChatGPTIntegrationPage() {
             <tr>
               <td><code>mcpfactory_campaign_stats</code></td>
               <td>Get campaign performance metrics</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_list_brands</code></td>
+              <td>List all your brands</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_suggest_icp</code></td>
+              <td>Suggest ideal customer profile for a brand URL</td>
             </tr>
           </tbody>
         </table>
