@@ -190,6 +190,46 @@ router.get("/brand/sales-profiles", authenticate, requireOrg, async (req: Authen
 });
 
 /**
+ * POST /v1/brand/icp-suggestion
+ * Get ICP suggestion (Apollo-compatible search params) for a brand URL
+ */
+router.post("/brand/icp-suggestion", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { brandUrl } = req.body;
+
+    if (!brandUrl) {
+      return res.status(400).json({ error: "brandUrl is required" });
+    }
+
+    const response = await fetch(
+      `${BRAND_SERVICE_URL}/icp-suggestion`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": BRAND_SERVICE_API_KEY,
+        },
+        body: JSON.stringify({
+          clerkOrgId: req.orgId,
+          url: brandUrl,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: "Unknown error" }));
+      throw new Error(error.error || `Failed to get ICP suggestion: ${response.status}`);
+    }
+
+    const result = await response.json();
+    res.json(result);
+  } catch (error: any) {
+    console.error("ICP suggestion error:", error.message);
+    res.status(500).json({ error: error.message || "Failed to get ICP suggestion" });
+  }
+});
+
+/**
  * GET /v1/brand/:id
  * Get brand scrape result by ID
  */
