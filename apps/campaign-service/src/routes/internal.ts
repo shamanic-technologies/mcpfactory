@@ -10,7 +10,7 @@ import { campaigns, orgs } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
 import { getAggregatedStats, getLeadsForRuns, aggregateCompaniesFromLeads } from "../lib/service-client.js";
 import { extractDomain } from "../lib/domain.js";
-import { ensureOrganization, listRuns, getRun, createRun, updateRun, type Run } from "@mcpfactory/runs-client";
+import { ensureOrganization, listRuns, getRun, getRunsBatch, createRun, updateRun, type Run } from "@mcpfactory/runs-client";
 
 const router = Router();
 
@@ -533,8 +533,22 @@ router.get("/campaigns/:id/stats", serviceAuth, async (req: AuthenticatedRequest
     const runs = await getRunsForCampaign(req.clerkOrgId!, id);
     const runIds = runs.map(r => r.id);
 
-    // Aggregate stats from other services
-    const aggregated = await getAggregatedStats(runIds, req.clerkOrgId!);
+    // Aggregate stats from other services + fetch run costs in parallel
+    const [aggregated, runsWithCosts] = await Promise.all([
+      getAggregatedStats(runIds, req.clerkOrgId!),
+      runIds.length > 0
+        ? getRunsBatch(runIds).catch((err) => {
+            console.warn("Failed to fetch run costs for stats:", err);
+            return new Map();
+          })
+        : Promise.resolve(new Map()),
+    ]);
+
+    // Sum total cost across all top-level runs (each includes recursive children costs)
+    let totalCostInUsdCents = 0;
+    for (const run of runsWithCosts.values()) {
+      totalCostInUsdCents += parseFloat(run.totalCostInUsdCents) || 0;
+    }
 
     // Build response with run stats + aggregated stats
     const stats = {
@@ -543,6 +557,8 @@ router.get("/campaigns/:id/stats", serviceAuth, async (req: AuthenticatedRequest
       completedRuns: runs.filter(r => r.status === "completed").length,
       failedRuns: runs.filter(r => r.status === "failed").length,
       runningRuns: runs.filter(r => r.status === "running").length,
+      // Total cost
+      totalCostInUsdCents: totalCostInUsdCents > 0 ? String(totalCostInUsdCents) : null,
       // Aggregated from other services
       leadsFound: aggregated.leadsFound,
       emailsGenerated: aggregated.emailsGenerated,

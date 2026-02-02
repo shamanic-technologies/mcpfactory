@@ -4,6 +4,15 @@ import { useCampaign } from "@/lib/campaign-context";
 import { FunnelMetrics } from "@/components/campaign/funnel-metrics";
 import { ReplyBreakdown } from "@/components/campaign/reply-breakdown";
 
+function formatTotalCost(cents: string | null | undefined): string | null {
+  if (!cents) return null;
+  const val = parseFloat(cents);
+  if (isNaN(val) || val === 0) return null;
+  const usd = val / 100;
+  if (usd < 0.01) return "<$0.01";
+  return `$${usd.toFixed(2)}`;
+}
+
 export default function CampaignOverviewPage() {
   const { campaign, stats, loading } = useCampaign();
 
@@ -51,6 +60,11 @@ export default function CampaignOverviewPage() {
           <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(campaign.status)}`}>
             {campaign.status}
           </span>
+          {stats && formatTotalCost(stats.totalCostInUsdCents) && (
+            <span className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-600">
+              Total: {formatTotalCost(stats.totalCostInUsdCents)}
+            </span>
+          )}
         </div>
         <p className="text-gray-600 text-sm">
           Created {new Date(campaign.createdAt).toLocaleDateString("en-US", {
