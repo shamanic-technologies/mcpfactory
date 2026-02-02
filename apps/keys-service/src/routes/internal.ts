@@ -142,6 +142,62 @@ router.delete("/api-keys/:id", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /internal/api-keys/session
+ * Get or create a "Foxy" session API key for the org
+ */
+router.post("/api-keys/session", async (req: Request, res: Response) => {
+  try {
+    const { clerkOrgId } = req.body;
+
+    if (!clerkOrgId) {
+      return res.status(400).json({ error: "clerkOrgId required" });
+    }
+
+    const orgId = await ensureOrg(clerkOrgId);
+
+    // Check for existing Foxy key
+    const existing = await db.query.apiKeys.findFirst({
+      where: and(eq(apiKeys.orgId, orgId), eq(apiKeys.name, "Foxy")),
+    });
+
+    if (existing) {
+      return res.json({
+        id: existing.id,
+        keyPrefix: existing.keyPrefix,
+        name: existing.name,
+        exists: true,
+      });
+    }
+
+    // Create new Foxy key
+    const rawKey = generateApiKey();
+    const keyHash = hashApiKey(rawKey);
+    const keyPrefix = getKeyPrefix(rawKey);
+
+    const [apiKey] = await db
+      .insert(apiKeys)
+      .values({
+        orgId,
+        keyHash,
+        keyPrefix,
+        name: "Foxy",
+      })
+      .returning();
+
+    res.json({
+      id: apiKey.id,
+      key: rawKey,
+      keyPrefix: apiKey.keyPrefix,
+      name: apiKey.name,
+      exists: false,
+    });
+  } catch (error) {
+    console.error("Session API key error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ==================== BYOK KEYS ====================
 
 /**

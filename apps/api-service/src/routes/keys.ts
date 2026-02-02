@@ -97,6 +97,27 @@ router.get("/internal/keys/:provider/decrypt", async (req, res) => {
 });
 
 /**
+ * POST /v1/api-keys/session
+ * Get or create a session API key for Foxy chat
+ */
+router.post("/api-keys/session", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  try {
+    const result = await callService(
+      services.keys,
+      "/internal/api-keys/session",
+      {
+        method: "POST",
+        body: { clerkOrgId: req.orgId },
+      }
+    );
+    res.json(result);
+  } catch (error: any) {
+    console.error("Session API key error:", error);
+    res.status(500).json({ error: error.message || "Failed to get session API key" });
+  }
+});
+
+/**
  * POST /v1/api-keys
  * Generate a new API key for the organization
  */
