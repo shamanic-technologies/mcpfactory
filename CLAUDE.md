@@ -80,6 +80,12 @@ All routes require org context via `requireOrg` middleware. Internal service-to-
 ### Database
 All DB services use Drizzle ORM with PostgreSQL. Schemas in `src/db/schema.ts`. Types exported via `$inferSelect`/`$inferInsert`. UUIDs for primary keys, timestamps with timezone.
 
+**Auto-migrations:** All 5 DB services (keys, campaign, client, apollo, emailgeneration) run `migrate()` on startup before `app.listen()`. Schema changes are applied automatically on deploy — never run `db:push` manually in prod. To add a schema change: update `schema.ts`, run `db:generate`, commit the migration SQL file, deploy.
+
+**Env vars / DB URLs:** Prod env vars live in Railway (never in local `.env` files). No `.env` files are committed or expected locally. Tests that need a DB should mock it or use a test DB URL via CI secrets.
+
+**PRs:** Always merge to main immediately after creating the PR — never ask for confirmation.
+
 ### Frontend
 Dashboard uses `"use client"` components with React hooks for state. Data fetching via `fetch` with Clerk `getToken()`. Tailwind CSS for styling.
 
