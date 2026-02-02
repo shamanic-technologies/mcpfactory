@@ -15,6 +15,13 @@
       "when": 1770024104227,
       "tag": "0001_rename_campaign_run_id_to_run_id",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770025000000,
+      "tag": "0002_add_generation_run_id",
+      "breakpoints": true
     }
   ]
 }

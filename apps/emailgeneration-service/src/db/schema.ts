@@ -49,6 +49,9 @@ export const emailGenerations = pgTable(
     clientCompanyName: text("client_company_name"),
     clientCompanyDescription: text("client_company_description"),
 
+    // Link to runs-service generation run for cost tracking
+    generationRunId: text("generation_run_id"),
+
     // Generated email
     subject: text("subject"),
     bodyHtml: text("body_html"),

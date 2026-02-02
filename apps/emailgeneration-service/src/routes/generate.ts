@@ -124,15 +124,20 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
 
       const costItems = [];
       if (result.tokensInput) {
-        costItems.push({ costName: "anthropic-tokens-input", quantity: result.tokensInput });
+        costItems.push({ costName: "anthropic-opus-4.5-tokens-input", quantity: result.tokensInput });
       }
       if (result.tokensOutput) {
-        costItems.push({ costName: "anthropic-tokens-output", quantity: result.tokensOutput });
+        costItems.push({ costName: "anthropic-opus-4.5-tokens-output", quantity: result.tokensOutput });
       }
       if (costItems.length > 0) {
         await addCosts(genRun.id, costItems);
       }
       await updateRun(genRun.id, "completed");
+
+      // Link generation run to email record for cost lookups
+      await db.update(emailGenerations)
+        .set({ generationRunId: genRun.id })
+        .where(eq(emailGenerations.id, generation.id));
     } catch (err) {
       console.warn("[emailgen] Failed to track run in runs-service:", err);
     }

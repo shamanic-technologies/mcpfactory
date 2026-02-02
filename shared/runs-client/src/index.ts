@@ -204,6 +204,18 @@ export async function listRuns(
 }
 
 /**
+ * Fetch multiple runs with costs in parallel.
+ * Returns a Map of runId → RunWithCosts.
+ */
+export async function getRunsBatch(
+  runIds: string[]
+): Promise<Map<string, RunWithCosts>> {
+  if (runIds.length === 0) return new Map();
+  const results = await Promise.all(runIds.map((id) => getRun(id)));
+  return new Map(results.map((r) => [r.id, r]));
+}
+
+/**
  * Get aggregated cost summary.
  */
 export async function getRunSummary(

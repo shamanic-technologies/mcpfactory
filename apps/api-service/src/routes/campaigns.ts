@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
 import { callService, services, callExternalService, externalServices } from "../lib/service-client.js";
 import { buildInternalHeaders } from "../lib/internal-headers.js";
+import { getRunsBatch, type RunWithCosts } from "@mcpfactory/runs-client";
 
 function sendLifecycleEmail(eventType: string, req: AuthenticatedRequest, metadata: Record<string, unknown>) {
   callExternalService(externalServices.lifecycle, "/send", {
@@ -337,7 +338,7 @@ router.get("/campaigns/:id/emails", authenticate, requireOrg, async (req: Authen
     }
 
     // 2. Get emails for each run from emailgeneration-service
-    const allEmails: unknown[] = [];
+    const allEmails: Array<Record<string, unknown>> = [];
     for (const run of runs) {
       try {
         const emailsResult = await callService(
@@ -346,8 +347,8 @@ router.get("/campaigns/:id/emails", authenticate, requireOrg, async (req: Authen
           {
             headers: { "x-clerk-org-id": req.orgId! },
           }
-        ) as { generations: unknown[] };
-        
+        ) as { generations: Array<Record<string, unknown>> };
+
         if (emailsResult.generations) {
           allEmails.push(...emailsResult.generations);
         }
@@ -357,7 +358,38 @@ router.get("/campaigns/:id/emails", authenticate, requireOrg, async (req: Authen
       }
     }
 
-    res.json({ emails: allEmails });
+    // 3. Batch-fetch generation run costs from runs-service
+    const generationRunIds = allEmails
+      .map((e) => e.generationRunId as string | undefined)
+      .filter((id): id is string => !!id);
+
+    let runMap = new Map<string, RunWithCosts>();
+    if (generationRunIds.length > 0) {
+      try {
+        runMap = await getRunsBatch(generationRunIds);
+      } catch (err) {
+        console.warn("Failed to fetch run costs:", err);
+      }
+    }
+
+    // 4. Attach run data to each email
+    const emailsWithRuns = allEmails.map((email) => {
+      const run = email.generationRunId ? runMap.get(email.generationRunId as string) : undefined;
+      return {
+        ...email,
+        generationRun: run
+          ? {
+              status: run.status,
+              startedAt: run.startedAt,
+              completedAt: run.completedAt,
+              totalCostInUsdCents: run.totalCostInUsdCents,
+              costs: run.costs,
+            }
+          : null,
+      };
+    });
+
+    res.json({ emails: emailsWithRuns });
   } catch (error: any) {
     console.error("Get campaign emails error:", error);
     res.status(500).json({ error: error.message || "Failed to get campaign emails" });

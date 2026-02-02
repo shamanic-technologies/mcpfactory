@@ -1,0 +1,1 @@
+ALTER TABLE "email_generations" ADD COLUMN "generation_run_id" text;

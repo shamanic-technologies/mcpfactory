@@ -23,6 +23,9 @@ importers:
       '@clerk/backend':
         specifier: ^1.0.0
         version: 1.14.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mcpfactory/runs-client':
+        specifier: workspace:*
+        version: link:../../shared/runs-client
       '@sentry/node':
         specifier: ^8.0.0
         version: 8.55.0
