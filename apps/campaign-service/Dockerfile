@@ -21,8 +21,9 @@ RUN pnpm --filter @mcpfactory/campaign-service build
 # Prepare production directory with only production dependencies
 RUN pnpm deploy --filter @mcpfactory/campaign-service  /prod
 
-# Copy built files to production directory
+# Copy built files and migrations to production directory
 RUN cp -r /app/apps/campaign-service/dist /prod/dist
+RUN cp -r /app/apps/campaign-service/drizzle /prod/drizzle
 
 # Stage 2: Production
 FROM node:20-slim
