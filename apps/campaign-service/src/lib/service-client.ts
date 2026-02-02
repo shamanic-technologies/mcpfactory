@@ -149,6 +149,7 @@ export interface CompanyData {
   industry: string | null;
   employeeCount: string | null;
   leadsCount: number;
+  enrichmentRunIds: string[];
 }
 
 export function aggregateCompaniesFromLeads(leads: LeadData[]): CompanyData[] {
@@ -159,6 +160,7 @@ export function aggregateCompaniesFromLeads(leads: LeadData[]): CompanyData[] {
     industry: string | null;
     employeeCount: string | null;
     leadsCount: number;
+    enrichmentRunIds: string[];
   }>();
 
   for (const lead of leads) {
@@ -168,6 +170,9 @@ export function aggregateCompaniesFromLeads(leads: LeadData[]): CompanyData[] {
     const existing = companyMap.get(orgName);
     if (existing) {
       existing.leadsCount++;
+      if (lead.enrichmentRunId) {
+        existing.enrichmentRunIds.push(lead.enrichmentRunId);
+      }
     } else {
       companyMap.set(orgName, {
         name: orgName,
@@ -175,6 +180,7 @@ export function aggregateCompaniesFromLeads(leads: LeadData[]): CompanyData[] {
         industry: lead.organizationIndustry || null,
         employeeCount: lead.organizationSize || null,
         leadsCount: 1,
+        enrichmentRunIds: lead.enrichmentRunId ? [lead.enrichmentRunId] : [],
       });
     }
   }
