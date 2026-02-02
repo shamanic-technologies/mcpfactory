@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { GlobeAltIcon } from "@heroicons/react/24/outline";
+import { getCampaignStats, type CampaignStats } from "@/lib/api";
 
 interface Brand {
   id: string;
@@ -13,25 +14,72 @@ interface Brand {
   createdAt: string;
 }
 
+interface Campaign {
+  id: string;
+  brandId: string | null;
+}
+
+function formatCost(cents: string | null | undefined): string | null {
+  if (!cents) return null;
+  const val = parseFloat(cents);
+  if (isNaN(val) || val === 0) return null;
+  const usd = val / 100;
+  if (usd < 0.01) return "<$0.01";
+  return `$${usd.toFixed(2)}`;
+}
+
 export default function BrandsPage() {
   const { getToken } = useAuth();
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [brandCosts, setBrandCosts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchBrands() {
       try {
         const token = await getToken();
-        // Call API gateway which proxies to brand-service (single source of truth)
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/brands`,
-          {
+        if (!token) return;
+
+        // Fetch brands and all campaigns in parallel
+        const [brandsRes, campaignsRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/brands`, {
             headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/campaigns`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        let loadedBrands: Brand[] = [];
+        if (brandsRes.ok) {
+          const data = await brandsRes.json();
+          loadedBrands = data.brands || [];
+          setBrands(loadedBrands);
+        }
+
+        // Group campaigns by brandId and fetch stats
+        if (campaignsRes.ok && loadedBrands.length > 0) {
+          const campaignsData = await campaignsRes.json();
+          const campaigns: Campaign[] = campaignsData.campaigns || [];
+
+          // Fetch stats for all campaigns
+          const statsMap: Record<string, CampaignStats> = {};
+          for (const campaign of campaigns) {
+            try {
+              statsMap[campaign.id] = await getCampaignStats(token, campaign.id);
+            } catch { /* Stats not available */ }
           }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setBrands(data.brands || []);
+
+          // Sum costs per brand
+          const costs: Record<string, number> = {};
+          for (const campaign of campaigns) {
+            if (!campaign.brandId) continue;
+            const stats = statsMap[campaign.id];
+            if (stats?.totalCostInUsdCents) {
+              costs[campaign.brandId] = (costs[campaign.brandId] || 0) + (parseFloat(stats.totalCostInUsdCents) || 0);
+            }
+          }
+          setBrandCosts(costs);
         }
       } catch (error) {
         console.error("Failed to fetch brands:", error);
@@ -86,7 +134,14 @@ export default function BrandsPage() {
                   <p className="text-sm text-gray-500">{brand.domain}</p>
                 </div>
               </div>
-              <p className="text-xs text-gray-400 truncate">{brand.brandUrl}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-400 truncate">{brand.brandUrl}</p>
+                {formatCost(brandCosts[brand.id] > 0 ? String(brandCosts[brand.id]) : null) && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 ml-2 flex-shrink-0">
+                    {formatCost(String(brandCosts[brand.id]))}
+                  </span>
+                )}
+              </div>
             </Link>
           ))}
         </div>
