@@ -86,11 +86,11 @@ MCP Factory - The DFY, BYOK MCP Platform`,
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: "Unknown error" }));
-      console.error("Postmark service error:", error);
+      const errorBody = await response.json().catch(() => ({ error: "Unknown error" }));
+      console.error(`Postmark service error (${response.status}):`, JSON.stringify(errorBody));
       return NextResponse.json(
-        { error: "Failed to send confirmation email" },
-        { status: 500 }
+        { error: "Failed to send confirmation email", details: errorBody },
+        { status: response.status }
       );
     }
 
