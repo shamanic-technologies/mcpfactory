@@ -3,6 +3,19 @@ import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/au
 import { callService, services, callExternalService, externalServices } from "../lib/service-client.js";
 import { buildInternalHeaders } from "../lib/internal-headers.js";
 
+function sendLifecycleEmail(eventType: string, req: AuthenticatedRequest, metadata: Record<string, unknown>) {
+  callExternalService(externalServices.lifecycle, "/send", {
+    method: "POST",
+    body: {
+      appId: "mcpfactory",
+      eventType,
+      clerkOrgId: req.orgId,
+      clerkUserId: req.userId,
+      metadata,
+    },
+  }).catch((err) => console.warn(`[campaigns] Lifecycle email ${eventType} failed:`, err.message));
+}
+
 const router = Router();
 
 /**
@@ -73,6 +86,16 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
         body: req.body,
       }
     );
+
+    // Fire-and-forget lifecycle email
+    const campaign = (result as any).campaign;
+    if (campaign) {
+      sendLifecycleEmail("campaign_created", req, {
+        campaignId: campaign.id,
+        campaignName: req.body.name || campaign.name,
+      });
+    }
+
     res.json(result);
   } catch (error: any) {
     console.error("Create campaign error:", error.message, error.stack);
@@ -142,6 +165,14 @@ router.post("/campaigns/:id/stop", authenticate, requireOrg, async (req: Authent
         headers: { "x-clerk-org-id": req.orgId! },
       }
     );
+
+    // Fire-and-forget lifecycle email
+    const campaign = (result as any).campaign;
+    sendLifecycleEmail("campaign_stopped", req, {
+      campaignId: id,
+      campaignName: campaign?.name,
+    });
+
     res.json(result);
   } catch (error: any) {
     console.error("Stop campaign error:", error);
