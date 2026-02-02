@@ -115,10 +115,9 @@ export async function deleteByokKey(
 // Session API Key (Foxy chat)
 export interface SessionApiKey {
   id: string;
-  key?: string; // Only present on first creation
+  key: string;
   keyPrefix: string;
   name: string;
-  exists: boolean;
 }
 
 export async function getOrCreateSessionKey(token: string): Promise<SessionApiKey> {

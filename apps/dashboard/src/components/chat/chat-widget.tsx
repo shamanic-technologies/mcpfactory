@@ -9,15 +9,22 @@ import { ChatInput } from "./chat-input";
 
 export function ChatWidget() {
   const { getToken } = useAuth();
+  const STORAGE_KEY = "foxy-api-key";
+
   const [isOpen, setIsOpen] = useState(true);
-  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(STORAGE_KEY);
+    }
+    return null;
+  });
   const [keyLoading, setKeyLoading] = useState(false);
 
   const { messages, isLoading, sendMessage } = useChat({ apiKey });
 
-  // Fetch or create a session key when the panel opens
+  // Fetch or create a Default API key if we don't have one cached
   useEffect(() => {
-    if (!isOpen || apiKey) return;
+    if (apiKey) return;
 
     let cancelled = false;
     setKeyLoading(true);
@@ -31,10 +38,11 @@ export function ChatWidget() {
         if (cancelled) return;
 
         if (result.key) {
+          localStorage.setItem(STORAGE_KEY, result.key);
           setApiKey(result.key);
         }
       } catch (err) {
-        console.error("Failed to get session key:", err);
+        console.error("Failed to get API key:", err);
       } finally {
         if (!cancelled) setKeyLoading(false);
       }
@@ -43,7 +51,7 @@ export function ChatWidget() {
     return () => {
       cancelled = true;
     };
-  }, [isOpen, apiKey, getToken]);
+  }, [apiKey, getToken]);
 
   const handleButtonClick = useCallback(
     (value: string) => {

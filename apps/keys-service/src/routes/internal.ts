@@ -144,7 +144,8 @@ router.delete("/api-keys/:id", async (req: Request, res: Response) => {
 
 /**
  * POST /internal/api-keys/session
- * Get or create a "Foxy" session API key for the org
+ * Get or create a "Default" API key for the org.
+ * If one already exists, delete and recreate to return the raw key.
  */
 router.post("/api-keys/session", async (req: Request, res: Response) => {
   try {
@@ -156,17 +157,15 @@ router.post("/api-keys/session", async (req: Request, res: Response) => {
 
     const orgId = await ensureOrg(clerkOrgId);
 
-    // Check for existing Foxy key
+    // Delete existing Default key so we can issue a fresh raw key
     const existing = await db.query.apiKeys.findFirst({
-      where: and(eq(apiKeys.orgId, orgId), eq(apiKeys.name, "Foxy")),
+      where: and(eq(apiKeys.orgId, orgId), eq(apiKeys.name, "Default")),
     });
 
     if (existing) {
-      // Delete old key so we can issue a fresh raw key for this session
       await db.delete(apiKeys).where(eq(apiKeys.id, existing.id));
     }
 
-    // Create new Foxy key
     const rawKey = generateApiKey();
     const keyHash = hashApiKey(rawKey);
     const keyPrefix = getKeyPrefix(rawKey);
@@ -177,7 +176,7 @@ router.post("/api-keys/session", async (req: Request, res: Response) => {
         orgId,
         keyHash,
         keyPrefix,
-        name: "Foxy",
+        name: "Default",
       })
       .returning();
 
@@ -186,7 +185,6 @@ router.post("/api-keys/session", async (req: Request, res: Response) => {
       key: rawKey,
       keyPrefix: apiKey.keyPrefix,
       name: apiKey.name,
-      exists: false,
     });
   } catch (error) {
     console.error("Session API key error:", error);
