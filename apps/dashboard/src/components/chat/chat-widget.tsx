@@ -9,7 +9,7 @@ import { ChatInput } from "./chat-input";
 
 export function ChatWidget() {
   const { getToken } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [keyLoading, setKeyLoading] = useState(false);
 
@@ -31,14 +31,7 @@ export function ChatWidget() {
         if (cancelled) return;
 
         if (result.key) {
-          // Newly created key
           setApiKey(result.key);
-        } else {
-          // Key already exists — we only have the prefix.
-          // Re-create so we get the raw key for this session.
-          // For now, store null to signal the key exists but we can't use it.
-          // The chat-service should accept Clerk JWT as fallback auth.
-          setApiKey(null);
         }
       } catch (err) {
         console.error("Failed to get session key:", err);

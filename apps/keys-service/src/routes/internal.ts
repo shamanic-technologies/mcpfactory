@@ -162,12 +162,8 @@ router.post("/api-keys/session", async (req: Request, res: Response) => {
     });
 
     if (existing) {
-      return res.json({
-        id: existing.id,
-        keyPrefix: existing.keyPrefix,
-        name: existing.name,
-        exists: true,
-      });
+      // Delete old key so we can issue a fresh raw key for this session
+      await db.delete(apiKeys).where(eq(apiKeys.id, existing.id));
     }
 
     // Create new Foxy key
