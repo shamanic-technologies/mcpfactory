@@ -8,7 +8,7 @@
 
 ## What is MCP Factory?
 
-MCP Factory provides Done-For-You (DFY) automation tools via the Model Context Protocol (MCP). 
+MCP Factory provides Done-For-You (DFY) automation tools via the Model Context Protocol (MCP).
 
 **DFY means:** You provide a URL + budget. We handle everything else - lead finding, content generation, outreach, optimization, and reporting.
 
@@ -18,7 +18,7 @@ MCP Factory provides Done-For-You (DFY) automation tools via the Model Context P
 
 | Plan | Price | Included |
 |------|-------|----------|
-| **Free** | $0 | Generous quota per MCP (500-1000 actions) + BYOK costs |
+| **Free tier** | $0 + your API costs | Generous quota per MCP (500-1000 actions) + BYOK costs |
 | **Pro** | $20/mo | 10x quota, priority support, advanced analytics |
 
 ## Available MCPs
@@ -27,18 +27,18 @@ MCP Factory provides Done-For-You (DFY) automation tools via the Model Context P
 
 | MCP | What it does | Free Quota |
 |-----|--------------|------------|
-| `@mcpfactory/influencer-pitch` | Find & pitch relevant influencers | 500 pitches |
-| `@mcpfactory/thought-leader` | Pitch journalists for thought leadership | 500 pitches |
-| `@mcpfactory/sales-outreach` | Cold email campaigns to prospects | 1000 emails |
-| `@mcpfactory/podcaster-pitch` | Find & pitch podcast hosts | 500 pitches |
-| `@mcpfactory/journalist-pitch` | Pitch journalists for announcements | 500 pitches |
+| `@mcpfactory/sales-outreach` | Cold email campaigns from your URL. Find leads, generate emails, send & optimize. | 1,000 emails |
+| `@mcpfactory/influencer-pitch` | Find and pitch relevant influencers automatically. | 500 pitches |
+| `@mcpfactory/thought-leader` | Get featured in publications as an industry expert. | 500 pitches |
+| `@mcpfactory/podcaster-pitch` | Get booked as a guest on relevant podcasts. | 500 pitches |
+| `@mcpfactory/journalist-pitch` | Pitch journalists about your announcements. | 500 pitches |
 
 ### URL to Ads (Campaigns)
 
 | MCP | What it does | Free Quota |
 |-----|--------------|------------|
-| `@mcpfactory/google-ads` | Create & optimize Google Ads campaigns | 100 campaigns |
-| `@mcpfactory/reddit-ads` | Create & optimize Reddit Ads campaigns | 100 campaigns |
+| `@mcpfactory/google-ads` | Create and optimize Google Ads campaigns automatically. | 100 campaigns |
+| `@mcpfactory/reddit-ads` | Create and optimize Reddit Ads campaigns automatically. | 100 campaigns |
 
 ## Quick Start
 
@@ -113,7 +113,7 @@ Tool: get_campaign_results
 ## Transparency
 
 Each MCP includes a `get_stats` tool showing:
-- Your usage & estimated BYOK costs
+- Your usage & estimated BYOK costs (~$0.02/email)
 - Community benchmarks (delivery rates, open rates, reply rates)
 - Average cost per action
 
@@ -129,17 +129,18 @@ mcpfactory/
 │   ├── dashboard/     # dashboard.mcpfactory.org
 │   └── landing/       # mcpfactory.org
 ├── packages/
+│   ├── mcp-sales-outreach/
 │   ├── mcp-influencer-pitch/
 │   ├── mcp-thought-leader/
-│   ├── mcp-sales-outreach/
 │   ├── mcp-podcaster-pitch/
 │   ├── mcp-journalist-pitch/
 │   ├── mcp-google-ads/
-│   └── mcp-reddit-ads/
+│   ├── mcp-reddit-ads/
 └── shared/
     ├── types/
     ├── auth/
-    └── byok/
+    ├── byok/
+    └── content/       # SSoT for all content (this generates README.md)
 ```
 
 ## Contributing

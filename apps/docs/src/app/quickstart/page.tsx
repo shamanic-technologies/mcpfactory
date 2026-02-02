@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { CopyForLLM } from "@/components/copy-for-llm";
+import { URLS } from "@mcpfactory/content";
 
 export const metadata: Metadata = {
   title: "Quick Start",
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 const LLM_INSTRUCTIONS = `# MCP Factory Quick Start
 
 ## 1. Create Account
-Sign up at: https://dashboard.mcpfactory.org/sign-up
+Sign up at: https://{URLS.signUp.replace("https://", "")}
 
 ## 2. Get API Key
 Dashboard → API Keys
@@ -61,8 +62,8 @@ export default function QuickstartPage() {
         <h2>1. Create an Account</h2>
         <p>
           Go to{" "}
-          <a href="https://dashboard.mcpfactory.org/sign-up">
-            dashboard.mcpfactory.org/sign-up
+          <a href={URLS.signUp}>
+            {URLS.signUp.replace("https://", "")}
           </a>{" "}
           and create your account.
         </p>

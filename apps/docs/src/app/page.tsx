@@ -1,3 +1,5 @@
+import { URLS, MCP_PACKAGES } from "@mcpfactory/content";
+
 export default function DocsHome() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-12">
@@ -16,7 +18,7 @@ export default function DocsHome() {
         <h2>Getting Started</h2>
         <ol>
           <li>
-            <a href="https://dashboard.mcpfactory.org/sign-up">Create an account</a> and get your API key
+            <a href={URLS.signUp}>Create an account</a> and get your API key
           </li>
           <li>Configure your BYOK keys (OpenAI, Apollo, Resend, etc.)</li>
           <li>Install the MCP you want to use</li>
@@ -25,30 +27,18 @@ export default function DocsHome() {
 
         <h2>Available MCPs</h2>
         <ul>
-          <li>
-            <a href="/sales-outreach">
-              <strong>Sales Outreach</strong>
-            </a>{" "}
-            - Cold email campaigns from your URL
-          </li>
-          <li>
-            <strong>Influencer Pitch</strong> (Coming Soon) - Find and pitch influencers
-          </li>
-          <li>
-            <strong>Thought Leader</strong> (Coming Soon) - Get featured as an expert
-          </li>
-          <li>
-            <strong>Podcaster Pitch</strong> (Coming Soon) - Get booked on podcasts
-          </li>
-          <li>
-            <strong>Journalist Pitch</strong> (Coming Soon) - Pitch your announcements
-          </li>
-          <li>
-            <strong>Google Ads</strong> (Coming Soon) - Create Google Ads campaigns
-          </li>
-          <li>
-            <strong>Reddit Ads</strong> (Coming Soon) - Create Reddit Ads campaigns
-          </li>
+          {MCP_PACKAGES.map((mcp) => (
+            <li key={mcp.slug}>
+              {mcp.isAvailable ? (
+                <a href={`/${mcp.slug}`}>
+                  <strong>{mcp.name}</strong>
+                </a>
+              ) : (
+                <strong>{mcp.name}</strong>
+              )}
+              {!mcp.isAvailable && " (Coming Soon)"} - {mcp.description}
+            </li>
+          ))}
         </ul>
 
         <h2>Key Concepts</h2>

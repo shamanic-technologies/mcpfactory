@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { LinkButton } from "./link-button";
 import { Sidebar } from "./sidebar";
+import { URLS } from "@mcpfactory/content";
 
 export function DocsLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -43,13 +44,13 @@ export function DocsLayout({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-2 md:gap-4">
             <a
-              href="https://mcpfactory.org"
+              href={URLS.landing}
               className="text-sm text-gray-600 hover:text-primary-600 transition hidden sm:block"
             >
               Home
             </a>
             <a
-              href="https://github.com/shamanic-technologies/mcpfactory"
+              href={URLS.github}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-gray-600 hover:text-primary-600 transition hidden sm:block"
@@ -57,7 +58,7 @@ export function DocsLayout({ children }: { children: React.ReactNode }) {
               GitHub
             </a>
             <LinkButton
-              href="https://dashboard.mcpfactory.org/sign-up"
+              href={URLS.signUp}
               external
               className="text-sm bg-primary-500 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full font-medium hover:bg-primary-600 shadow-sm"
             >

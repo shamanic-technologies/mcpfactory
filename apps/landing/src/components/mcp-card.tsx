@@ -1,6 +1,5 @@
 import { LinkButton } from "./link-button";
-
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://dashboard.mcpfactory.org";
+import { URLS } from "@mcpfactory/content";
 
 interface McpCardProps {
   name: string;
@@ -39,7 +38,7 @@ export function McpCard({ name, package: pkg, description, freeQuota, isAvailabl
         </span>
         {isAvailable ? (
           <LinkButton
-            href={`${DASHBOARD_URL}/sign-up`}
+            href={URLS.signUp}
             className="text-sm bg-primary-500 text-white px-4 py-1.5 rounded-full hover:bg-primary-600 font-medium shadow-sm hover:shadow-md"
           >
             Get Started

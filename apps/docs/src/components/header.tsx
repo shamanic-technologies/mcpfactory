@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { LinkButton } from "./link-button";
+import { URLS } from "@mcpfactory/content";
 
 export function Header() {
   return (
@@ -18,13 +19,13 @@ export function Header() {
 
         <div className="flex items-center gap-4">
           <a
-            href="https://mcpfactory.org"
+            href={URLS.landing}
             className="text-sm text-gray-600 hover:text-primary-600 transition"
           >
             Home
           </a>
           <a
-            href="https://github.com/shamanic-technologies/mcpfactory"
+            href={URLS.github}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-gray-600 hover:text-primary-600 transition"
@@ -32,7 +33,7 @@ export function Header() {
             GitHub
           </a>
           <LinkButton
-            href="https://dashboard.mcpfactory.org/sign-up"
+            href={URLS.signUp}
             external
             className="text-sm bg-primary-500 text-white px-4 py-2 rounded-full font-medium hover:bg-primary-600 shadow-sm"
           >

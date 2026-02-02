@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { URLS } from "@mcpfactory/content";
 
-const SITE_URL = "https://mcpfactory.org";
+const SITE_URL = URLS.landing;
 const SITE_NAME = "MCP Factory";
 const SITE_DESCRIPTION = "From URL to Revenue. Done-For-You automation via Model Context Protocol. You give us your URL + budget, we handle lead finding, outreach, optimization, and reporting.";
 
@@ -119,8 +120,8 @@ const jsonLd = {
     url: SITE_URL,
     logo: `${SITE_URL}/logo-head.jpg`,
     sameAs: [
-      "https://github.com/shamanic-technologies/mcpfactory",
-      "https://twitter.com/mcpfactory",
+      URLS.github,
+      URLS.twitter,
     ],
   },
 };
@@ -133,7 +134,7 @@ const organizationJsonLd = {
   logo: `${SITE_URL}/logo-head.jpg`,
   description: "The DFY, BYOK MCP Platform",
   sameAs: [
-    "https://github.com/shamanic-technologies/mcpfactory",
+    URLS.github,
   ],
   contactPoint: {
     "@type": "ContactPoint",
@@ -183,7 +184,7 @@ const howToJsonLd = {
       "@type": "HowToStep",
       position: 4,
       name: "Connect AI Client",
-      text: "Add MCP Factory to ChatGPT, Claude, or Cursor using the MCP URL: https://mcp.mcpfactory.org/mcp",
+      text: `Add MCP Factory to ChatGPT, Claude, or Cursor using the MCP URL: ${URLS.mcp}`,
     },
     {
       "@type": "HowToStep",

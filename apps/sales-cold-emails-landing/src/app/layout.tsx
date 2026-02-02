@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { URLS, SALES_PRICING_TIERS } from "@mcpfactory/content";
 import "./globals.css";
 
-const SITE_URL = "https://salescoldemail.mcpfactory.org";
+const SITE_URL = URLS.salesLanding;
 const SITE_NAME = "Sales Cold Emails | MCP Factory";
 const SITE_DESCRIPTION = "Done-for-you cold email with your own API keys. You give us your URL + target audience. We handle lead finding, email generation, sending, and optimization. 100% open-source.";
 
@@ -53,7 +54,7 @@ export const metadata: Metadata = {
     description: "Done-for-you cold email with your own API keys. You give us your URL, we handle everything. 100% open-source.",
     images: [
       {
-        url: "https://mcpfactory.org/og-image.jpg",
+        url: `${URLS.landing}/og-image.jpg`,
         width: 1200,
         height: 630,
         alt: "Sales Cold Emails",
@@ -64,7 +65,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Sales Cold Emails - Done For You, Bring Your Own Keys",
     description: "Done-for-you cold email with your own API keys. You give us your URL, we handle everything. 100% open-source.",
-    images: ["https://mcpfactory.org/og-image.jpg"],
+    images: [`${URLS.landing}/og-image.jpg`],
     creator: "@mcpfactory",
   },
   robots: {
@@ -79,9 +80,9 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "https://mcpfactory.org/favicon.jpg",
-    shortcut: "https://mcpfactory.org/favicon.jpg",
-    apple: "https://mcpfactory.org/favicon.jpg",
+    icon: `${URLS.landing}/favicon.jpg`,
+    shortcut: `${URLS.landing}/favicon.jpg`,
+    apple: `${URLS.landing}/favicon.jpg`,
   },
   alternates: {
     canonical: SITE_URL,
@@ -97,39 +98,14 @@ const softwareJsonLd = {
   operatingSystem: "Web",
   description: "Open-source cold email automation platform. Launch personalized cold email campaigns from ChatGPT, Claude, or Cursor.",
   url: SITE_URL,
-  offers: [
-    {
-      "@type": "Offer",
-      name: "Free",
-      price: "0",
-      priceCurrency: "USD",
-      description: "500 emails (one-time)",
-    },
-    {
-      "@type": "Offer",
-      name: "Hobby",
-      price: "16",
-      priceCurrency: "USD",
-      priceValidUntil: "2027-12-31",
-      description: "3,000 emails/month",
-    },
-    {
-      "@type": "Offer",
-      name: "Standard",
-      price: "83",
-      priceCurrency: "USD",
-      priceValidUntil: "2027-12-31",
-      description: "100,000 emails/month",
-    },
-    {
-      "@type": "Offer",
-      name: "Growth",
-      price: "333",
-      priceCurrency: "USD",
-      priceValidUntil: "2027-12-31",
-      description: "500,000 emails/month",
-    },
-  ],
+  offers: SALES_PRICING_TIERS.map((tier) => ({
+    "@type": "Offer",
+    name: tier.name,
+    price: String(tier.price),
+    priceCurrency: "USD",
+    ...(tier.price > 0 ? { priceValidUntil: "2027-12-31" } : {}),
+    description: `${tier.emails} emails${tier.period === "/month" ? "/month" : " (one-time)"}`,
+  })),
   featureList: [
     "100% open-source",
     "Lead search via Apollo",
@@ -143,7 +119,7 @@ const softwareJsonLd = {
   provider: {
     "@type": "Organization",
     name: "MCP Factory",
-    url: "https://mcpfactory.org",
+    url: URLS.landing,
   },
 };
 
@@ -172,7 +148,7 @@ const faqJsonLd = {
       name: "How much does cold email automation cost?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "MCP Factory offers 500 free emails to start. Plans: Hobby $16/mo (3,000 emails), Standard $83/mo (100,000 emails), Growth $333/mo (500,000 emails). Plus BYOK costs: Apollo ~$0.01/lead, Anthropic ~$0.01/email.",
+        text: `MCP Factory offers ${SALES_PRICING_TIERS[0].emails} free emails to start. Plans: ${SALES_PRICING_TIERS.filter((t) => t.price > 0).map((t) => `${t.name} $${t.price}/mo (${t.emails} emails)`).join(", ")}. Plus BYOK costs: Apollo ~$0.01/lead, Anthropic ~$0.01/email.`,
       },
     },
     {
@@ -210,7 +186,7 @@ const howToJsonLd = {
       "@type": "HowToStep",
       position: 1,
       name: "Create Account",
-      text: "Sign up at dashboard.mcpfactory.org - it's free",
+      text: `Sign up at ${URLS.dashboard} - it's free`,
     },
     {
       "@type": "HowToStep",

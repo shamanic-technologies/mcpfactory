@@ -4,60 +4,7 @@ import { McpCard } from "@/components/mcp-card";
 import { LinkButton } from "@/components/link-button";
 import { StatusIndicator } from "@/components/status-indicator";
 import { Navbar } from "@/components/navbar";
-
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://dashboard.mcpfactory.org";
-
-const MCPS = [
-  {
-    name: "Sales Outreach",
-    package: "@mcpfactory/sales-outreach",
-    description: "Cold email campaigns from your URL. Find leads, generate emails, send & optimize.",
-    freeQuota: "1,000 emails",
-    isAvailable: true,
-  },
-  {
-    name: "Influencer Pitch",
-    package: "@mcpfactory/influencer-pitch",
-    description: "Find and pitch relevant influencers automatically.",
-    freeQuota: "500 pitches",
-    isAvailable: false,
-  },
-  {
-    name: "Thought Leader",
-    package: "@mcpfactory/thought-leader",
-    description: "Get featured in publications as an industry expert.",
-    freeQuota: "500 pitches",
-    isAvailable: false,
-  },
-  {
-    name: "Podcaster Pitch",
-    package: "@mcpfactory/podcaster-pitch",
-    description: "Get booked as a guest on relevant podcasts.",
-    freeQuota: "500 pitches",
-    isAvailable: false,
-  },
-  {
-    name: "Journalist Pitch",
-    package: "@mcpfactory/journalist-pitch",
-    description: "Pitch journalists about your announcements.",
-    freeQuota: "500 pitches",
-    isAvailable: false,
-  },
-  {
-    name: "Google Ads",
-    package: "@mcpfactory/google-ads",
-    description: "Create and optimize Google Ads campaigns automatically.",
-    freeQuota: "100 campaigns",
-    isAvailable: false,
-  },
-  {
-    name: "Reddit Ads",
-    package: "@mcpfactory/reddit-ads",
-    description: "Create and optimize Reddit Ads campaigns automatically.",
-    freeQuota: "100 campaigns",
-    isAvailable: false,
-  },
-];
+import { URLS, MCP_PACKAGES, LANDING_PRICING, SUPPORTED_CLIENTS } from "@mcpfactory/content";
 
 export default function Home() {
   return (
@@ -90,16 +37,16 @@ export default function Home() {
                 You give us your URL + budget. We handle lead finding, content generation,
                 outreach, optimization, and reporting. All via MCP.
               </p>
-              
+
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start mb-8">
                 <LinkButton
-                  href={`${DASHBOARD_URL}/sign-up`}
+                  href={URLS.signUp}
                   className="px-8 py-4 bg-primary-500 text-white rounded-full hover:bg-primary-600 font-medium text-lg shadow-lg hover:shadow-xl"
                 >
                   Get Started Free
                 </LinkButton>
                 <a
-                  href="https://github.com/shamanic-technologies/mcpfactory"
+                  href={URLS.github}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center px-6 py-4 bg-white border border-gray-200 text-gray-700 rounded-full hover:border-primary-300 hover:bg-primary-50 transition font-medium shadow-sm"
@@ -114,12 +61,12 @@ export default function Home() {
               {/* Pricing badges */}
               <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                 <div className="bg-white/80 backdrop-blur border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
-                  <span className="text-gray-500 text-sm">Free tier</span>
-                  <span className="block font-bold text-gray-900">$0 + your API costs</span>
+                  <span className="text-gray-500 text-sm">{LANDING_PRICING.free.label}</span>
+                  <span className="block font-bold text-gray-900">{LANDING_PRICING.free.display}</span>
                 </div>
                 <div className="bg-white/80 backdrop-blur border border-primary-200 rounded-xl px-4 py-2 shadow-sm">
-                  <span className="text-primary-500 text-sm">Pro</span>
-                  <span className="block font-bold text-gray-900">$20/mo</span>
+                  <span className="text-primary-500 text-sm">{LANDING_PRICING.pro.label}</span>
+                  <span className="block font-bold text-gray-900">{LANDING_PRICING.pro.display}</span>
                 </div>
               </div>
             </div>
@@ -145,7 +92,7 @@ export default function Home() {
           <h2 className="font-display text-3xl font-bold text-center mb-12 text-gray-800">
             What makes us different?
           </h2>
-          
+
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-2xl p-6 border border-primary-100">
               <div className="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 border border-primary-200">
@@ -160,7 +107,7 @@ export default function Home() {
                 <p>We: Find leads → Generate emails → Send → Optimize → Report</p>
               </div>
             </div>
-            
+
             <div className="bg-gradient-to-br from-accent-50 to-secondary-50 rounded-2xl p-6 border border-accent-100">
               <div className="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center mb-4 border border-accent-200">
                 <span className="text-3xl">🔑</span>
@@ -183,32 +130,19 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-sm text-gray-500 uppercase tracking-wider mb-6">Works with your favorite AI</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <a 
-              href="https://docs.mcpfactory.org/integrations/chatgpt"
-              className="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary-300 hover:shadow-lg transition"
-            >
-              <div className="text-4xl mb-2">🤖</div>
-              <h3 className="font-semibold text-gray-800 group-hover:text-primary-600">ChatGPT</h3>
-              <p className="text-xs text-gray-500 mt-1">Plus, Pro, Team</p>
-            </a>
-            <a 
-              href="https://docs.mcpfactory.org/integrations/claude"
-              className="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary-300 hover:shadow-lg transition"
-            >
-              <div className="text-4xl mb-2">🧠</div>
-              <h3 className="font-semibold text-gray-800 group-hover:text-primary-600">Claude</h3>
-              <p className="text-xs text-gray-500 mt-1">Web, Desktop, Code</p>
-            </a>
-            <a 
-              href="https://docs.mcpfactory.org/integrations/cursor"
-              className="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary-300 hover:shadow-lg transition"
-            >
-              <div className="text-4xl mb-2">🖥️</div>
-              <h3 className="font-semibold text-gray-800 group-hover:text-primary-600">Cursor</h3>
-              <p className="text-xs text-gray-500 mt-1">IDE Integration</p>
-            </a>
-            <a 
-              href="https://docs.mcpfactory.org/integrations"
+            {SUPPORTED_CLIENTS.map((client) => (
+              <a
+                key={client.name}
+                href={`${URLS.docs}${client.docsPath}`}
+                className="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary-300 hover:shadow-lg transition"
+              >
+                <div className="text-4xl mb-2">{client.emoji}</div>
+                <h3 className="font-semibold text-gray-800 group-hover:text-primary-600">{client.name}</h3>
+                <p className="text-xs text-gray-500 mt-1">{client.detail}</p>
+              </a>
+            ))}
+            <a
+              href={`${URLS.docs}/integrations`}
               className="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary-300 hover:shadow-lg transition"
             >
               <div className="text-4xl mb-2">✨</div>
@@ -226,35 +160,26 @@ export default function Home() {
           <p className="text-gray-600 text-center mb-8 max-w-2xl mx-auto">
             Install any MCP and start automating. Works with all major AI clients.
           </p>
-          
+
           {/* Supported AI clients */}
           <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <a 
-              href="https://docs.mcpfactory.org/integrations/chatgpt" 
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50 transition shadow-sm"
-            >
-              <span>🤖</span> ChatGPT
-            </a>
-            <a 
-              href="https://docs.mcpfactory.org/integrations/claude" 
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50 transition shadow-sm"
-            >
-              <span>🧠</span> Claude
-            </a>
-            <a 
-              href="https://docs.mcpfactory.org/integrations/cursor" 
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50 transition shadow-sm"
-            >
-              <span>🖥️</span> Cursor
-            </a>
+            {SUPPORTED_CLIENTS.map((client) => (
+              <a
+                key={client.name}
+                href={`${URLS.docs}${client.docsPath}`}
+                className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50 transition shadow-sm"
+              >
+                <span>{client.emoji}</span> {client.name}
+              </a>
+            ))}
             <span className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-full px-4 py-2 text-sm text-gray-500">
               <span>✨</span> Any MCP Client
             </span>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MCPS.map((mcp) => (
-              <McpCard key={mcp.package} {...mcp} />
+            {MCP_PACKAGES.map((mcp) => (
+              <McpCard key={mcp.npmPackage} name={mcp.name} package={mcp.npmPackage} description={mcp.description} freeQuota={mcp.freeQuota} isAvailable={mcp.isAvailable} />
             ))}
           </div>
         </div>
@@ -264,7 +189,7 @@ export default function Home() {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-display text-3xl font-bold text-center mb-12 text-gray-800">How it works</h2>
-          
+
           <div className="space-y-8">
             <div className="flex gap-4">
               <div className="w-10 h-10 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold shrink-0 shadow-md">
@@ -274,14 +199,14 @@ export default function Home() {
                 <h3 className="font-display font-bold text-lg text-gray-800">Create an account</h3>
                 <p className="text-gray-600">
                   Sign up at{" "}
-                  <a href={`${DASHBOARD_URL}/sign-up`} className="text-primary-600 hover:underline font-medium">
+                  <a href={URLS.signUp} className="text-primary-600 hover:underline font-medium">
                     dashboard.mcpfactory.org
                   </a>{" "}
                   and get your API key
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-4">
               <div className="w-10 h-10 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold shrink-0 shadow-md">
                 2
@@ -290,11 +215,11 @@ export default function Home() {
                 <h3 className="font-display font-bold text-lg text-gray-800">Connect your AI</h3>
                 <p className="text-gray-600 mb-2">Add MCP Factory to ChatGPT, Claude, or Cursor:</p>
                 <code className="text-sm bg-primary-50 text-primary-700 px-3 py-1.5 rounded-lg border border-primary-100 block overflow-x-auto">
-                  https://mcp.mcpfactory.org/mcp
+                  {URLS.mcp}
                 </code>
               </div>
             </div>
-            
+
             <div className="flex gap-4">
               <div className="w-10 h-10 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold shrink-0 shadow-md">
                 3
@@ -304,7 +229,7 @@ export default function Home() {
                 <p className="text-gray-600">Add your Apollo, Anthropic keys in the dashboard for advanced features</p>
               </div>
             </div>
-            
+
             <div className="flex gap-4">
               <div className="w-10 h-10 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold shrink-0 shadow-md">
                 4
@@ -316,7 +241,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-4">
               <div className="w-10 h-10 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold shrink-0 shadow-md">
                 5
@@ -352,14 +277,14 @@ export default function Home() {
           <p className="text-sm mb-4">The DFY, BYOK MCP Platform</p>
           <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm">
             <a
-              href="https://github.com/shamanic-technologies/mcpfactory"
+              href={URLS.github}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-primary-400 transition"
             >
               GitHub
             </a>
-            <a href="https://docs.mcpfactory.org" className="hover:text-primary-400 transition">
+            <a href={URLS.docs} className="hover:text-primary-400 transition">
               Docs
             </a>
             <a href="/brand" className="hover:text-primary-400 transition">

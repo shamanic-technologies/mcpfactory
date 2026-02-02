@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { CopyForLLM } from "@/components/copy-for-llm";
+import { URLS, SUPPORTED_CLIENTS } from "@mcpfactory/content";
 
 export const metadata: Metadata = {
   title: "MCP Usage Guide",
@@ -197,8 +198,8 @@ Run for 5 days as a trial."`}</code>
         </pre>
         <p>
           Get your API key at{" "}
-          <a href="https://dashboard.mcpfactory.org/api-keys">
-            dashboard.mcpfactory.org/api-keys
+          <a href={URLS.apiKeys}>
+            {URLS.apiKeys.replace("https://", "")}
           </a>
         </p>
 
