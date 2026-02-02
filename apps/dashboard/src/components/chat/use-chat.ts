@@ -10,12 +10,20 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   buttons?: ChatButton[];
+  inputRequest?: InputRequest;
   isStreaming?: boolean;
 }
 
 export interface ChatButton {
   label: string;
   value: string;
+}
+
+export interface InputRequest {
+  input_type: "url" | "text" | "email";
+  label: string;
+  placeholder?: string;
+  field: string;
 }
 
 interface UseChatOptions {
@@ -122,6 +130,24 @@ export function useChat({ apiKey }: UseChatOptions) {
                             /(\n\s*-\s*\[.*?\]\s*)+\s*$/,
                             ""
                           ),
+                        }
+                      : m
+                  )
+                );
+              }
+
+              if (event.type === "input_request") {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantId
+                      ? {
+                          ...m,
+                          inputRequest: {
+                            input_type: event.input_type,
+                            label: event.label,
+                            placeholder: event.placeholder,
+                            field: event.field,
+                          },
                         }
                       : m
                   )
