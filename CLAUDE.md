@@ -102,6 +102,29 @@ Dashboard uses `"use client"` components with React hooks for state. Data fetchi
 - **CI:** GitHub Actions (build → parallel test jobs, lint with continue-on-error)
 - **Deploy:** Railway (private networking between services)
 
+## Mandatory Regression Tests
+
+**Every bug fix or issue resolution MUST include regression tests.** No exceptions.
+
+### Rules
+1. **Before fixing a bug**, write a failing test that reproduces the issue
+2. **After fixing**, confirm the test passes
+3. **Test file location**: place tests in the affected service's `tests/unit/` or `tests/integration/` directory
+4. **Naming convention**: `<description>.regression.test.ts` for regression-specific tests, or add test cases to existing test files if relevant
+5. **Run tests** before committing: `pnpm --filter @mcpfactory/<package> test`
+6. **CI coverage**: all test files are automatically picked up by the per-service CI workflows (`test-*.yml`). No extra CI config needed.
+
+### What to test
+- The exact scenario that caused the bug (input → expected output)
+- Edge cases related to the bug
+- If the fix touches a shared utility, test it at the shared level too
+
+### Checklist (for every issue/bug fix PR)
+- [ ] Regression test written that would have caught the original bug
+- [ ] Test fails without the fix, passes with it
+- [ ] Tests pass locally (`pnpm --filter @mcpfactory/<package> test`)
+- [ ] No existing tests broken
+
 ## Content Sync Rules
 
 All marketing/docs content lives in `shared/content/src/`. The 4 public surfaces import from `@mcpfactory/content` instead of hardcoding values.
