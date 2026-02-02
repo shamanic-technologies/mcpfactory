@@ -45,15 +45,19 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   res.status(500).json({ error: "Internal server error" });
 });
 
-// Run migrations then start server
-migrate(db, { migrationsFolder: "./drizzle" })
-  .then(() => {
-    console.log("Migrations complete");
-    app.listen(Number(PORT), "::", () => {
-      console.log(`Keys service running on port ${PORT}`);
+// Only start server if not in test environment
+if (process.env.NODE_ENV !== "test") {
+  migrate(db, { migrationsFolder: "./drizzle" })
+    .then(() => {
+      console.log("Migrations complete");
+      app.listen(Number(PORT), "::", () => {
+        console.log(`Keys service running on port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error("Migration failed:", err);
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    console.error("Migration failed:", err);
-    process.exit(1);
-  });
+}
+
+export default app;
