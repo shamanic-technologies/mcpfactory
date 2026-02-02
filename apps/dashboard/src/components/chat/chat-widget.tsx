@@ -9,25 +9,15 @@ import { ChatInput } from "./chat-input";
 
 export function ChatWidget() {
   const { getToken } = useAuth();
-  const STORAGE_KEY = "foxy-api-key";
-
   const [isOpen, setIsOpen] = useState(true);
-  const [apiKey, setApiKey] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem(STORAGE_KEY);
-    }
-    return null;
-  });
-  const [keyLoading, setKeyLoading] = useState(false);
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [keyLoading, setKeyLoading] = useState(true);
 
   const { messages, isLoading, sendMessage } = useChat({ apiKey });
 
-  // Fetch or create a Default API key if we don't have one cached
+  // Fetch or create a Default API key on mount
   useEffect(() => {
-    if (apiKey) return;
-
     let cancelled = false;
-    setKeyLoading(true);
 
     (async () => {
       try {
@@ -35,10 +25,7 @@ export function ChatWidget() {
         if (!token || cancelled) return;
 
         const result = await getOrCreateSessionKey(token);
-        if (cancelled) return;
-
-        if (result.key) {
-          localStorage.setItem(STORAGE_KEY, result.key);
+        if (!cancelled && result.key) {
           setApiKey(result.key);
         }
       } catch (err) {
@@ -51,7 +38,7 @@ export function ChatWidget() {
     return () => {
       cancelled = true;
     };
-  }, [apiKey, getToken]);
+  }, [getToken]);
 
   const handleButtonClick = useCallback(
     (value: string) => {
