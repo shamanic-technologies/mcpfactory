@@ -1,86 +1,114 @@
-import Link from "next/link";
 import { URLS } from "@mcpfactory/content";
-import { fetchLeaderboard } from "@/lib/fetch-leaderboard";
-import { HeroStatsSection } from "@/components/hero-stats";
+import { fetchLeaderboard, formatPercent, formatModelName } from "@/lib/fetch-leaderboard";
+import { LeaderboardTabs } from "@/components/leaderboard-tabs";
 
 export const revalidate = 3600;
 
 export default async function HomePage() {
   const data = await fetchLeaderboard();
 
+  const brands = data?.brands || [];
+  const models = data?.models || [];
+  const hero = data?.hero;
+
+  // Compute aggregate summary numbers across all brands
+  const totalEmails = brands.reduce((s, b) => s + b.emailsSent, 0);
+  const totalOpened = brands.reduce((s, b) => s + b.emailsOpened, 0);
+  const totalClicked = brands.reduce((s, b) => s + b.emailsClicked, 0);
+  const totalReplied = brands.reduce((s, b) => s + b.emailsReplied, 0);
+  const avgOpenRate = totalEmails > 0 ? totalOpened / totalEmails : 0;
+  const avgClickRate = totalEmails > 0 ? totalClicked / totalEmails : 0;
+  const avgReplyRate = totalEmails > 0 ? totalReplied / totalEmails : 0;
+
+  const hasData = totalEmails > 0;
+
   return (
     <main className="min-h-screen">
-      {data?.hero ? (
-        <HeroStatsSection hero={data.hero} />
-      ) : (
-        <section className="py-16 px-4 gradient-bg">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 text-gray-800">
-              Real Performance, <span className="gradient-text">Real Data</span>
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+      {/* Hero */}
+      <section className="py-12 md:py-16 px-4 gradient-bg">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="inline-block bg-accent-100 text-accent-700 px-4 py-1.5 rounded-full text-sm font-medium mb-6 border border-accent-200">
+            100% Transparent
+          </div>
+          <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 text-gray-800">
+            Real Performance, <span className="gradient-text">Real Data</span>
+          </h1>
+          <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto">
+            Every metric from every campaign. No cherry-picking, no hidden numbers.
+          </p>
+
+          {hasData ? (
+            <>
+              {/* Key numbers row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
+                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                  <p className="text-3xl font-bold text-gray-800">{totalEmails.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500 mt-1">Emails Sent</p>
+                </div>
+                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                  <p className="text-3xl font-bold text-primary-500">{formatPercent(avgOpenRate)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Avg Open Rate</p>
+                </div>
+                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                  <p className="text-3xl font-bold text-accent-500">{formatPercent(avgClickRate)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Avg Visit Rate</p>
+                </div>
+                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                  <p className="text-3xl font-bold text-secondary-500">{formatPercent(avgReplyRate)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Avg Reply Rate</p>
+                </div>
+              </div>
+
+              {/* Best conversion + best value cards */}
+              {hero && (
+                <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-4">
+                  <div className="bg-white rounded-2xl p-6 border border-primary-200 shadow-sm">
+                    <p className="text-sm text-gray-500 uppercase tracking-wider mb-1">Best Conversion Rate</p>
+                    <p className="text-4xl font-bold text-primary-500 mb-1">
+                      {formatPercent(hero.bestConversionModel.conversionRate)}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {formatModelName(hero.bestConversionModel.model)} — visits + replies per email
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-2xl p-6 border border-accent-200 shadow-sm">
+                    <p className="text-sm text-gray-500 uppercase tracking-wider mb-1">Best Value</p>
+                    <p className="text-4xl font-bold text-accent-500 mb-1">
+                      {hero.bestValueModel.conversionsPerDollar.toFixed(1)}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {formatModelName(hero.bestValueModel.model)} — conversions per $1 spent
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-gray-400 mt-2">
+                Updated {data?.updatedAt ? new Date(data.updatedAt).toLocaleString() : "hourly"}.{" "}
+                <a href={URLS.github} className="underline hover:text-gray-600">Methodology is open source.</a>
+              </p>
+            </>
+          ) : (
+            <p className="text-gray-500">
               Performance data will appear here as campaigns run. Check back soon.
             </p>
+          )}
+        </div>
+      </section>
+
+      {/* Leaderboard tables with tabs */}
+      {hasData && (
+        <section className="py-12 px-4 bg-white">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="font-display text-2xl font-bold mb-1 text-gray-800">
+              Leaderboard
+            </h2>
+            <p className="text-sm text-gray-500 mb-6">Click column headers to sort.</p>
+
+            <LeaderboardTabs brands={brands} models={models} />
           </div>
         </section>
       )}
-
-      {/* Leaderboard links */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="font-display text-2xl font-bold text-center mb-8 text-gray-800">
-            Explore the Data
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <Link
-              href="/brands"
-              className="group bg-gradient-to-br from-primary-50 to-white rounded-2xl p-6 border border-primary-100 hover:border-primary-300 transition hover:shadow-lg"
-            >
-              <h3 className="font-display text-lg font-bold mb-2 text-gray-800 group-hover:text-primary-600">
-                By Brand
-              </h3>
-              <p className="text-sm text-gray-600">
-                See how each client&apos;s campaigns perform. Open rates, click rates, reply rates, and cost per action.
-              </p>
-              {data?.brands && (
-                <p className="text-xs text-gray-400 mt-3">
-                  {data.brands.length} brand{data.brands.length !== 1 ? "s" : ""}
-                </p>
-              )}
-            </Link>
-
-            <Link
-              href="/models"
-              className="group bg-gradient-to-br from-accent-50 to-white rounded-2xl p-6 border border-accent-100 hover:border-accent-300 transition hover:shadow-lg"
-            >
-              <h3 className="font-display text-lg font-bold mb-2 text-gray-800 group-hover:text-accent-600">
-                By Model
-              </h3>
-              <p className="text-sm text-gray-600">
-                Compare AI models head-to-head. Which model writes the most effective cold emails?
-              </p>
-              {data?.models && (
-                <p className="text-xs text-gray-400 mt-3">
-                  {data.models.length} model{data.models.length !== 1 ? "s" : ""}
-                </p>
-              )}
-            </Link>
-
-            <Link
-              href="/prompts"
-              className="group bg-gradient-to-br from-secondary-50 to-white rounded-2xl p-6 border border-secondary-100 hover:border-secondary-300 transition hover:shadow-lg"
-            >
-              <h3 className="font-display text-lg font-bold mb-2 text-gray-800 group-hover:text-secondary-600">
-                By Prompt
-              </h3>
-              <p className="text-sm text-gray-600">
-                Track how different prompt versions perform over time.
-              </p>
-              <p className="text-xs text-secondary-500 mt-3 font-medium">Coming soon</p>
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Why transparency */}
       <section className="py-16 px-4 bg-gray-50">
