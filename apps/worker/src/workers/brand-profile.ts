@@ -49,7 +49,7 @@ export function startBrandProfileWorker(): Worker {
       try {
         // 1. Get sales profile from brand-service
         // brand-service will create the brand if it doesn't exist (getOrCreateBrand)
-        let clientData: LeadSearchJobData["clientData"] = { companyName: brandDomain };
+        let clientData: LeadSearchJobData["clientData"] = { companyName: brandDomain, brandUrl };
         
         try {
           const profileResult = await brandService.getSalesProfile(
@@ -73,8 +73,9 @@ export function startBrandProfileWorker(): Worker {
               callToAction: p.callToAction || undefined,
               additionalContext: p.additionalContext || undefined,
             };
+            clientData.brandUrl = brandUrl;
             console.log(`[brand-profile] Got profile: ${clientData.companyName} (cached: ${profileResult.cached})`);
-            
+
             // Update campaign with brandId from brand-service
             if (profileResult.brandId) {
               try {

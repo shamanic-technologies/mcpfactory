@@ -31,6 +31,7 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
       leadCompanyRevenueUsd,
       // Client (our company) info
       clientCompanyName,
+      clientBrandUrl,
       clientCompanyOverview,
       clientValueProposition,
       clientTargetAudience,
@@ -74,6 +75,7 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
       leadCompanyRevenueUsd,
       // Client (our company) info
       clientCompanyName,
+      clientBrandUrl,
       clientCompanyOverview,
       clientValueProposition,
       clientTargetAudience,

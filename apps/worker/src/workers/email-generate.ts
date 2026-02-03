@@ -45,6 +45,7 @@ export function startEmailGenerateWorker(): Worker {
           leadCompanyRevenueUsd: leadData.companyRevenueUsd,
           // Client (our company) info
           clientCompanyName: clientData.companyName,
+          clientBrandUrl: clientData.brandUrl,
           clientCompanyOverview: clientData.companyOverview,
           clientValueProposition: clientData.valueProposition,
           clientTargetAudience: clientData.targetAudience,
