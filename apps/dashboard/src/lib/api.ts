@@ -136,10 +136,10 @@ export interface Campaign {
   status: string;
   personTitles: string[] | null;
   organizationLocations: string[] | null;
-  recurrence: string | null;
   maxBudgetDailyUsd: string | null;
   maxBudgetWeeklyUsd: string | null;
   maxBudgetMonthlyUsd: string | null;
+  maxBudgetTotalUsd: string | null;
   startDate: string | null;
   endDate: string | null;
   createdAt: string;

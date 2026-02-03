@@ -59,15 +59,15 @@ export const campaigns = pgTable(
     // Store full Apollo request for transparency
     requestRaw: jsonb("request_raw"),
     
-    // Budget limits per campaign
+    // Budget limits per campaign (at least one required)
     maxBudgetDailyUsd: decimal("max_budget_daily_usd", { precision: 10, scale: 2 }),
     maxBudgetWeeklyUsd: decimal("max_budget_weekly_usd", { precision: 10, scale: 2 }),
     maxBudgetMonthlyUsd: decimal("max_budget_monthly_usd", { precision: 10, scale: 2 }),
-    
+    maxBudgetTotalUsd: decimal("max_budget_total_usd", { precision: 10, scale: 2 }),
+
     // Scheduling
     startDate: date("start_date"),
     endDate: date("end_date"),
-    recurrence: text("recurrence").notNull(),  // 'oneoff', 'daily', 'weekly', 'monthly'
     
     // Status: 'ongoing' or 'stopped'
     status: text("status").notNull().default("ongoing"),

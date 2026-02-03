@@ -1,18 +1,34 @@
 import { getQueues, QUEUE_NAMES, BrandUpsertJobData } from "../queues/index.js";
 import { campaignService, runsService } from "../lib/service-client.js";
-import type { Run } from "@mcpfactory/runs-client";
+import type { Run, RunWithCosts } from "@mcpfactory/runs-client";
 
-interface Campaign {
+export interface Campaign {
   id: string;
   orgId: string;
   clerkOrgId: string;
   status: string;
-  recurrence: string;
   createdAt: string;
+  maxBudgetDailyUsd?: string | null;
+  maxBudgetWeeklyUsd?: string | null;
+  maxBudgetMonthlyUsd?: string | null;
+  maxBudgetTotalUsd?: string | null;
   personTitles?: string[];
   organizationLocations?: string[];
   qOrganizationKeywordTags?: string[];
   requestRaw?: Record<string, unknown>;
+}
+
+interface BudgetWindow {
+  label: "daily" | "weekly" | "monthly" | "total";
+  startedAfter: Date | null; // null = all time (for total budget)
+  limitUsd: number;
+}
+
+interface BudgetCheckResult {
+  exceeded: boolean;
+  which?: "daily" | "weekly" | "monthly" | "total";
+  spendUsd?: number;
+  limitUsd?: number;
 }
 
 // Runs older than this are considered stale and will be marked failed
@@ -20,17 +36,14 @@ const STALE_RUN_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 /**
  * Campaign Scheduler
- * Polls for ongoing campaigns that need to be executed and queues them
- *
- * Source of truth is runs-service.
- * We check for "running" status runs to avoid duplicate processing.
+ * Polls for ongoing campaigns and queues them if budget allows.
+ * Campaigns run continuously (back-to-back) — budget is the only throttle.
  */
 export function startCampaignScheduler(intervalMs: number = 30000): NodeJS.Timeout {
   console.log(`[scheduler] Starting campaign scheduler (interval: ${intervalMs}ms)`);
 
   async function pollCampaigns() {
     try {
-      // Get all ongoing campaigns
       const result = await campaignService.listCampaigns() as { campaigns: Campaign[] };
       const campaigns = result.campaigns || [];
 
@@ -38,21 +51,18 @@ export function startCampaignScheduler(intervalMs: number = 30000): NodeJS.Timeo
       console.log(`[scheduler] Found ${ongoingCampaigns.length} ongoing campaigns`);
 
       for (const campaign of ongoingCampaigns) {
-        // Check if we should run this campaign (based on runs-service)
         const { shouldRun, hasRunningRun } = await shouldRunCampaign(campaign);
 
         console.log(`[scheduler] Campaign ${campaign.id}: shouldRun=${shouldRun}, hasRunningRun=${hasRunningRun}`);
 
-        // Skip if there's already a run in progress
         if (hasRunningRun) {
           console.log(`[scheduler] Campaign ${campaign.id}: has running run, skipping`);
           continue;
         }
 
         if (shouldRun) {
-          console.log(`[scheduler] Queueing campaign ${campaign.id} (${campaign.recurrence}) for org ${campaign.clerkOrgId}`);
+          console.log(`[scheduler] Queueing campaign ${campaign.id} for org ${campaign.clerkOrgId}`);
 
-          // Add to brand-upsert queue (first step in campaign run chain)
           const queues = getQueues();
           await queues[QUEUE_NAMES.BRAND_UPSERT].add(
             `campaign-${campaign.id}-${Date.now()}`,
@@ -82,7 +92,7 @@ interface ShouldRunResult {
   hasRunningRun: boolean;
 }
 
-async function getRunsForCampaign(campaign: Campaign): Promise<Run[]> {
+export async function getRunsForCampaign(campaign: Campaign): Promise<Run[]> {
   const runsOrgId = await runsService.ensureOrganization(campaign.clerkOrgId);
   const result = await runsService.listRuns({
     organizationId: runsOrgId,
@@ -114,58 +124,129 @@ async function shouldRunCampaign(campaign: Campaign): Promise<ShouldRunResult> {
     // Re-fetch runs after cleanup
     runs = await getRunsForCampaign(campaign);
 
-    // Check if any run is currently in progress
     const hasRunningRun = runs.some(r => r.status === "running");
 
-    console.log(`[scheduler] Campaign ${campaign.id} has ${runs.length} runs (${runs.filter(r => r.status === "running").length} running), recurrence=${campaign.recurrence}`);
+    console.log(`[scheduler] Campaign ${campaign.id} has ${runs.length} runs (${runs.filter(r => r.status === "running").length} running)`);
 
-    // Check based on recurrence
+    // Budget is the only gate — if no running run, check budget
     let shouldRun = false;
-    switch (campaign.recurrence) {
-      case "oneoff": {
-        // Only run if no completed/failed runs exist yet
-        const completedOrFailed = runs.filter(r => r.status === "completed" || r.status === "failed");
-        shouldRun = completedOrFailed.length === 0;
-        console.log(`[scheduler] oneoff check: completedOrFailed=${completedOrFailed.length}, shouldRun=${shouldRun}`);
-        break;
-      }
+    if (!hasRunningRun) {
+      const budgetResult = await isBudgetExceeded(campaign, runs);
+      if (budgetResult.exceeded) {
+        console.log(`[scheduler] Campaign ${campaign.id}: ${budgetResult.which} budget exceeded ($${budgetResult.spendUsd?.toFixed(2)} >= $${budgetResult.limitUsd?.toFixed(2)})`);
 
-      case "daily":
-        shouldRun = !hasRunToday(runs);
-        break;
+        // Auto-stop campaign if total budget is exhausted
+        if (budgetResult.which === "total") {
+          console.log(`[scheduler] Campaign ${campaign.id}: total budget exhausted, stopping campaign`);
+          try {
+            await campaignService.updateCampaign(campaign.id, campaign.clerkOrgId, { status: "stopped" } as any);
+          } catch (err) {
+            console.error(`[scheduler] Failed to auto-stop campaign ${campaign.id}:`, err);
+          }
+        }
 
-      case "weekly":
-        shouldRun = !hasRunThisWeek(runs);
-        break;
-
-      case "monthly":
-        shouldRun = !hasRunThisMonth(runs);
-        break;
-
-      default:
         shouldRun = false;
+      } else {
+        shouldRun = true;
+      }
     }
 
     return { shouldRun, hasRunningRun };
   } catch (error) {
-    console.error(`[scheduler] Error checking runs for ${campaign.id}:`, error);
+    // Fail closed — if we can't determine budget, don't run
+    console.error(`[scheduler] Error checking runs for ${campaign.id}, failing closed:`, error);
     return { shouldRun: false, hasRunningRun: false };
   }
 }
 
-function hasRunToday(runs: Run[]): boolean {
-  const today = new Date().toISOString().split("T")[0];
-  return runs.some(r => r.createdAt.split("T")[0] === today);
+export function getBudgetWindows(campaign: Campaign): BudgetWindow[] {
+  const windows: BudgetWindow[] = [];
+  const now = new Date();
+
+  if (campaign.maxBudgetDailyUsd) {
+    windows.push({
+      label: "daily",
+      startedAfter: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+      limitUsd: parseFloat(campaign.maxBudgetDailyUsd),
+    });
+  }
+
+  if (campaign.maxBudgetWeeklyUsd) {
+    windows.push({
+      label: "weekly",
+      startedAfter: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      limitUsd: parseFloat(campaign.maxBudgetWeeklyUsd),
+    });
+  }
+
+  if (campaign.maxBudgetMonthlyUsd) {
+    windows.push({
+      label: "monthly",
+      startedAfter: new Date(now.getFullYear(), now.getMonth(), 1),
+      limitUsd: parseFloat(campaign.maxBudgetMonthlyUsd),
+    });
+  }
+
+  if (campaign.maxBudgetTotalUsd) {
+    windows.push({
+      label: "total",
+      startedAfter: null, // all time
+      limitUsd: parseFloat(campaign.maxBudgetTotalUsd),
+    });
+  }
+
+  return windows;
 }
 
-function hasRunThisWeek(runs: Run[]): boolean {
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  return runs.some(r => new Date(r.createdAt) > weekAgo);
-}
+export async function isBudgetExceeded(campaign: Campaign, allRuns: Run[]): Promise<BudgetCheckResult> {
+  const windows = getBudgetWindows(campaign);
 
-function hasRunThisMonth(runs: Run[]): boolean {
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  return runs.some(r => new Date(r.createdAt) >= monthStart);
+  if (windows.length === 0) {
+    // No budget fields set — fail closed (shouldn't happen since creation requires at least one)
+    console.warn(`[scheduler] Campaign ${campaign.id}: no budget fields set, blocking run`);
+    return { exceeded: true, which: "total", spendUsd: 0, limitUsd: 0 };
+  }
+
+  // Find the broadest window to minimize the number of runs we need costs for
+  // total (null startedAfter) is broadest, then monthly, weekly, daily
+  const broadestWindow = windows.reduce((a, b) => {
+    if (a.startedAfter === null) return a;
+    if (b.startedAfter === null) return b;
+    return a.startedAfter < b.startedAfter ? a : b;
+  });
+
+  // Filter runs to the broadest window
+  const runsInWindow = broadestWindow.startedAfter === null
+    ? allRuns
+    : allRuns.filter(r => new Date(r.createdAt) >= broadestWindow.startedAfter!);
+
+  if (runsInWindow.length === 0) {
+    return { exceeded: false };
+  }
+
+  // Single batch call for costs
+  const runIds = runsInWindow.map(r => r.id);
+  const runsWithCosts = await runsService.getRunsBatch(runIds);
+
+  // Check each window
+  for (const window of windows) {
+    let spendCents = 0;
+
+    for (const run of runsWithCosts.values()) {
+      const inWindow = window.startedAfter === null ||
+        new Date(run.createdAt) >= window.startedAfter;
+      if (inWindow) {
+        spendCents += parseFloat(run.totalCostInUsdCents) || 0;
+      }
+    }
+
+    const spendUsd = spendCents / 100;
+    console.log(`[scheduler] Campaign ${campaign.id} ${window.label} spend: $${spendUsd.toFixed(2)} / $${window.limitUsd.toFixed(2)}`);
+
+    if (spendUsd >= window.limitUsd) {
+      return { exceeded: true, which: window.label, spendUsd, limitUsd: window.limitUsd };
+    }
+  }
+
+  return { exceeded: false };
 }

@@ -204,7 +204,6 @@ describe("Scheduler Endpoints", () => {
       const campaign = await insertTestCampaign(org.id, {
         name: "Workflow Test",
         status: "ongoing",
-        recurrence: "oneoff",
       });
 
       // 1. Scheduler lists all campaigns

@@ -16,7 +16,9 @@ import {
   addCosts,
   listRuns,
   getRun,
+  getRunsBatch,
   type Run,
+  type RunWithCosts,
   type CreateRunParams,
   type CostItem,
   type ListRunsParams,
@@ -228,4 +230,5 @@ export const runsService = {
   addCosts,
   listRuns,
   getRun,
+  getRunsBatch,
 };
