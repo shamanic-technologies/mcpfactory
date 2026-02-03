@@ -20,7 +20,8 @@ export default async function HomePage() {
   const avgClickRate = totalEmails > 0 ? totalClicked / totalEmails : 0;
   const avgReplyRate = totalEmails > 0 ? totalReplied / totalEmails : 0;
 
-  const hasData = totalEmails > 0;
+  const hasEmails = totalEmails > 0;
+  const hasBrands = brands.length > 0;
 
   return (
     <main className="min-h-screen">
@@ -37,7 +38,7 @@ export default async function HomePage() {
             Every metric from every campaign. No cherry-picking, no hidden numbers.
           </p>
 
-          {hasData ? (
+          {hasEmails ? (
             <>
               {/* Key numbers row */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
@@ -88,6 +89,30 @@ export default async function HomePage() {
                 <a href={URLS.github} className="underline hover:text-gray-600">Methodology is open source.</a>
               </p>
             </>
+          ) : hasBrands ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
+                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                  <p className="text-3xl font-bold text-gray-400">0</p>
+                  <p className="text-xs text-gray-500 mt-1">Emails Sent</p>
+                </div>
+                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                  <p className="text-3xl font-bold text-gray-400">—</p>
+                  <p className="text-xs text-gray-500 mt-1">Avg Open Rate</p>
+                </div>
+                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                  <p className="text-3xl font-bold text-gray-400">—</p>
+                  <p className="text-xs text-gray-500 mt-1">Avg Visit Rate</p>
+                </div>
+                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                  <p className="text-3xl font-bold text-gray-400">—</p>
+                  <p className="text-xs text-gray-500 mt-1">Avg Reply Rate</p>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                {brands.length} {brands.length === 1 ? "brand" : "brands"} registered. Metrics will populate as campaigns send emails.
+              </p>
+            </>
           ) : (
             <p className="text-gray-500">
               Performance data will appear here as campaigns run. Check back soon.
@@ -97,7 +122,7 @@ export default async function HomePage() {
       </section>
 
       {/* Leaderboard tables with tabs */}
-      {hasData && (
+      {hasBrands && (
         <section className="py-12 px-4 bg-white">
           <div className="max-w-6xl mx-auto">
             <h2 className="font-display text-2xl font-bold mb-1 text-gray-800">
