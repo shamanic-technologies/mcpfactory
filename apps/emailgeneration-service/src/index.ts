@@ -7,6 +7,7 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { db } from "./db/index.js";
 import healthRoutes from "./routes/health.js";
 import generateRoutes from "./routes/generate.js";
+import statsRoutes from "./routes/stats.js";
 
 const app = express();
 const PORT = process.env.PORT || 3005;
@@ -18,6 +19,7 @@ app.use(express.json());
 // Routes
 app.use(healthRoutes);
 app.use(generateRoutes);
+app.use(statsRoutes);
 
 // 404 handler
 app.use((req, res) => {

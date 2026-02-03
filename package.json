@@ -20,6 +20,7 @@
     "dev:apollo-service": "pnpm --filter @mcpfactory/apollo-service dev",
     "dev:emailgeneration-service": "pnpm --filter @mcpfactory/emailgeneration-service dev",
     "dev:worker": "pnpm --filter @mcpfactory/worker dev",
+    "dev:performance-service": "pnpm --filter @mcpfactory/performance-service dev",
     "build": "turbo build",
     "build:landing": "pnpm --filter @mcpfactory/landing build",
     "build:dashboard": "pnpm --filter @mcpfactory/dashboard build",

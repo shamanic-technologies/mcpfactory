@@ -192,6 +192,38 @@ export function aggregateCompaniesFromLeads(leads: LeadData[]): CompanyData[] {
   }));
 }
 
+export interface ModelStats {
+  model: string;
+  count: number;
+  runIds: string[];
+}
+
+/**
+ * Get email generation stats grouped by model (no auth — internal network trust)
+ */
+export async function getStatsByModel(runIds: string[]): Promise<ModelStats[]> {
+  if (runIds.length === 0) return [];
+
+  try {
+    const response = await fetch(`${EMAILGENERATION_SERVICE_URL}/stats/by-model`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ runIds }),
+    });
+
+    if (!response.ok) {
+      console.warn(`Stats by model fetch failed: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+    return data.stats || [];
+  } catch (error) {
+    console.warn("Stats by model fetch error:", error);
+    return [];
+  }
+}
+
 export async function getAggregatedStats(
   runIds: string[],
   clerkOrgId: string

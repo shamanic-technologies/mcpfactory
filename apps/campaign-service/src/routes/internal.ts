@@ -8,7 +8,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { campaigns, orgs } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
-import { getAggregatedStats, getLeadsForRuns, aggregateCompaniesFromLeads } from "../lib/service-client.js";
+import { getAggregatedStats, getStatsByModel, getLeadsForRuns, aggregateCompaniesFromLeads, type AggregatedStats } from "../lib/service-client.js";
 import { extractDomain } from "../lib/domain.js";
 import { ensureOrganization, listRuns, getRun, getRunsBatch, createRun, updateRun, type Run } from "@mcpfactory/runs-client";
 
@@ -56,6 +56,233 @@ async function getRunsForCampaign(clerkOrgId: string, campaignId: string): Promi
   });
   return result.runs;
 }
+
+/**
+ * Helper: sum two AggregatedStats objects
+ */
+function sumStats(a: AggregatedStats, b: AggregatedStats): AggregatedStats {
+  return {
+    leadsFound: a.leadsFound + b.leadsFound,
+    emailsGenerated: a.emailsGenerated + b.emailsGenerated,
+    emailsSent: a.emailsSent + b.emailsSent,
+    emailsOpened: a.emailsOpened + b.emailsOpened,
+    emailsClicked: a.emailsClicked + b.emailsClicked,
+    emailsReplied: a.emailsReplied + b.emailsReplied,
+    emailsBounced: a.emailsBounced + b.emailsBounced,
+    repliesWillingToMeet: a.repliesWillingToMeet + b.repliesWillingToMeet,
+    repliesInterested: a.repliesInterested + b.repliesInterested,
+    repliesNotInterested: a.repliesNotInterested + b.repliesNotInterested,
+    repliesOutOfOffice: a.repliesOutOfOffice + b.repliesOutOfOffice,
+    repliesUnsubscribe: a.repliesUnsubscribe + b.repliesUnsubscribe,
+  };
+}
+
+const EMPTY_STATS: AggregatedStats = {
+  leadsFound: 0, emailsGenerated: 0, emailsSent: 0, emailsOpened: 0,
+  emailsClicked: 0, emailsReplied: 0, emailsBounced: 0,
+  repliesWillingToMeet: 0, repliesInterested: 0, repliesNotInterested: 0,
+  repliesOutOfOffice: 0, repliesUnsubscribe: 0,
+};
+
+/**
+ * GET /internal/performance/leaderboard - Public performance leaderboard
+ * No auth — internal network trust (same as /campaigns/all)
+ * Aggregates stats across ALL campaigns grouped by brand and model
+ */
+router.get("/performance/leaderboard", async (_req, res) => {
+  try {
+    // 1. Fetch all campaigns with clerkOrgId
+    const allCampaigns = await db
+      .select({
+        id: campaigns.id,
+        brandId: campaigns.brandId,
+        brandUrl: campaigns.brandUrl,
+        clerkOrgId: orgs.clerkOrgId,
+      })
+      .from(campaigns)
+      .innerJoin(orgs, eq(campaigns.orgId, orgs.id));
+
+    if (allCampaigns.length === 0) {
+      return res.json({ brands: [], models: [], hero: null, updatedAt: new Date().toISOString() });
+    }
+
+    // 2. Group campaigns by brand (brandId or brandDomain fallback)
+    const brandGroups = new Map<string, {
+      brandId: string | null;
+      brandUrl: string | null;
+      brandDomain: string | null;
+      campaignsByOrg: Map<string, string[]>; // clerkOrgId -> campaignIds
+    }>();
+
+    for (const c of allCampaigns) {
+      const domain = c.brandUrl ? extractDomain(c.brandUrl) : null;
+      const brandKey = c.brandId || domain;
+      if (!brandKey) continue;
+
+      let group = brandGroups.get(brandKey);
+      if (!group) {
+        group = {
+          brandId: c.brandId,
+          brandUrl: c.brandUrl,
+          brandDomain: domain,
+          campaignsByOrg: new Map(),
+        };
+        brandGroups.set(brandKey, group);
+      }
+
+      const orgCampaigns = group.campaignsByOrg.get(c.clerkOrgId) || [];
+      orgCampaigns.push(c.id);
+      group.campaignsByOrg.set(c.clerkOrgId, orgCampaigns);
+    }
+
+    // 3. For each brand, get runs + stats (batched by org)
+    const brandResults = [];
+    const allRunIdsByOrg = new Map<string, string[]>(); // clerkOrgId -> all runIds (for model leaderboard)
+
+    for (const [, group] of brandGroups) {
+      let brandStats = { ...EMPTY_STATS };
+      let brandCostCents = 0;
+
+      for (const [clerkOrgId, campaignIds] of group.campaignsByOrg) {
+        // Get runs for all campaigns in this org-brand group
+        const brandOrgRunIds: string[] = [];
+        for (const campaignId of campaignIds) {
+          try {
+            const runs = await getRunsForCampaign(clerkOrgId, campaignId);
+            brandOrgRunIds.push(...runs.map((r: Run) => r.id));
+          } catch (err) {
+            console.warn(`Failed to get runs for campaign ${campaignId}:`, err);
+          }
+        }
+
+        if (brandOrgRunIds.length === 0) continue;
+
+        // Track for model leaderboard
+        const existing = allRunIdsByOrg.get(clerkOrgId) || [];
+        existing.push(...brandOrgRunIds);
+        allRunIdsByOrg.set(clerkOrgId, existing);
+
+        // Get stats and costs in parallel
+        const [stats, runsMap] = await Promise.all([
+          getAggregatedStats(brandOrgRunIds, clerkOrgId),
+          getRunsBatch(brandOrgRunIds).catch(() => new Map() as Map<string, Run>),
+        ]);
+
+        brandStats = sumStats(brandStats, stats);
+
+        for (const run of runsMap.values()) {
+          brandCostCents += parseFloat(run.totalCostInUsdCents) || 0;
+        }
+      }
+
+      const sent = brandStats.emailsSent;
+      brandResults.push({
+        brandId: group.brandId,
+        brandUrl: group.brandUrl,
+        brandDomain: group.brandDomain,
+        emailsSent: sent,
+        emailsOpened: brandStats.emailsOpened,
+        emailsClicked: brandStats.emailsClicked,
+        emailsReplied: brandStats.emailsReplied,
+        totalCostUsdCents: Math.round(brandCostCents),
+        openRate: sent > 0 ? Math.round((brandStats.emailsOpened / sent) * 10000) / 10000 : 0,
+        clickRate: sent > 0 ? Math.round((brandStats.emailsClicked / sent) * 10000) / 10000 : 0,
+        replyRate: sent > 0 ? Math.round((brandStats.emailsReplied / sent) * 10000) / 10000 : 0,
+        costPerOpenCents: brandStats.emailsOpened > 0 ? Math.round(brandCostCents / brandStats.emailsOpened) : null,
+        costPerClickCents: brandStats.emailsClicked > 0 ? Math.round(brandCostCents / brandStats.emailsClicked) : null,
+        costPerReplyCents: brandStats.emailsReplied > 0 ? Math.round(brandCostCents / brandStats.emailsReplied) : null,
+      });
+    }
+
+    // 4. Model leaderboard — get email generation stats grouped by model
+    const allRunIds = Array.from(allRunIdsByOrg.values()).flat();
+    const modelStatsRaw = await getStatsByModel(allRunIds);
+
+    // For each model, get postmark stats using the model's specific runIds
+    const modelResults = [];
+    for (const ms of modelStatsRaw) {
+      // Get postmark stats for this model's runIds (batch by org)
+      let modelAgg = { ...EMPTY_STATS };
+      let modelCostCents = 0;
+
+      // Group model runIds by org
+      const modelRunsByOrg = new Map<string, string[]>();
+      for (const [clerkOrgId, orgRunIds] of allRunIdsByOrg) {
+        const intersection = ms.runIds.filter((rid) => orgRunIds.includes(rid));
+        if (intersection.length > 0) {
+          modelRunsByOrg.set(clerkOrgId, intersection);
+        }
+      }
+
+      for (const [clerkOrgId, runIds] of modelRunsByOrg) {
+        const [stats, runsMap] = await Promise.all([
+          getAggregatedStats(runIds, clerkOrgId),
+          getRunsBatch(runIds).catch(() => new Map() as Map<string, Run>),
+        ]);
+        modelAgg = sumStats(modelAgg, stats);
+        for (const run of runsMap.values()) {
+          modelCostCents += parseFloat(run.totalCostInUsdCents) || 0;
+        }
+      }
+
+      const sent = modelAgg.emailsSent;
+      modelResults.push({
+        model: ms.model,
+        emailsGenerated: ms.count,
+        emailsSent: sent,
+        emailsOpened: modelAgg.emailsOpened,
+        emailsClicked: modelAgg.emailsClicked,
+        emailsReplied: modelAgg.emailsReplied,
+        totalCostUsdCents: Math.round(modelCostCents),
+        openRate: sent > 0 ? Math.round((modelAgg.emailsOpened / sent) * 10000) / 10000 : 0,
+        clickRate: sent > 0 ? Math.round((modelAgg.emailsClicked / sent) * 10000) / 10000 : 0,
+        replyRate: sent > 0 ? Math.round((modelAgg.emailsReplied / sent) * 10000) / 10000 : 0,
+        costPerOpenCents: modelAgg.emailsOpened > 0 ? Math.round(modelCostCents / modelAgg.emailsOpened) : null,
+        costPerClickCents: modelAgg.emailsClicked > 0 ? Math.round(modelCostCents / modelAgg.emailsClicked) : null,
+        costPerReplyCents: modelAgg.emailsReplied > 0 ? Math.round(modelCostCents / modelAgg.emailsReplied) : null,
+      });
+    }
+
+    // 5. Hero stats — best conversion rate & best value
+    // Conversion = clicks (website visits) + replies
+    let hero = null;
+    if (modelResults.length > 0) {
+      const withConversion = modelResults.map((m) => ({
+        model: m.model,
+        conversionRate: m.emailsSent > 0
+          ? (m.emailsClicked + m.emailsReplied) / m.emailsSent
+          : 0,
+        conversionsPerDollar: m.totalCostUsdCents > 0
+          ? ((m.emailsClicked + m.emailsReplied) / m.totalCostUsdCents) * 100 // per dollar (cents -> dollars)
+          : 0,
+      }));
+
+      const bestConversion = withConversion.reduce((a, b) => a.conversionRate > b.conversionRate ? a : b);
+      const bestValue = withConversion.reduce((a, b) => a.conversionsPerDollar > b.conversionsPerDollar ? a : b);
+
+      hero = {
+        bestConversionModel: {
+          model: bestConversion.model,
+          conversionRate: Math.round(bestConversion.conversionRate * 10000) / 10000,
+        },
+        bestValueModel: {
+          model: bestValue.model,
+          conversionsPerDollar: Math.round(bestValue.conversionsPerDollar * 100) / 100,
+        },
+      };
+    }
+
+    res.json({
+      brands: brandResults,
+      models: modelResults,
+      hero,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Leaderboard error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 /**
  * GET /internal/campaigns - List all campaigns for org
