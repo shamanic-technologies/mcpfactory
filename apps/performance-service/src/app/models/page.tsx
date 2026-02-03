@@ -1,11 +1,23 @@
+import type { Metadata } from "next";
+import { URLS } from "@mcpfactory/content";
 import { fetchLeaderboard } from "@/lib/fetch-leaderboard";
 import { ModelLeaderboard } from "@/components/leaderboard-table";
 
 export const revalidate = 3600;
 
-export const metadata = {
-  title: "Model Leaderboard — MCP Factory Performance",
-  description: "Compare AI models head-to-head. Which model writes the most effective cold emails? Open rates, replies, and cost per action.",
+export const metadata: Metadata = {
+  title: "Model Leaderboard",
+  description:
+    "Compare AI models head-to-head. Which model writes the most effective cold emails? Open rates, replies, and cost per action.",
+  openGraph: {
+    title: "Model Leaderboard — MCP Factory Performance",
+    description:
+      "Compare AI models by real cold email campaign performance. Which model generates the best open rates, replies, and conversions?",
+    url: `${URLS.performance}/models`,
+  },
+  alternates: {
+    canonical: `${URLS.performance}/models`,
+  },
 };
 
 export default async function ModelsPage() {

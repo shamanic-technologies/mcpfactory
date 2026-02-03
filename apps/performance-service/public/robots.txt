@@ -1,0 +1,5 @@
+# MCP Factory Performance - https://performance.mcpfactory.org
+User-agent: *
+Allow: /
+
+Sitemap: https://performance.mcpfactory.org/sitemap.xml

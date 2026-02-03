@@ -1,8 +1,20 @@
+import type { Metadata } from "next";
+import { URLS } from "@mcpfactory/content";
 import { ComingSoon } from "@/components/coming-soon";
 
-export const metadata = {
-  title: "Prompt Leaderboard — MCP Factory Performance",
-  description: "Coming soon: compare prompt versions and see which ones generate the most effective emails.",
+export const metadata: Metadata = {
+  title: "Prompt Leaderboard",
+  description:
+    "Coming soon: compare prompt versions and see which ones generate the most effective cold emails.",
+  openGraph: {
+    title: "Prompt Leaderboard — MCP Factory Performance",
+    description:
+      "Coming soon: compare prompt versions and see which ones generate the most effective cold emails.",
+    url: `${URLS.performance}/prompts`,
+  },
+  alternates: {
+    canonical: `${URLS.performance}/prompts`,
+  },
 };
 
 export default function PromptsPage() {
