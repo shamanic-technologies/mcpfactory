@@ -141,7 +141,14 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
         .set({ generationRunId: genRun.id })
         .where(eq(emailGenerations.id, generation.id));
     } catch (err) {
-      console.warn("[emailgen] Failed to track run in runs-service:", err);
+      console.error("[emailgen] COST TRACKING FAILED — costs will be missing from campaign totals.", {
+        runId,
+        apolloEnrichmentId,
+        tokensInput: result.tokensInput,
+        tokensOutput: result.tokensOutput,
+        costNames: ["anthropic-opus-4.5-tokens-input", "anthropic-opus-4.5-tokens-output"],
+        error: err instanceof Error ? err.message : err,
+      });
     }
 
     res.json({
