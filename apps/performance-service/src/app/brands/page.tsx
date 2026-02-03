@@ -1,11 +1,23 @@
+import type { Metadata } from "next";
+import { URLS } from "@mcpfactory/content";
 import { fetchLeaderboard } from "@/lib/fetch-leaderboard";
 import { BrandLeaderboard } from "@/components/leaderboard-table";
 
 export const revalidate = 3600;
 
-export const metadata = {
-  title: "Brand Leaderboard — MCP Factory Performance",
-  description: "See how each brand performs with MCP Factory cold email campaigns. Open rates, website visits, replies, and cost per action.",
+export const metadata: Metadata = {
+  title: "Brand Leaderboard",
+  description:
+    "See how each brand performs with MCP Factory cold email campaigns. Open rates, website visits, replies, and cost per action.",
+  openGraph: {
+    title: "Brand Leaderboard — MCP Factory Performance",
+    description:
+      "Compare brand performance across MCP Factory cold email campaigns. Real open rates, visit rates, reply rates, and cost per action.",
+    url: `${URLS.performance}/brands`,
+  },
+  alternates: {
+    canonical: `${URLS.performance}/brands`,
+  },
 };
 
 export default async function BrandsPage() {
