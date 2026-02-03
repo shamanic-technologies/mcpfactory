@@ -329,7 +329,7 @@ export function BreadcrumbNav() {
         <>
           <Sep />
           <div className="relative flex items-center">
-            <Link href={`/brands/${brandId}/mcp/${mcpSlug}/campaigns/${campaignId}`} className="px-2 py-1 rounded-md hover:bg-gray-100 transition font-medium text-gray-800 max-w-[280px] truncate">
+            <Link href={`/brands/${brandId}/mcp/${mcpSlug}/campaigns/${campaignId}`} className="px-2 py-1 rounded-md hover:bg-gray-100 transition font-medium text-gray-800">
               {currentCampaign?.name || "Campaign"}
             </Link>
             <button onClick={() => toggleDropdown("campaign")} className="p-1 hover:bg-gray-100 rounded transition">
