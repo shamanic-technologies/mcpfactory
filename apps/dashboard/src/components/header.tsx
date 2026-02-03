@@ -28,7 +28,7 @@ export function Header() {
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="px-4 py-2.5 flex items-center justify-between">
         {/* Left: Hamburger + Logo + Breadcrumb */}
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
           {/* Mobile hamburger */}
           <button
             onClick={toggleMobileSidebar}
@@ -44,7 +44,7 @@ export function Header() {
             <span className="font-display font-bold text-lg text-primary-600 hidden sm:block">MCP Factory</span>
           </Link>
 
-          <div className="hidden sm:block">
+          <div className="hidden sm:block min-w-0 flex-1">
             <BreadcrumbNav />
           </div>
         </div>
