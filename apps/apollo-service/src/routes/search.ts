@@ -104,13 +104,15 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
               taskName: "enrichment",
               parentRunId: searchRunId,
             });
-            await addCosts(enrichRun.id, [{ costName: "apollo-enrichment-credit", quantity: 1 }]);
-            await updateRun(enrichRun.id, "completed");
 
-            // Link enrichment run to record for cost lookups
+            // Link enrichment run to record IMMEDIATELY so per-item cost
+            // lookups work even if addCosts/updateRun fail below
             await db.update(apolloPeopleEnrichments)
               .set({ enrichmentRunId: enrichRun.id })
               .where(eq(apolloPeopleEnrichments.id, enrichment.id));
+
+            await addCosts(enrichRun.id, [{ costName: "apollo-enrichment-credit", quantity: 1 }]);
+            await updateRun(enrichRun.id, "completed");
           } catch (err) {
             console.error("[apollo] COST TRACKING FAILED for enrichment — costs will be missing from campaign totals.", {
               runId,

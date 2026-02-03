@@ -41,7 +41,8 @@ vi.mock("../../src/middleware/auth.js", () => ({
   },
 }));
 
-// Mock the DB
+// Mock the DB — track db.update().set() calls to verify generationRunId linking
+const mockDbSetCalls: Array<Record<string, unknown>> = [];
 vi.mock("../../src/db/index.js", () => ({
   db: {
     insert: vi.fn().mockReturnValue({
@@ -50,8 +51,9 @@ vi.mock("../../src/db/index.js", () => ({
       }),
     }),
     update: vi.fn().mockReturnValue({
-      set: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue(undefined),
+      set: vi.fn().mockImplementation((data: Record<string, unknown>) => {
+        mockDbSetCalls.push(data);
+        return { where: vi.fn().mockResolvedValue(undefined) };
       }),
     }),
   },
@@ -92,6 +94,7 @@ describe("Email generation cost tracking", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    mockDbSetCalls.length = 0;
     mockEnsureOrganization.mockResolvedValue("org-123");
     mockCreateRun.mockResolvedValue({ id: "run-456" });
     mockUpdateRun.mockResolvedValue({});
@@ -198,5 +201,33 @@ describe("Email generation cost tracking", () => {
         taskName: "single-generation",
       })
     );
+  });
+
+  it("should link generationRunId to DB record even when addCosts fails", async () => {
+    // This is the critical regression: if addCosts fails, the DB link must
+    // still be set so the dashboard can show per-item cost details.
+    mockCreateRun.mockResolvedValueOnce({ id: "run-456" });
+    mockAddCosts.mockRejectedValueOnce(new Error("Cost name not registered"));
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await request(app)
+      .post("/generate")
+      .set("X-Clerk-Org-Id", "org_test")
+      .send({
+        runId: "run-parent-123",
+        apolloEnrichmentId: "enrich-123",
+        leadFirstName: "John",
+        leadCompanyName: "Acme Corp",
+        clientCompanyName: "MyCompany",
+      })
+      .expect(200);
+
+    // generationRunId must be set in the DB even though addCosts failed
+    const linkCall = mockDbSetCalls.find((data) => "generationRunId" in data);
+    expect(linkCall).toBeDefined();
+    expect(linkCall!.generationRunId).toBe("run-456");
+
+    errorSpy.mockRestore();
   });
 });
