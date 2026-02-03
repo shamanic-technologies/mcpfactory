@@ -10,4 +10,5 @@ export const URLS = {
   signUp: "https://dashboard.mcpfactory.org/sign-up",
   signIn: "https://dashboard.mcpfactory.org/sign-in",
   apiKeys: "https://dashboard.mcpfactory.org/api-keys",
+  performance: "https://performance.mcpfactory.org",
 } as const;

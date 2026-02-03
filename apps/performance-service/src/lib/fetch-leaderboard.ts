@@ -1,0 +1,126 @@
+const CAMPAIGN_SERVICE_URL = process.env.CAMPAIGN_SERVICE_URL || "http://localhost:3004";
+const BRAND_SERVICE_URL = process.env.BRAND_SERVICE_URL;
+
+export interface BrandLeaderboardEntry {
+  brandId: string | null;
+  brandUrl: string | null;
+  brandDomain: string | null;
+  brandName?: string | null;
+  emailsSent: number;
+  emailsOpened: number;
+  emailsClicked: number;
+  emailsReplied: number;
+  totalCostUsdCents: number;
+  openRate: number;
+  clickRate: number;
+  replyRate: number;
+  costPerOpenCents: number | null;
+  costPerClickCents: number | null;
+  costPerReplyCents: number | null;
+}
+
+export interface ModelLeaderboardEntry {
+  model: string;
+  emailsGenerated: number;
+  emailsSent: number;
+  emailsOpened: number;
+  emailsClicked: number;
+  emailsReplied: number;
+  totalCostUsdCents: number;
+  openRate: number;
+  clickRate: number;
+  replyRate: number;
+  costPerOpenCents: number | null;
+  costPerClickCents: number | null;
+  costPerReplyCents: number | null;
+}
+
+export interface HeroStats {
+  bestConversionModel: {
+    model: string;
+    conversionRate: number;
+  };
+  bestValueModel: {
+    model: string;
+    conversionsPerDollar: number;
+  };
+}
+
+export interface LeaderboardData {
+  brands: BrandLeaderboardEntry[];
+  models: ModelLeaderboardEntry[];
+  hero: HeroStats | null;
+  updatedAt: string;
+}
+
+export async function fetchLeaderboard(): Promise<LeaderboardData | null> {
+  try {
+    const res = await fetch(`${CAMPAIGN_SERVICE_URL}/internal/performance/leaderboard`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (!res.ok) {
+      console.warn(`Leaderboard fetch failed: ${res.status}`);
+      return null;
+    }
+
+    const data = await res.json();
+
+    // Enrich brands with names from brand-service if available
+    if (BRAND_SERVICE_URL && data.brands?.length > 0) {
+      const brandIds = data.brands
+        .map((b: BrandLeaderboardEntry) => b.brandId)
+        .filter(Boolean);
+
+      if (brandIds.length > 0) {
+        try {
+          const brandsRes = await fetch(`${BRAND_SERVICE_URL}/brands/batch`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ brandIds }),
+            next: { revalidate: 3600 },
+          });
+
+          if (brandsRes.ok) {
+            const brandsData = await brandsRes.json();
+            const brandMap = new Map(
+              (brandsData.brands || []).map((b: { id: string; name: string }) => [b.id, b.name])
+            );
+            for (const brand of data.brands) {
+              if (brand.brandId && brandMap.has(brand.brandId)) {
+                brand.brandName = brandMap.get(brand.brandId);
+              }
+            }
+          }
+        } catch {
+          // Brand-service unavailable — use domain as fallback
+        }
+      }
+    }
+
+    return data as LeaderboardData;
+  } catch (error) {
+    console.warn("Leaderboard fetch error:", error);
+    return null;
+  }
+}
+
+export function formatModelName(model: string): string {
+  const names: Record<string, string> = {
+    "claude-opus-4-5": "Claude Opus 4.5",
+    "claude-sonnet-4-5": "Claude Sonnet 4.5",
+    "claude-sonnet-4": "Claude Sonnet 4",
+    "claude-haiku-3-5": "Claude Haiku 3.5",
+  };
+  return names[model] || model;
+}
+
+export function formatPercent(rate: number): string {
+  return `${(rate * 100).toFixed(1)}%`;
+}
+
+export function formatCostCents(cents: number | null): string {
+  if (cents === null) return "—";
+  if (cents < 100) return `${cents}c`;
+  return `$${(cents / 100).toFixed(2)}`;
+}

@@ -8,7 +8,34 @@ import {
   BYOK_COST_ESTIMATES,
 } from "@mcpfactory/content";
 
-export default function Home() {
+export const revalidate = 3600;
+
+interface HeroStats {
+  bestConversionModel: { model: string; conversionRate: number };
+  bestValueModel: { model: string; conversionsPerDollar: number };
+}
+
+const MODEL_NAMES: Record<string, string> = {
+  "claude-opus-4-5": "Claude Opus 4.5",
+  "claude-sonnet-4-5": "Claude Sonnet 4.5",
+};
+
+async function getHeroStats(): Promise<HeroStats | null> {
+  try {
+    const url = process.env.PERFORMANCE_API_URL || URLS.performance;
+    const res = await fetch(`${url}/api/leaderboard`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.hero || null;
+  } catch {
+    return null;
+  }
+}
+
+export default async function Home() {
+  const heroStats = await getHeroStats();
   return (
     <main className="min-h-screen">
       {/* Navbar */}
@@ -134,6 +161,44 @@ export default function Home() {
           </a>
         </div>
       </section>
+
+      {/* Live Performance Stats */}
+      {heroStats && (
+        <section className="py-12 px-4 bg-gradient-to-b from-white to-primary-50 border-b border-primary-100">
+          <div className="max-w-4xl mx-auto text-center">
+            <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Real Performance Data</p>
+            <h2 className="text-2xl font-bold mb-8 text-gray-800">
+              100% Transparent Results
+            </h2>
+            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-6">
+              <div className="bg-white rounded-xl p-6 border border-primary-200 shadow-sm">
+                <p className="text-4xl font-bold text-primary-500 mb-1">
+                  {(heroStats.bestConversionModel.conversionRate * 100).toFixed(1)}%
+                </p>
+                <p className="text-sm text-gray-600 mb-1">Best Conversion Rate</p>
+                <p className="text-xs text-gray-400">
+                  {MODEL_NAMES[heroStats.bestConversionModel.model] || heroStats.bestConversionModel.model}
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-6 border border-accent-200 shadow-sm">
+                <p className="text-4xl font-bold text-accent-500 mb-1">
+                  {heroStats.bestValueModel.conversionsPerDollar.toFixed(1)}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">Conversions per $1</p>
+                <p className="text-xs text-gray-400">
+                  {MODEL_NAMES[heroStats.bestValueModel.model] || heroStats.bestValueModel.model}
+                </p>
+              </div>
+            </div>
+            <a
+              href={URLS.performance}
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium transition"
+            >
+              See full leaderboard &rarr;
+            </a>
+          </div>
+        </section>
+      )}
 
       {/* DFY + BYOK */}
       <section className="py-16 px-4 bg-white">
