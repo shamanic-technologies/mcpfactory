@@ -27,20 +27,31 @@
 
 ## Installation
 
-```bash
-npx @mcpfactory/sales-outreach
-```
-
-Or add to your MCP config:
+Add to your MCP client config (Cursor, Claude Code, etc.):
 
 ```json
 {
   "mcpServers": {
-    "sales-outreach": {
+    "mcpfactory": {
+      "url": "https://mcp.mcpfactory.org/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+**Alternative (local npx):**
+
+```json
+{
+  "mcpServers": {
+    "mcpfactory": {
       "command": "npx",
       "args": ["@mcpfactory/sales-outreach"],
       "env": {
-        "MCPFACTORY_API_KEY": "your-api-key"
+        "MCPFACTORY_API_KEY": "YOUR_API_KEY"
       }
     }
   }

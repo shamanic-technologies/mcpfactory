@@ -22,6 +22,39 @@
 
 **Estimated BYOK cost:** ~$0.05/pitch
 
+## Installation
+
+Add to your MCP client config (Cursor, Claude Code, etc.):
+
+```json
+{
+  "mcpServers": {
+    "mcpfactory": {
+      "url": "https://mcp.mcpfactory.org/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+**Alternative (local npx):**
+
+```json
+{
+  "mcpServers": {
+    "mcpfactory": {
+      "command": "npx",
+      "args": ["@mcpfactory/journalist-pitch"],
+      "env": {
+        "MCPFACTORY_API_KEY": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
 ## Usage
 
 > "Pitch journalists about our Series A funding announcement, based on mybrand.com"
