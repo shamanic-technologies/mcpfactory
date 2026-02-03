@@ -45,9 +45,6 @@ export function CampaignCard({ campaign, stats }: CampaignCardProps) {
           <h3 className="font-medium text-gray-800">{campaign.name}</h3>
           <p className="text-sm text-gray-500">
             Created {formatDate(campaign.createdAt)}
-            {campaign.recurrence && campaign.recurrence !== "oneoff" && (
-              <span className="ml-2 text-primary-600">• Runs {campaign.recurrence}</span>
-            )}
           </p>
         </div>
         <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(campaign.status)}`}>
@@ -95,12 +92,13 @@ export function CampaignCard({ campaign, stats }: CampaignCardProps) {
       {/* Footer with budget and view action */}
       <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
         <span>
-          {(campaign.maxBudgetDailyUsd || campaign.maxBudgetWeeklyUsd || campaign.maxBudgetMonthlyUsd) ? (
+          {(campaign.maxBudgetDailyUsd || campaign.maxBudgetWeeklyUsd || campaign.maxBudgetMonthlyUsd || campaign.maxBudgetTotalUsd) ? (
             <>
-              Budget: 
+              Budget:
               {campaign.maxBudgetDailyUsd && ` $${campaign.maxBudgetDailyUsd}/day`}
               {campaign.maxBudgetWeeklyUsd && ` $${campaign.maxBudgetWeeklyUsd}/week`}
               {campaign.maxBudgetMonthlyUsd && ` $${campaign.maxBudgetMonthlyUsd}/month`}
+              {campaign.maxBudgetTotalUsd && ` $${campaign.maxBudgetTotalUsd} total`}
             </>
           ) : (
             <span className="text-gray-400">No budget limit</span>

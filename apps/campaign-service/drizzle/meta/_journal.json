@@ -43,6 +43,13 @@
       "when": 1770014881587,
       "tag": "0005_moaning_sasquatch",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770100000000,
+      "tag": "0006_budget_only_scheduling",
+      "breakpoints": true
     }
   ]
 }

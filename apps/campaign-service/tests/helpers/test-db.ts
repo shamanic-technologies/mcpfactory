@@ -44,7 +44,8 @@ export async function insertTestCampaign(
   data: {
     name?: string;
     status?: string;
-    recurrence?: string;
+    maxBudgetDailyUsd?: string;
+    maxBudgetTotalUsd?: string;
     personTitles?: string[];
     organizationLocations?: string[];
   } = {}
@@ -55,7 +56,8 @@ export async function insertTestCampaign(
       orgId,
       name: data.name || `Test Campaign ${Date.now()}`,
       status: data.status || "ongoing",
-      recurrence: data.recurrence || "oneoff",
+      maxBudgetDailyUsd: data.maxBudgetDailyUsd || "10.00",
+      maxBudgetTotalUsd: data.maxBudgetTotalUsd,
       personTitles: data.personTitles,
       organizationLocations: data.organizationLocations,
     })

@@ -15,10 +15,10 @@ export const toolDefinitions = {
       target_titles: z.array(z.string()).describe("Job titles to target"),
       target_industries: z.array(z.string()).optional().describe("Industries to target"),
       target_locations: z.array(z.string()).optional().describe("Locations to target"),
-      recurrence: z.enum(["oneoff", "daily", "weekly", "monthly"]).describe("How often to run: oneoff (single run), daily, weekly, or monthly"),
       max_daily_budget_usd: z.number().optional().describe("Maximum daily spend in USD (at least one budget required)"),
       max_weekly_budget_usd: z.number().optional().describe("Maximum weekly spend in USD"),
       max_monthly_budget_usd: z.number().optional().describe("Maximum monthly spend in USD"),
+      max_total_budget_usd: z.number().optional().describe("Maximum total spend in USD (campaign stops permanently when reached)"),
       end_date: z.string().optional().describe("Optional campaign end date (ISO format)"),
       // Coming soon: reporting frequency
       // reporting: z.enum(["none", "daily", "weekly", "monthly"]).describe("How often to receive campaign reports"),
@@ -141,8 +141,8 @@ async function handleStatus() {
 
 async function handleCreateCampaign(args: Record<string, unknown>) {
   // Validate at least one budget is provided
-  if (!args.max_daily_budget_usd && !args.max_weekly_budget_usd && !args.max_monthly_budget_usd) {
-    throw new Error("At least one budget is required (max_daily_budget_usd, max_weekly_budget_usd, or max_monthly_budget_usd)");
+  if (!args.max_daily_budget_usd && !args.max_weekly_budget_usd && !args.max_monthly_budget_usd && !args.max_total_budget_usd) {
+    throw new Error("At least one budget is required (max_daily_budget_usd, max_weekly_budget_usd, max_monthly_budget_usd, or max_total_budget_usd)");
   }
 
   const result = await callApi("/v1/campaigns", {
@@ -153,10 +153,10 @@ async function handleCreateCampaign(args: Record<string, unknown>) {
       personTitles: args.target_titles,
       organizationLocations: args.target_locations,
       qOrganizationKeywordTags: args.target_industries,
-      recurrence: args.recurrence,
       maxBudgetDailyUsd: args.max_daily_budget_usd,
       maxBudgetWeeklyUsd: args.max_weekly_budget_usd,
       maxBudgetMonthlyUsd: args.max_monthly_budget_usd,
+      maxBudgetTotalUsd: args.max_total_budget_usd,
       endDate: args.end_date,
     },
   });

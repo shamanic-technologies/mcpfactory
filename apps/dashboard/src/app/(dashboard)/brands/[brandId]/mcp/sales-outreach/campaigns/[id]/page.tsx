@@ -72,9 +72,6 @@ export default function CampaignOverviewPage() {
             day: "numeric",
             year: "numeric"
           })}
-          {campaign.recurrence && campaign.recurrence !== "oneoff" && (
-            <span className="ml-2 text-primary-600">• Runs {campaign.recurrence}</span>
-          )}
         </p>
       </div>
 

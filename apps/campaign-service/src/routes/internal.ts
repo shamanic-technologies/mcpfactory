@@ -98,7 +98,6 @@ router.get("/campaigns/all", async (_req, res) => {
         orgId: campaigns.orgId,
         name: campaigns.name,
         status: campaigns.status,
-        recurrence: campaigns.recurrence,
         personTitles: campaigns.personTitles,
         organizationLocations: campaigns.organizationLocations,
         qOrganizationKeywordTags: campaigns.qOrganizationKeywordTags,
@@ -108,6 +107,7 @@ router.get("/campaigns/all", async (_req, res) => {
         maxBudgetDailyUsd: campaigns.maxBudgetDailyUsd,
         maxBudgetWeeklyUsd: campaigns.maxBudgetWeeklyUsd,
         maxBudgetMonthlyUsd: campaigns.maxBudgetMonthlyUsd,
+        maxBudgetTotalUsd: campaigns.maxBudgetTotalUsd,
         requestRaw: campaigns.requestRaw,
         createdAt: campaigns.createdAt,
         clerkOrgId: orgs.clerkOrgId,
@@ -179,9 +179,9 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       maxBudgetDailyUsd,
       maxBudgetWeeklyUsd,
       maxBudgetMonthlyUsd,
+      maxBudgetTotalUsd,
       startDate,
       endDate,
-      recurrence,
       notifyFrequency,
       notifyChannel,
       notifyDestination,
@@ -195,18 +195,10 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       return res.status(400).json({ error: "brandUrl is required" });
     }
 
-    // Validate recurrence
-    const validRecurrences = ["oneoff", "daily", "weekly", "monthly"];
-    if (!recurrence || !validRecurrences.includes(recurrence)) {
-      return res.status(400).json({
-        error: `recurrence is required. Valid values: ${validRecurrences.join(", ")}`
-      });
-    }
-
     // Validate at least one budget is set
-    if (!maxBudgetDailyUsd && !maxBudgetWeeklyUsd && !maxBudgetMonthlyUsd) {
+    if (!maxBudgetDailyUsd && !maxBudgetWeeklyUsd && !maxBudgetMonthlyUsd && !maxBudgetTotalUsd) {
       return res.status(400).json({
-        error: "At least one budget must be set (maxBudgetDailyUsd, maxBudgetWeeklyUsd, or maxBudgetMonthlyUsd)"
+        error: "At least one budget must be set (maxBudgetDailyUsd, maxBudgetWeeklyUsd, maxBudgetMonthlyUsd, or maxBudgetTotalUsd)"
       });
     }
 
@@ -229,9 +221,9 @@ router.post("/campaigns", serviceAuth, async (req: AuthenticatedRequest, res) =>
       maxBudgetDailyUsd,
       maxBudgetWeeklyUsd,
       maxBudgetMonthlyUsd,
+      maxBudgetTotalUsd,
       startDate,
       endDate,
-      recurrence,
       notifyFrequency,
       notifyChannel,
       notifyDestination,
@@ -472,7 +464,6 @@ router.get("/campaigns/:id/debug", serviceAuth, async (req: AuthenticatedRequest
         id: campaign.id,
         name: campaign.name,
         status: campaign.status,
-        recurrence: campaign.recurrence,
         createdAt: campaign.createdAt,
         updatedAt: campaign.updatedAt,
         targeting: {
@@ -484,6 +475,7 @@ router.get("/campaigns/:id/debug", serviceAuth, async (req: AuthenticatedRequest
           daily: campaign.maxBudgetDailyUsd,
           weekly: campaign.maxBudgetWeeklyUsd,
           monthly: campaign.maxBudgetMonthlyUsd,
+          total: campaign.maxBudgetTotalUsd,
         },
       },
       runs: runs.map(run => ({

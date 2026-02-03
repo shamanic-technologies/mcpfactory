@@ -13,7 +13,6 @@ interface Campaign {
   id: string;
   name: string;
   status: string;
-  recurrence: string;
   createdAt: string;
   personTitles?: string[];
   organizationLocations?: string[];
@@ -151,7 +150,7 @@ export default function BrandMcpSalesOutreachPage() {
                   <div>
                     <h3 className="font-medium text-gray-800">{campaign.name}</h3>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      {campaign.recurrence} • Created {new Date(campaign.createdAt).toLocaleDateString()}
+                      Created {new Date(campaign.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(campaign.status)}`}>
