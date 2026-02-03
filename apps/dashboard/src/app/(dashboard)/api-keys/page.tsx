@@ -167,7 +167,7 @@ export default function ApiKeysPage() {
                 <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs">
 {`{
   "mcpServers": {
-    "mcpfactory-sales": {
+    "mcpfactory": {
       "url": "https://mcp.mcpfactory.org/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_API_KEY"

@@ -50,6 +50,8 @@ claude mcp add mcpfactory --transport http https://mcp.mcpfactory.org/mcp
 - mcpfactory_stop_campaign: Stop a campaign
 - mcpfactory_resume_campaign: Resume a campaign
 - mcpfactory_campaign_stats: Get performance
+- mcpfactory_list_brands: List your brands
+- mcpfactory_suggest_icp: Suggest ideal customer profile for a brand URL
 
 ## Get API Key
 https://dashboard.mcpfactory.org/api-keys`;
@@ -156,6 +158,14 @@ export default function ClaudeIntegrationPage() {
             <tr>
               <td><code>mcpfactory_campaign_stats</code></td>
               <td>Get campaign performance metrics</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_list_brands</code></td>
+              <td>List all your brands</td>
+            </tr>
+            <tr>
+              <td><code>mcpfactory_suggest_icp</code></td>
+              <td>Suggest ideal customer profile for a brand URL</td>
             </tr>
           </tbody>
         </table>

@@ -1,3 +1,5 @@
+// IMPORTANT: Import instrument first to initialize Sentry before anything else
+import "./instrument.js";
 import * as Sentry from "@sentry/node";
 import express from "express";
 import cors from "cors";
@@ -5,15 +7,6 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { db } from "./db/index.js";
 import healthRoutes from "./routes/health.js";
 import generateRoutes from "./routes/generate.js";
-
-// Initialize Sentry
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || "development",
-    tracesSampleRate: 0.1,
-  });
-}
 
 const app = express();
 const PORT = process.env.PORT || 3005;

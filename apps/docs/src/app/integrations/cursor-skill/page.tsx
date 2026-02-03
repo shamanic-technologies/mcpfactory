@@ -24,11 +24,10 @@ Create: ~/.cursor/skills/mcpfactory/SKILL.md
 Add to .cursor/mcp.json:
 {
   "mcpServers": {
-    "sales-outreach": {
-      "command": "npx",
-      "args": ["@mcpfactory/sales-outreach"],
-      "env": {
-        "MCPFACTORY_API_KEY": "mcpf_live_xxxx"
+    "mcpfactory": {
+      "url": "https://mcp.mcpfactory.org/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
       }
     }
   }
@@ -107,18 +106,10 @@ Ensure MCPFACTORY_API_KEY is set in your MCP config.
         <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
           <code>{`{
   "mcpServers": {
-    "sales-outreach": {
-      "command": "npx",
-      "args": ["@mcpfactory/sales-outreach"],
-      "env": {
-        "MCPFACTORY_API_KEY": "mcpf_live_xxxx"
-      }
-    },
-    "influencer-pitch": {
-      "command": "npx",
-      "args": ["@mcpfactory/influencer-pitch"],
-      "env": {
-        "MCPFACTORY_API_KEY": "mcpf_live_xxxx"
+    "mcpfactory": {
+      "url": "https://mcp.mcpfactory.org/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
       }
     }
   }

@@ -1,3 +1,5 @@
+// IMPORTANT: Import instrument first to initialize Sentry before anything else
+import "./instrument.js";
 import * as Sentry from "@sentry/node";
 import express from "express";
 import cors from "cors";
@@ -6,16 +8,6 @@ import { db } from "./db/index.js";
 import healthRoutes from "./routes/health.js";
 import usersRoutes from "./routes/users.js";
 import orgsRoutes from "./routes/orgs.js";
-
-// Initialize Sentry
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || "development",
-    tracesSampleRate: 0.1,
-  });
-  Sentry.setTag("service", "client-service");
-}
 
 const app = express();
 const PORT = process.env.PORT || 3002;
