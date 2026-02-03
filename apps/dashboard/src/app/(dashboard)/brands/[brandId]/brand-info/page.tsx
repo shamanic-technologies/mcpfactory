@@ -32,8 +32,7 @@ interface RunCost {
 
 interface BrandRun {
   id: string;
-  campaignId: string;
-  campaignName: string;
+  taskName: string;
   status: string;
   startedAt: string;
   completedAt: string | null;
@@ -373,7 +372,9 @@ export default function BrandInfoPage() {
                       />
                       <div>
                         <p className="text-sm font-medium text-gray-800">
-                          {run.campaignName}
+                          {run.taskName === "sales-profile-extraction" ? "Sales Profile Extraction" :
+                           run.taskName === "icp-extraction" ? "ICP Extraction" :
+                           run.taskName}
                         </p>
                         <p className="text-xs text-gray-500">
                           {timeAgo(run.startedAt)}

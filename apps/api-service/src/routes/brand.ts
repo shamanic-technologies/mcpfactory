@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
-import { callExternalService, callService, externalServices, services } from "../lib/service-client.js";
+import { callExternalService, externalServices } from "../lib/service-client.js";
 import { getRunsBatch, type RunWithCosts } from "@mcpfactory/runs-client";
 
 // Brand service URL (for sales profiles)
@@ -232,49 +232,38 @@ router.post("/brand/icp-suggestion", authenticate, requireOrg, async (req: Authe
 
 /**
  * GET /v1/brands/:id/runs
- * Get all campaign runs for a brand (for update history)
+ * Get extraction runs for a brand (sales-profile, icp-extraction) from brand-service,
+ * enriched with cost data from runs-service.
  */
 router.get("/brands/:id/runs", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
 
-    // 1. Get campaigns for this brand
-    const campaignsResult = await callService<{ campaigns: Array<{ id: string; name: string }> }>(
-      services.campaign,
-      `/internal/campaigns?brandId=${id}`,
-      { headers: { "x-clerk-org-id": req.orgId! } }
-    );
-    const campaigns = campaignsResult.campaigns || [];
-
-    if (campaigns.length === 0) {
-      return res.json({ runs: [] });
-    }
-
-    // 2. Get runs for each campaign
-    interface RunEntry { id: string; status: string; startedAt: string; completedAt: string | null }
-    const allRuns: Array<RunEntry & { campaignId: string; campaignName: string }> = [];
-
-    for (const campaign of campaigns) {
-      try {
-        const runsResult = await callService<{ runs: RunEntry[] }>(
-          services.campaign,
-          `/internal/campaigns/${campaign.id}/runs`,
-          { headers: { "x-clerk-org-id": req.orgId! } }
-        );
-        for (const run of runsResult.runs || []) {
-          allRuns.push({ ...run, campaignId: campaign.id, campaignName: campaign.name });
-        }
-      } catch (err) {
-        console.warn(`Failed to get runs for campaign ${campaign.id}:`, err);
+    // 1. Get runs list from brand-service
+    const response = await fetch(
+      `${BRAND_SERVICE_URL}/brands/${id}/runs`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": BRAND_SERVICE_API_KEY,
+        },
       }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: "Unknown error" }));
+      throw new Error(error.error || `Failed to fetch brand runs: ${response.status}`);
     }
 
-    if (allRuns.length === 0) {
+    const data = await response.json();
+    const runs: Array<{ id: string; taskName: string; status: string; startedAt: string; completedAt: string | null }> = data.runs || [];
+
+    if (runs.length === 0) {
       return res.json({ runs: [] });
     }
 
-    // 3. Batch-fetch RunWithCosts
-    const runIds = allRuns.map((r) => r.id);
+    // 2. Batch-fetch RunWithCosts from runs-service
+    const runIds = runs.map((r) => r.id);
     let runMap = new Map<string, RunWithCosts>();
     try {
       runMap = await getRunsBatch(runIds);
@@ -282,14 +271,13 @@ router.get("/brands/:id/runs", authenticate, requireOrg, async (req: Authenticat
       console.warn("Failed to fetch run costs for brand runs:", err);
     }
 
-    // 4. Build response sorted by startedAt desc
-    const runs = allRuns
+    // 3. Enrich and return sorted by startedAt desc
+    const enriched = runs
       .map((run) => {
         const withCosts = runMap.get(run.id);
         return {
           id: run.id,
-          campaignId: run.campaignId,
-          campaignName: run.campaignName,
+          taskName: run.taskName,
           status: withCosts?.status || run.status,
           startedAt: withCosts?.startedAt || run.startedAt,
           completedAt: withCosts?.completedAt || run.completedAt,
@@ -299,7 +287,7 @@ router.get("/brands/:id/runs", authenticate, requireOrg, async (req: Authenticat
       })
       .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
 
-    res.json({ runs });
+    res.json({ runs: enriched });
   } catch (error: any) {
     console.error("Get brand runs error:", error);
     res.status(500).json({ error: error.message || "Failed to get brand runs" });

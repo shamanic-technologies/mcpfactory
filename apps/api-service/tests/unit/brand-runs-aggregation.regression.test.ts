@@ -1,54 +1,36 @@
 import { describe, it, expect } from "vitest";
 
 /**
- * Regression test: the brands/:id/runs endpoint must aggregate runs
- * across all campaigns belonging to a brand, sorted by startedAt desc.
+ * Regression test: the brands/:id/runs endpoint enriches brand-service runs
+ * with cost data from runs-service, sorted by startedAt desc.
  */
 
-describe("brand runs aggregation", () => {
-  it("should aggregate runs from multiple campaigns and sort by startedAt desc", () => {
-    // Simulate runs from 2 campaigns
-    const campaign1Runs = [
-      { id: "run-1", status: "completed", startedAt: "2025-01-01T00:00:00Z", completedAt: "2025-01-01T00:01:00Z" },
-      { id: "run-2", status: "completed", startedAt: "2025-01-03T00:00:00Z", completedAt: "2025-01-03T00:01:00Z" },
-    ];
-    const campaign2Runs = [
-      { id: "run-3", status: "completed", startedAt: "2025-01-02T00:00:00Z", completedAt: "2025-01-02T00:01:00Z" },
+describe("brand runs enrichment", () => {
+  it("should enrich runs with cost data and sort by startedAt desc", () => {
+    // Simulate runs from brand-service (no costs)
+    const brandServiceRuns = [
+      { id: "run-1", taskName: "sales-profile-extraction", status: "completed", startedAt: "2025-01-01T00:00:00Z", completedAt: "2025-01-01T00:01:00Z" },
+      { id: "run-2", taskName: "icp-extraction", status: "completed", startedAt: "2025-01-03T00:00:00Z", completedAt: "2025-01-03T00:01:00Z" },
+      { id: "run-3", taskName: "sales-profile-extraction", status: "completed", startedAt: "2025-01-02T00:00:00Z", completedAt: "2025-01-02T00:01:00Z" },
     ];
 
-    const campaigns = [
-      { id: "campaign-1", name: "Campaign A" },
-      { id: "campaign-2", name: "Campaign B" },
-    ];
-
-    // This mirrors the aggregation logic in brand.ts GET /v1/brands/:id/runs
-    interface RunEntry { id: string; status: string; startedAt: string; completedAt: string | null }
-    const allRuns: Array<RunEntry & { campaignId: string; campaignName: string }> = [];
-
-    for (const run of campaign1Runs) {
-      allRuns.push({ ...run, campaignId: campaigns[0].id, campaignName: campaigns[0].name });
-    }
-    for (const run of campaign2Runs) {
-      allRuns.push({ ...run, campaignId: campaigns[1].id, campaignName: campaigns[1].name });
-    }
-
-    // Simulate RunWithCosts map
+    // Simulate RunWithCosts map from runs-service
     const runCosts = new Map([
-      ["run-1", { totalCostInUsdCents: "10", costs: [{ costName: "apollo-enrichment-credit", quantity: "2", unitCostInUsdCents: "5", totalCostInUsdCents: "10" }] }],
-      ["run-2", { totalCostInUsdCents: "15", costs: [] }],
-      ["run-3", { totalCostInUsdCents: "5", costs: [] }],
+      ["run-1", { totalCostInUsdCents: "2", costs: [{ costName: "anthropic-opus-4.5-tokens-input", quantity: "5000", unitCostInUsdCents: "0.0002", totalCostInUsdCents: "1" }], status: "completed", startedAt: "2025-01-01T00:00:00Z", completedAt: "2025-01-01T00:01:00Z" }],
+      ["run-2", { totalCostInUsdCents: "5", costs: [], status: "completed", startedAt: "2025-01-03T00:00:00Z", completedAt: "2025-01-03T00:01:00Z" }],
+      ["run-3", { totalCostInUsdCents: "3", costs: [], status: "completed", startedAt: "2025-01-02T00:00:00Z", completedAt: "2025-01-02T00:01:00Z" }],
     ]);
 
-    const result = allRuns
+    // Mirrors the enrichment logic in brand.ts GET /v1/brands/:id/runs
+    const result = brandServiceRuns
       .map((run) => {
         const withCosts = runCosts.get(run.id);
         return {
           id: run.id,
-          campaignId: run.campaignId,
-          campaignName: run.campaignName,
-          status: run.status,
-          startedAt: run.startedAt,
-          completedAt: run.completedAt,
+          taskName: run.taskName,
+          status: withCosts?.status || run.status,
+          startedAt: withCosts?.startedAt || run.startedAt,
+          completedAt: withCosts?.completedAt || run.completedAt,
           totalCostInUsdCents: withCosts?.totalCostInUsdCents || null,
           costs: withCosts?.costs || [],
         };
@@ -62,31 +44,24 @@ describe("brand runs aggregation", () => {
     expect(result[2].id).toBe("run-1"); // Jan 1
 
     // Should have cost data attached
-    expect(result[0].totalCostInUsdCents).toBe("15");
-    expect(result[2].totalCostInUsdCents).toBe("10");
+    expect(result[0].totalCostInUsdCents).toBe("5");
+    expect(result[2].totalCostInUsdCents).toBe("2");
     expect(result[2].costs).toHaveLength(1);
 
-    // Should have campaign names
-    expect(result[0].campaignName).toBe("Campaign A");
-    expect(result[1].campaignName).toBe("Campaign B");
+    // Should have taskName
+    expect(result[0].taskName).toBe("icp-extraction");
+    expect(result[2].taskName).toBe("sales-profile-extraction");
   });
 
-  it("should handle empty campaigns list", () => {
-    const campaigns: Array<{ id: string; name: string }> = [];
-    const allRuns: Array<{ id: string }> = [];
-
-    for (const _campaign of campaigns) {
-      // No iterations
-    }
-
-    expect(allRuns).toHaveLength(0);
+  it("should handle empty runs list", () => {
+    const runs: Array<{ id: string }> = [];
+    expect(runs).toHaveLength(0);
   });
 
-  it("should handle runs with no cost data", () => {
+  it("should handle runs with no cost data from runs-service", () => {
     const run = {
       id: "run-1",
-      campaignId: "campaign-1",
-      campaignName: "Campaign A",
+      taskName: "sales-profile-extraction",
       status: "running",
       startedAt: "2025-01-01T00:00:00Z",
       completedAt: null,
