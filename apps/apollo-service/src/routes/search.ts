@@ -112,7 +112,13 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
               .set({ enrichmentRunId: enrichRun.id })
               .where(eq(apolloPeopleEnrichments.id, enrichment.id));
           } catch (err) {
-            console.warn("[apollo] Failed to track enrichment run:", err);
+            console.error("[apollo] COST TRACKING FAILED for enrichment — costs will be missing from campaign totals.", {
+              runId,
+              searchRunId,
+              personId: person.id,
+              costName: "apollo-enrichment-credit",
+              error: err instanceof Error ? err.message : err,
+            });
           }
         }
       }
@@ -123,7 +129,12 @@ router.post("/search", serviceAuth, async (req: AuthenticatedRequest, res) => {
           await addCosts(searchRunId, [{ costName: "apollo-search-credit", quantity: 1 }]);
           await updateRun(searchRunId, "completed");
         } catch (err) {
-          console.warn("[apollo] Failed to complete search run:", err);
+          console.error("[apollo] COST TRACKING FAILED for search — costs will be missing from campaign totals.", {
+            runId,
+            searchRunId,
+            costName: "apollo-search-credit",
+            error: err instanceof Error ? err.message : err,
+          });
         }
       }
     }
