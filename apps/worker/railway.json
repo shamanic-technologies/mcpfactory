@@ -5,7 +5,7 @@
     "dockerfilePath": "./apps/worker/Dockerfile",
     "watchPatterns": [
       "/apps/worker/**",
-      "/packages/shared/**",
+      "/shared/**",
       "/pnpm-lock.yaml"
     ]
   }

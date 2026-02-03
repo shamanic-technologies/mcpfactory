@@ -5,7 +5,7 @@
     "dockerfilePath": "./apps/apollo-service/Dockerfile",
     "watchPatterns": [
       "/apps/apollo-service/**",
-      "/packages/shared/**",
+      "/shared/**",
       "/pnpm-lock.yaml"
     ]
   },

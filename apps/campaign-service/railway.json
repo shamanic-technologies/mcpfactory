@@ -5,7 +5,7 @@
     "dockerfilePath": "./apps/campaign-service/Dockerfile",
     "watchPatterns": [
       "/apps/campaign-service/**",
-      "/packages/shared/**",
+      "/shared/**",
       "/pnpm-lock.yaml"
     ]
   },

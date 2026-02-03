@@ -5,7 +5,7 @@
     "dockerfilePath": "./apps/emailgeneration-service/Dockerfile",
     "watchPatterns": [
       "/apps/emailgeneration-service/**",
-      "/packages/shared/**",
+      "/shared/**",
       "/pnpm-lock.yaml"
     ]
   },

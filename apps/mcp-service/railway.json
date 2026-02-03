@@ -5,7 +5,7 @@
     "dockerfilePath": "./apps/mcp-service/Dockerfile",
     "watchPatterns": [
       "/apps/mcp-service/**",
-      "/packages/shared/**",
+      "/shared/**",
       "/pnpm-lock.yaml"
     ]
   },

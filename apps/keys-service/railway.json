@@ -5,7 +5,7 @@
     "dockerfilePath": "./apps/keys-service/Dockerfile",
     "watchPatterns": [
       "/apps/keys-service/**",
-      "/packages/shared/**",
+      "/shared/**",
       "/pnpm-lock.yaml"
     ]
   },
