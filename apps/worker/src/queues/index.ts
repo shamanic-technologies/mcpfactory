@@ -66,6 +66,7 @@ export interface LeadSearchJobData {
   };
   clientData: {
     companyName: string;
+    brandUrl?: string;
     companyOverview?: string;
     valueProposition?: string;
     targetAudience?: string;
@@ -114,6 +115,7 @@ export interface EmailGenerateJobData {
   };
   clientData: {
     companyName: string;
+    brandUrl?: string;
     companyOverview?: string;
     valueProposition?: string;
     targetAudience?: string;
