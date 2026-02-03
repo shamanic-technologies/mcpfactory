@@ -10,7 +10,7 @@ import { campaigns, orgs } from "../db/schema.js";
 import { serviceAuth, AuthenticatedRequest } from "../middleware/auth.js";
 import { getAggregatedStats, getStatsByModel, getLeadsForRuns, aggregateCompaniesFromLeads, type AggregatedStats } from "../lib/service-client.js";
 import { extractDomain } from "../lib/domain.js";
-import { ensureOrganization, listRuns, getRun, getRunsBatch, createRun, updateRun, type Run } from "@mcpfactory/runs-client";
+import { ensureOrganization, listRuns, getRun, getRunsBatch, createRun, updateRun, type Run, type RunWithCosts } from "@mcpfactory/runs-client";
 
 const router = Router();
 
@@ -165,7 +165,7 @@ router.get("/performance/leaderboard", async (_req, res) => {
         // Get stats and costs in parallel
         const [stats, runsMap] = await Promise.all([
           getAggregatedStats(brandOrgRunIds, clerkOrgId),
-          getRunsBatch(brandOrgRunIds).catch(() => new Map() as Map<string, Run>),
+          getRunsBatch(brandOrgRunIds).catch(() => new Map() as Map<string, RunWithCosts>),
         ]);
 
         brandStats = sumStats(brandStats, stats);
@@ -217,7 +217,7 @@ router.get("/performance/leaderboard", async (_req, res) => {
       for (const [clerkOrgId, runIds] of modelRunsByOrg) {
         const [stats, runsMap] = await Promise.all([
           getAggregatedStats(runIds, clerkOrgId),
-          getRunsBatch(runIds).catch(() => new Map() as Map<string, Run>),
+          getRunsBatch(runIds).catch(() => new Map() as Map<string, RunWithCosts>),
         ]);
         modelAgg = sumStats(modelAgg, stats);
         for (const run of runsMap.values()) {
