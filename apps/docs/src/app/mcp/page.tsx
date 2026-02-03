@@ -26,7 +26,7 @@ https://mcp.mcpfactory.org/mcp
 Add to .cursor/mcp.json:
 {
   "mcpServers": {
-    "mcpfactory-sales": {
+    "mcpfactory": {
       "url": "https://mcp.mcpfactory.org/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_API_KEY"
@@ -110,7 +110,7 @@ export default function McpUsagePage() {
         <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
           <code>{`{
   "mcpServers": {
-    "mcpfactory-sales": {
+    "mcpfactory": {
       "url": "https://mcp.mcpfactory.org/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_API_KEY"
@@ -127,7 +127,7 @@ export default function McpUsagePage() {
         <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
           <code>{`{
   "mcpServers": {
-    "mcpfactory-sales": {
+    "mcpfactory": {
       "url": "https://mcp.mcpfactory.org/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_API_KEY"

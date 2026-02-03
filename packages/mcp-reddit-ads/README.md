@@ -24,6 +24,39 @@
 
 **Estimated BYOK cost:** ~$0.10/campaign setup (AI costs only, ad spend separate)
 
+## Installation
+
+Add to your MCP client config (Cursor, Claude Code, etc.):
+
+```json
+{
+  "mcpServers": {
+    "mcpfactory": {
+      "url": "https://mcp.mcpfactory.org/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+**Alternative (local npx):**
+
+```json
+{
+  "mcpServers": {
+    "mcpfactory": {
+      "command": "npx",
+      "args": ["@mcpfactory/reddit-ads"],
+      "env": {
+        "MCPFACTORY_API_KEY": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
 ## Usage
 
 > "Create a Reddit Ads campaign for mybrand.com targeting developers in r/programming, $25/day ad budget"
