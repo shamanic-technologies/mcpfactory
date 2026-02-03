@@ -130,6 +130,15 @@ export function BreadcrumbNav() {
     }
   }, [brandId, getToken]);
 
+  // Eagerly fetch brand/campaign names for breadcrumb display
+  useEffect(() => {
+    if (brandId) fetchBrands();
+  }, [brandId, fetchBrands]);
+
+  useEffect(() => {
+    if (campaignId) fetchCampaigns();
+  }, [campaignId, fetchCampaigns]);
+
   // Handle dropdown toggle
   const toggleDropdown = (key: string) => {
     if (openDropdown === key) {
