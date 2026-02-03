@@ -213,6 +213,7 @@ router.post("/brand/icp-suggestion", authenticate, requireOrg, async (req: Authe
         body: JSON.stringify({
           clerkOrgId: req.orgId,
           url: brandUrl,
+          keyType: "byok",
         }),
       }
     );
@@ -226,7 +227,13 @@ router.post("/brand/icp-suggestion", authenticate, requireOrg, async (req: Authe
     res.json(result);
   } catch (error: any) {
     console.error("ICP suggestion error:", error.message);
-    res.status(500).json({ error: error.message || "Failed to get ICP suggestion" });
+    const msg = error.message || "Failed to get ICP suggestion";
+    if (msg.includes("No Anthropic API key found")) {
+      return res.status(400).json({
+        error: "Anthropic API key not configured. Add your Anthropic key in the dashboard under Settings > API Keys (BYOK).",
+      });
+    }
+    res.status(500).json({ error: msg });
   }
 });
 
