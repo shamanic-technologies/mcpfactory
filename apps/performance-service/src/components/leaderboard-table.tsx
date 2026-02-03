@@ -98,10 +98,10 @@ export function BrandLeaderboard({ brands }: { brands: BrandLeaderboardEntry[] }
                   </span>
                 </div>
               </td>
-              <td className="px-4 py-4 text-sm text-gray-600">{brand.emailsSent.toLocaleString()}</td>
-              <td className="px-4 py-4 text-sm text-gray-600">{formatPercent(brand.openRate)}</td>
-              <td className="px-4 py-4 text-sm text-gray-600">{formatPercent(brand.clickRate)}</td>
-              <td className="px-4 py-4 text-sm font-medium text-gray-900">{formatPercent(brand.replyRate)}</td>
+              <td className="px-4 py-4 text-sm text-gray-600">{brand.emailsSent > 0 ? brand.emailsSent.toLocaleString() : "—"}</td>
+              <td className="px-4 py-4 text-sm text-gray-600">{brand.emailsSent > 0 ? formatPercent(brand.openRate) : "—"}</td>
+              <td className="px-4 py-4 text-sm text-gray-600">{brand.emailsSent > 0 ? formatPercent(brand.clickRate) : "—"}</td>
+              <td className="px-4 py-4 text-sm font-medium text-gray-900">{brand.emailsSent > 0 ? formatPercent(brand.replyRate) : "—"}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{formatCostCents(brand.costPerOpenCents)}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{formatCostCents(brand.costPerClickCents)}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{formatCostCents(brand.costPerReplyCents)}</td>
@@ -160,10 +160,10 @@ export function ModelLeaderboard({ models }: { models: ModelLeaderboardEntry[] }
                   {model.emailsGenerated.toLocaleString()} generated
                 </span>
               </td>
-              <td className="px-4 py-4 text-sm text-gray-600">{model.emailsSent.toLocaleString()}</td>
-              <td className="px-4 py-4 text-sm text-gray-600">{formatPercent(model.openRate)}</td>
-              <td className="px-4 py-4 text-sm text-gray-600">{formatPercent(model.clickRate)}</td>
-              <td className="px-4 py-4 text-sm font-medium text-gray-900">{formatPercent(model.replyRate)}</td>
+              <td className="px-4 py-4 text-sm text-gray-600">{model.emailsSent > 0 ? model.emailsSent.toLocaleString() : "—"}</td>
+              <td className="px-4 py-4 text-sm text-gray-600">{model.emailsSent > 0 ? formatPercent(model.openRate) : "—"}</td>
+              <td className="px-4 py-4 text-sm text-gray-600">{model.emailsSent > 0 ? formatPercent(model.clickRate) : "—"}</td>
+              <td className="px-4 py-4 text-sm font-medium text-gray-900">{model.emailsSent > 0 ? formatPercent(model.replyRate) : "—"}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{formatCostCents(model.costPerOpenCents)}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{formatCostCents(model.costPerClickCents)}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{formatCostCents(model.costPerReplyCents)}</td>
