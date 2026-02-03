@@ -1,5 +1,3 @@
-// IMPORTANT: Import instrument first to initialize Sentry before anything else
-import "./instrument.js";
 import * as Sentry from "@sentry/node";
 import express from "express";
 import cors from "cors";

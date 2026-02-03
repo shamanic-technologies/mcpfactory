@@ -42,4 +42,4 @@ COPY --from=builder /prod .
 # Force IPv4 first to avoid IPv6 connection issues with Neon
 ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "--import", "./dist/instrument.js", "dist/index.js"]
