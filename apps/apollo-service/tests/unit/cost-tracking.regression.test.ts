@@ -37,8 +37,9 @@ vi.mock("../../src/middleware/auth.js", () => ({
   },
 }));
 
-// Mock the DB
+// Mock the DB — track db.update().set() calls to verify enrichmentRunId linking
 const mockInsertReturning = vi.fn().mockResolvedValue([{ id: "record-1" }]);
+const mockDbSetCalls: Array<Record<string, unknown>> = [];
 vi.mock("../../src/db/index.js", () => ({
   db: {
     insert: vi.fn().mockReturnValue({
@@ -47,8 +48,9 @@ vi.mock("../../src/db/index.js", () => ({
       }),
     }),
     update: vi.fn().mockReturnValue({
-      set: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue(undefined),
+      set: vi.fn().mockImplementation((data: Record<string, unknown>) => {
+        mockDbSetCalls.push(data);
+        return { where: vi.fn().mockResolvedValue(undefined) };
       }),
     }),
     query: {
@@ -104,6 +106,7 @@ describe("Apollo service cost tracking", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    mockDbSetCalls.length = 0;
     mockEnsureOrganization.mockResolvedValue("org-123");
     mockUpdateRun.mockResolvedValue({});
     mockAddCosts.mockResolvedValue({ costs: [] });
@@ -193,6 +196,39 @@ describe("Apollo service cost tracking", () => {
       (call) => typeof call[0] === "string" && call[0].includes("COST TRACKING FAILED")
     );
     expect(costErrorCalls.length).toBeGreaterThan(0);
+
+    errorSpy.mockRestore();
+  });
+
+  it("should link enrichmentRunId to DB record even when addCosts fails", async () => {
+    // This is the critical regression: if addCosts fails, the DB link must
+    // still be set so the dashboard can show per-item cost details.
+    let createCallCount = 0;
+    mockCreateRun.mockImplementation(() => {
+      createCallCount++;
+      return Promise.resolve({ id: `run-${createCallCount}` });
+    });
+    mockAddCosts.mockRejectedValue(new Error("Cost name not registered"));
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await request(app)
+      .post("/search")
+      .set("X-API-Key", "test-service-secret")
+      .set("X-Clerk-Org-Id", "org_test")
+      .send({
+        runId: "campaign-run-abc",
+        personTitles: ["CEO"],
+      })
+      .expect(200);
+
+    // enrichmentRunId must be set in the DB even though addCosts failed
+    const linkCalls = mockDbSetCalls.filter((data) => "enrichmentRunId" in data);
+    expect(linkCalls).toHaveLength(MOCK_PEOPLE_COUNT);
+    for (const linkCall of linkCalls) {
+      expect(linkCall.enrichmentRunId).toBeDefined();
+      expect(typeof linkCall.enrichmentRunId).toBe("string");
+    }
 
     errorSpy.mockRestore();
   });

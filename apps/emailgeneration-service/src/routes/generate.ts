@@ -124,6 +124,12 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
         parentRunId: runId,
       });
 
+      // Link generation run to email record IMMEDIATELY so per-item cost
+      // lookups work even if addCosts/updateRun fail below
+      await db.update(emailGenerations)
+        .set({ generationRunId: genRun.id })
+        .where(eq(emailGenerations.id, generation.id));
+
       const costItems = [];
       if (result.tokensInput) {
         costItems.push({ costName: "anthropic-opus-4.5-tokens-input", quantity: result.tokensInput });
@@ -135,11 +141,6 @@ router.post("/generate", serviceAuth, async (req: AuthenticatedRequest, res) => 
         await addCosts(genRun.id, costItems);
       }
       await updateRun(genRun.id, "completed");
-
-      // Link generation run to email record for cost lookups
-      await db.update(emailGenerations)
-        .set({ generationRunId: genRun.id })
-        .where(eq(emailGenerations.id, generation.id));
     } catch (err) {
       console.error("[emailgen] COST TRACKING FAILED — costs will be missing from campaign totals.", {
         runId,
