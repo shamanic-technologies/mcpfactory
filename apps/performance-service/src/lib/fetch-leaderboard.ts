@@ -1,4 +1,4 @@
-const CAMPAIGN_SERVICE_URL = process.env.CAMPAIGN_SERVICE_URL || "http://localhost:3004";
+const API_SERVICE_URL = process.env.API_SERVICE_URL || "http://localhost:3000";
 const BRAND_SERVICE_URL = process.env.BRAND_SERVICE_URL;
 
 export interface BrandLeaderboardEntry {
@@ -55,7 +55,7 @@ export interface LeaderboardData {
 
 export async function fetchLeaderboard(): Promise<LeaderboardData | null> {
   try {
-    const res = await fetch(`${CAMPAIGN_SERVICE_URL}/internal/performance/leaderboard`, {
+    const res = await fetch(`${API_SERVICE_URL}/performance/leaderboard`, {
       next: { revalidate: 3600 },
     });
 

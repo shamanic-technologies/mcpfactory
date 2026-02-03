@@ -13,6 +13,7 @@ import qualifyRoutes from "./routes/qualify.js";
 import brandRoutes from "./routes/brand.js";
 import leadsRoutes from "./routes/leads.js";
 import activityRoutes from "./routes/activity.js";
+import performanceRoutes from "./routes/performance.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +25,8 @@ app.use(cors({
     "https://mcpfactory.org",
     "http://localhost:3000",
     "http://localhost:3001",
+    "https://performance.mcpfactory.org",
+    "http://localhost:3007",
   ],
   credentials: true,
 }));
@@ -33,6 +36,7 @@ app.use(express.json());
 // Public routes
 app.use(healthRoutes);
 app.use(webhookRoutes);
+app.use(performanceRoutes);
 
 // Authenticated routes
 app.use("/v1", meRoutes);
