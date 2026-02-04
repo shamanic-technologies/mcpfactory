@@ -33,7 +33,7 @@ export function HeroStatsSection({ hero }: { hero: HeroStats }) {
           <div className="bg-white rounded-2xl p-8 border border-accent-200 shadow-sm">
             <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Best Value</p>
             <p className="text-5xl font-bold text-accent-500 mb-2">
-              {hero.bestValueModel.conversionsPerDollar.toFixed(1)}
+              {hero.bestValueModel.conversionsPerDollar === 0 ? "—" : hero.bestValueModel.conversionsPerDollar.toFixed(1)}
             </p>
             <p className="text-sm text-gray-500">
               conversions per $1 spent

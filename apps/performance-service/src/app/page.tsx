@@ -75,7 +75,7 @@ export default async function HomePage() {
                   <div className="bg-white rounded-2xl p-6 border border-accent-200 shadow-sm">
                     <p className="text-sm text-gray-500 uppercase tracking-wider mb-1">Best Value</p>
                     <p className="text-4xl font-bold text-accent-500 mb-1">
-                      {hero.bestValueModel.conversionsPerDollar.toFixed(1)}
+                      {hero.bestValueModel.conversionsPerDollar === 0 ? "—" : hero.bestValueModel.conversionsPerDollar.toFixed(1)}
                     </p>
                     <p className="text-xs text-gray-400">
                       {formatModelName(hero.bestValueModel.model)} — conversions per $1 spent
@@ -93,7 +93,7 @@ export default async function HomePage() {
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
                 <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
-                  <p className="text-3xl font-bold text-gray-400">0</p>
+                  <p className="text-3xl font-bold text-gray-400">—</p>
                   <p className="text-xs text-gray-500 mt-1">Emails Sent</p>
                 </div>
                 <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
