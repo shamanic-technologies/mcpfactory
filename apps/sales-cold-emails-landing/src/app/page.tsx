@@ -173,7 +173,7 @@ export default async function Home() {
             <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-6">
               <div className="bg-white rounded-xl p-6 border border-primary-200 shadow-sm">
                 <p className="text-4xl font-bold text-primary-500 mb-1">
-                  {(heroStats.bestConversionModel.conversionRate * 100).toFixed(1)}%
+                  {heroStats.bestConversionModel.conversionRate === 0 ? "—" : `${(heroStats.bestConversionModel.conversionRate * 100).toFixed(1)}%`}
                 </p>
                 <p className="text-sm text-gray-600 mb-1">Best Conversion Rate</p>
                 <p className="text-xs text-gray-400">
@@ -182,7 +182,7 @@ export default async function Home() {
               </div>
               <div className="bg-white rounded-xl p-6 border border-accent-200 shadow-sm">
                 <p className="text-4xl font-bold text-accent-500 mb-1">
-                  {heroStats.bestValueModel.conversionsPerDollar.toFixed(1)}
+                  {heroStats.bestValueModel.conversionsPerDollar === 0 ? "—" : heroStats.bestValueModel.conversionsPerDollar.toFixed(1)}
                 </p>
                 <p className="text-sm text-gray-600 mb-1">Conversions per $1</p>
                 <p className="text-xs text-gray-400">

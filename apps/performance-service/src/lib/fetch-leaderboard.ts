@@ -116,11 +116,12 @@ export function formatModelName(model: string): string {
 }
 
 export function formatPercent(rate: number): string {
+  if (rate === 0) return "—";
   return `${(rate * 100).toFixed(1)}%`;
 }
 
 export function formatCostCents(cents: number | null): string {
-  if (cents === null) return "—";
+  if (cents === null || cents === 0) return "—";
   if (cents < 100) return `${cents}c`;
   return `$${(cents / 100).toFixed(2)}`;
 }

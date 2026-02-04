@@ -157,7 +157,7 @@ export function ModelLeaderboard({ models }: { models: ModelLeaderboardEntry[] }
                   {formatModelName(model.model)}
                 </span>
                 <span className="text-xs text-gray-400 ml-2">
-                  {model.emailsGenerated.toLocaleString()} generated
+                  {model.emailsGenerated > 0 ? `${model.emailsGenerated.toLocaleString()} generated` : "—"}
                 </span>
               </td>
               <td className="px-4 py-4 text-sm text-gray-600">{model.emailsSent > 0 ? model.emailsSent.toLocaleString() : "—"}</td>
