@@ -1,0 +1,16 @@
+{
+  "name": "@mcpfactory/auth",
+  "version": "0.1.0",
+  "description": "API key validation for MCP Factory",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0"
+  }
+}

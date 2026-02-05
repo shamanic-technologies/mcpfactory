@@ -1,0 +1,15 @@
+{
+  "name": "@mcpfactory/types",
+  "version": "0.1.0",
+  "description": "Shared TypeScript types for MCP Factory",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0"
+  }
+}
