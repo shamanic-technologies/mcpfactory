@@ -8,6 +8,11 @@ vi.mock("@clerk/backend", () => ({
   }),
 }));
 
+// Mock runs-client (used by brand router)
+vi.mock("@mcpfactory/runs-client", () => ({
+  getRunsBatch: vi.fn().mockResolvedValue(new Map()),
+}));
+
 // Mock fetch for service calls
 global.fetch = vi.fn().mockResolvedValue({
   ok: true,
