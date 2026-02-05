@@ -7,7 +7,7 @@ const router = Router();
 
 /**
  * POST /v1/leads/search
- * Search for leads using Apollo
+ * Search for leads via lead-service
  */
 router.post("/leads/search", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
@@ -23,9 +23,8 @@ router.post("/leads/search", authenticate, requireOrg, async (req: Authenticated
       return res.status(400).json({ error: "person_titles array is required" });
     }
 
-    // Call apollo-service
     const result = await callService(
-      services.apollo,
+      services.lead,
       "/search",
       {
         method: "POST",
@@ -35,7 +34,7 @@ router.post("/leads/search", authenticate, requireOrg, async (req: Authenticated
           organizationLocations: organization_locations,
           qOrganizationIndustryTagIds: organization_industries,
           organizationNumEmployeesRanges: organization_num_employees_ranges,
-          perPage: Math.min(per_page, 100), // Cap at 100
+          perPage: Math.min(per_page, 100),
         },
       }
     );
@@ -47,36 +46,6 @@ router.post("/leads/search", authenticate, requireOrg, async (req: Authenticated
   }
 });
 
-/**
- * POST /v1/leads/enrich
- * Enrich a lead with additional information
- */
-router.post("/leads/enrich", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
-  try {
-    const { email, linkedin_url } = req.body;
-
-    if (!email && !linkedin_url) {
-      return res.status(400).json({ error: "email or linkedin_url is required" });
-    }
-
-    const result = await callService(
-      services.apollo,
-      "/enrich",
-      {
-        method: "POST",
-        headers: buildInternalHeaders(req),
-        body: {
-          email,
-          linkedinUrl: linkedin_url,
-        },
-      }
-    );
-
-    res.json(result);
-  } catch (error: any) {
-    console.error("Lead enrich error:", error);
-    res.status(500).json({ error: error.message || "Failed to enrich lead" });
-  }
-});
+// POST /v1/leads/enrich removed - no consumers
 
 export default router;

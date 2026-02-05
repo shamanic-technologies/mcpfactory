@@ -126,19 +126,6 @@ export const campaignService = {
   },
 };
 
-export const apolloService = {
-  url: process.env.APOLLO_SERVICE_URL || "http://localhost:3004",
-  apiKey: process.env.APOLLO_SERVICE_API_KEY,
-  
-  async search(clerkOrgId: string, data: unknown) {
-    return callService(this.url, "/search", {
-      method: "POST",
-      body: data,
-      apiKey: this.apiKey,
-      clerkOrgId,
-    });
-  },
-};
 
 export const emailGenerationService = {
   url: process.env.EMAILGENERATION_SERVICE_URL || "http://localhost:3005",
@@ -247,10 +234,10 @@ export const leadService = {
     });
   },
 
-  async next(clerkOrgId: string, namespace: string, parentRunId: string) {
+  async next(clerkOrgId: string, namespace: string, parentRunId: string, searchParams?: unknown) {
     return callService(this.url, "/buffer/next", {
       method: "POST",
-      body: { namespace, parentRunId },
+      body: { namespace, parentRunId, searchParams },
       apiKey: this.apiKey,
       extraHeaders: this.headers(clerkOrgId),
     });

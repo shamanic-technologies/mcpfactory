@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import path from "path";
 
 export default defineConfig({
   test: {
@@ -9,5 +10,11 @@ export default defineConfig({
     exclude: ["node_modules", "dist"],
     fileParallelism: false,
     maxWorkers: 1,
+  },
+  resolve: {
+    alias: {
+      // Mock workspace package that may not be built in CI
+      "@mcpfactory/runs-client": path.resolve(__dirname, "tests/__mocks__/runs-client.ts"),
+    },
   },
 });

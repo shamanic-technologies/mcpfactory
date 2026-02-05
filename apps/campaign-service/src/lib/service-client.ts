@@ -2,16 +2,16 @@
  * Service client for cross-service calls from campaign-service
  */
 
-const APOLLO_SERVICE_URL = process.env.APOLLO_SERVICE_URL || "http://localhost:3003";
+const LEAD_SERVICE_URL = process.env.LEAD_SERVICE_URL || "http://localhost:3006";
 const EMAILGENERATION_SERVICE_URL = process.env.EMAILGENERATION_SERVICE_URL || "http://localhost:3004";
 const POSTMARK_SERVICE_URL = process.env.POSTMARK_SERVICE_URL || "http://localhost:3006";
 
 // Service API keys for inter-service auth
-const APOLLO_SERVICE_API_KEY = process.env.APOLLO_SERVICE_API_KEY;
+const LEAD_SERVICE_API_KEY = process.env.LEAD_SERVICE_API_KEY;
 const EMAILGENERATION_SERVICE_API_KEY = process.env.EMAILGENERATION_SERVICE_API_KEY;
 const POSTMARK_SERVICE_API_KEY = process.env.POSTMARK_SERVICE_API_KEY;
 
-interface ApolloStats {
+interface LeadStats {
   leadsFound: number;
   searchesCount: number;
   totalPeopleFromSearches: number;
@@ -127,12 +127,12 @@ export async function getLeadsForRuns(
 
   const allLeads: LeadData[] = [];
 
-  // Fetch leads for each run from apollo-service
+  // Fetch leads for each run from lead-service
   for (const runId of runIds) {
     const result = await fetchData<{ enrichments: LeadData[] }>(
-      `${APOLLO_SERVICE_URL}/enrichments/${runId}`,
+      `${LEAD_SERVICE_URL}/enrichments/${runId}`,
       clerkOrgId,
-      APOLLO_SERVICE_API_KEY
+      LEAD_SERVICE_API_KEY
     );
     if (result?.enrichments) {
       allLeads.push(...result.enrichments);
@@ -248,14 +248,14 @@ export async function getAggregatedStats(
   const body = { runIds };
 
   // Fetch stats from all services in parallel
-  const [apolloStats, emailGenStats, postmarkStats] = await Promise.all([
-    fetchStats<ApolloStats>(`${APOLLO_SERVICE_URL}/stats`, clerkOrgId, body, APOLLO_SERVICE_API_KEY),
+  const [leadStats, emailGenStats, postmarkStats] = await Promise.all([
+    fetchStats<LeadStats>(`${LEAD_SERVICE_URL}/stats`, clerkOrgId, body, LEAD_SERVICE_API_KEY),
     fetchStats<EmailGenStats>(`${EMAILGENERATION_SERVICE_URL}/stats`, clerkOrgId, body, EMAILGENERATION_SERVICE_API_KEY),
     fetchStats<PostmarkStats>(`${POSTMARK_SERVICE_URL}/stats`, clerkOrgId, body, POSTMARK_SERVICE_API_KEY),
   ]);
 
   return {
-    leadsFound: apolloStats?.leadsFound || 0,
+    leadsFound: leadStats?.leadsFound || 0,
     emailsGenerated: emailGenStats?.emailsGenerated || 0,
     emailsSent: postmarkStats?.emailsSent || 0,
     emailsOpened: postmarkStats?.emailsOpened || 0,

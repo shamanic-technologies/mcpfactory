@@ -8,6 +8,11 @@ vi.mock("@clerk/backend", () => ({
   }),
 }));
 
+// Mock runs-client (used by brand router)
+vi.mock("@mcpfactory/runs-client", () => ({
+  getRunsBatch: vi.fn().mockResolvedValue(new Map()),
+}));
+
 // Mock fetch for service calls
 global.fetch = vi.fn().mockResolvedValue({
   ok: true,
@@ -17,7 +22,7 @@ global.fetch = vi.fn().mockResolvedValue({
 process.env.CLERK_SECRET_KEY = "test_clerk_secret_key";
 process.env.API_SERVICE_API_KEY = "test-service-secret";
 process.env.KEYS_SERVICE_URL = "http://localhost:3001";
-process.env.APOLLO_SERVICE_URL = "http://localhost:3003";
+process.env.LEAD_SERVICE_URL = "http://localhost:3006";
 process.env.CAMPAIGN_SERVICE_URL = "http://localhost:3004";
 process.env.CLIENT_SERVICE_URL = "http://localhost:3002";
 

@@ -1,42 +1,30 @@
 import { Worker, Job } from "bullmq";
 import { getRedis } from "../lib/redis.js";
 import { getQueues, QUEUE_NAMES, LeadSearchJobData, EmailGenerateJobData } from "../queues/index.js";
-import { apolloService, leadService } from "../lib/service-client.js";
+import { leadService } from "../lib/service-client.js";
 import { initRunTracking, finalizeRun } from "../lib/run-tracker.js";
 
-interface ApolloEnrichment {
-  id: string;
-  firstName: string;
-  lastName: string;
-  title: string;
+interface LeadData {
   email: string;
+  externalId?: string;
+  firstName?: string;
+  lastName?: string;
+  title?: string;
   linkedinUrl?: string;
-  organizationName: string;
+  organizationName?: string;
   organizationDomain?: string;
-  organizationIndustry: string;
+  organizationIndustry?: string;
   organizationSize?: string;
   organizationRevenueUsd?: string;
 }
 
-interface CursorState {
-  lastPage: number;
-  exhausted: boolean;
-}
-
-interface BufferLead {
-  email: string;
-  externalId?: string;
-  data: Record<string, unknown>;
-}
-
-const APOLLO_PAGE_SIZE = 25;
 const MAX_LEADS_PER_RUN = 50;
 
 /**
  * Lead Search Worker
  *
- * Searches Apollo for leads, pushes to lead-service buffer for dedup,
- * then pulls deduplicated leads one-by-one and queues email generation.
+ * Pulls leads from lead-service one-by-one.
+ * Lead-service handles Apollo search + dedup internally.
  */
 export function startLeadSearchWorker(): Worker {
   const connection = getRedis();
@@ -51,85 +39,23 @@ export function startLeadSearchWorker(): Worker {
       console.log(`[lead-search] Client: ${clientData?.companyName || "(no client data)"}`);
 
       try {
-        // 1. Read cursor from lead-service
-        let cursor: CursorState = { lastPage: 0, exhausted: false };
-        try {
-          const cursorResult = await leadService.getCursor(clerkOrgId, namespace) as { state: CursorState | null };
-          if (cursorResult?.state) {
-            cursor = cursorResult.state;
-          }
-        } catch {
-          console.log(`[lead-search] No cursor found, starting fresh`);
-        }
-
-        // 2. If not exhausted, fetch next page from Apollo and push to buffer
-        if (!cursor.exhausted) {
-          const nextPage = cursor.lastPage + 1;
-          console.log(`[lead-search] Fetching Apollo page ${nextPage}`);
-
-          const result = await apolloService.search(clerkOrgId, {
-            runId,
-            page: nextPage,
-            ...searchParams,
-          }) as { people: ApolloEnrichment[] };
-
-          const people = result.people || [];
-          console.log(`[lead-search] Apollo returned ${people.length} leads`);
-
-          if (people.length > 0) {
-            const leads = people.map((p) => ({
-              email: p.email,
-              externalId: p.id,
-              data: {
-                firstName: p.firstName,
-                lastName: p.lastName,
-                title: p.title,
-                email: p.email,
-                linkedinUrl: p.linkedinUrl,
-                organizationName: p.organizationName,
-                organizationDomain: p.organizationDomain,
-                organizationIndustry: p.organizationIndustry,
-                organizationSize: p.organizationSize,
-                organizationRevenueUsd: p.organizationRevenueUsd,
-              },
-            }));
-
-            const pushResult = await leadService.push(clerkOrgId, namespace, runId, leads) as {
-              buffered: number;
-              skippedAlreadyServed: number;
-            };
-            console.log(
-              `[lead-search] Buffer push: ${pushResult.buffered} new, ${pushResult.skippedAlreadyServed} already served`
-            );
-          }
-
-          // Update cursor
-          const exhausted = people.length < APOLLO_PAGE_SIZE;
-          await leadService.setCursor(clerkOrgId, namespace, { lastPage: nextPage, exhausted });
-          if (exhausted) {
-            console.log(`[lead-search] Apollo results exhausted at page ${nextPage}`);
-          }
-        } else {
-          console.log(`[lead-search] Apollo exhausted, pulling from buffer only`);
-        }
-
-        // 3. Pull deduplicated leads from buffer one-by-one
-        const dedupedLeads: BufferLead[] = [];
-        while (dedupedLeads.length < MAX_LEADS_PER_RUN) {
-          const nextResult = await leadService.next(clerkOrgId, namespace, runId) as {
+        // Pull leads from lead-service (handles Apollo search + dedup internally)
+        const leads: LeadData[] = [];
+        while (leads.length < MAX_LEADS_PER_RUN) {
+          const result = await leadService.next(clerkOrgId, namespace, runId, searchParams) as {
             found: boolean;
-            lead?: BufferLead;
+            lead?: LeadData;
           };
-          if (!nextResult.found || !nextResult.lead) break;
-          dedupedLeads.push(nextResult.lead);
+          if (!result.found || !result.lead) break;
+          leads.push(result.lead);
         }
 
-        console.log(`[lead-search] Pulled ${dedupedLeads.length} deduped leads from buffer`);
+        console.log(`[lead-search] Got ${leads.length} leads from lead-service`);
 
-        // 4. Queue email generation for each deduped lead
+        // Queue email generation for each lead
         const queues = getQueues();
-        const jobs = dedupedLeads
-          .filter((lead) => lead.data?.email)
+        const jobs = leads
+          .filter((lead) => lead.email)
           .map((lead) => ({
             name: `generate-${lead.externalId || lead.email}`,
             data: {
@@ -137,16 +63,16 @@ export function startLeadSearchWorker(): Worker {
               clerkOrgId,
               apolloEnrichmentId: lead.externalId || "",
               leadData: {
-                firstName: lead.data.firstName as string,
-                lastName: lead.data.lastName as string | undefined,
-                title: lead.data.title as string | undefined,
-                email: lead.data.email as string,
-                linkedinUrl: lead.data.linkedinUrl as string | undefined,
-                companyName: (lead.data.organizationName as string) || "",
-                companyDomain: lead.data.organizationDomain as string | undefined,
-                companyIndustry: lead.data.organizationIndustry as string | undefined,
-                companySize: lead.data.organizationSize as string | undefined,
-                companyRevenueUsd: lead.data.organizationRevenueUsd as string | undefined,
+                firstName: lead.firstName || "",
+                lastName: lead.lastName,
+                title: lead.title,
+                email: lead.email!,
+                linkedinUrl: lead.linkedinUrl,
+                companyName: lead.organizationName || "",
+                companyDomain: lead.organizationDomain,
+                companyIndustry: lead.organizationIndustry,
+                companySize: lead.organizationSize,
+                companyRevenueUsd: lead.organizationRevenueUsd,
               },
               clientData: clientData || { companyName: "" },
             } as EmailGenerateJobData,
@@ -161,7 +87,7 @@ export function startLeadSearchWorker(): Worker {
           await finalizeRun(runId, { total: 0, done: 0, failed: 0 });
         }
 
-        return { leadsFound: dedupedLeads.length, jobsQueued: jobs.length };
+        return { leadsFound: leads.length, jobsQueued: jobs.length };
       } catch (error) {
         console.error(`[lead-search] Error:`, error);
         throw error;

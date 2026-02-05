@@ -733,7 +733,7 @@ router.get("/campaigns/:id/debug", serviceAuth, async (req: AuthenticatedRequest
 
 /**
  * GET /internal/campaigns/:id/stats - Get campaign statistics
- * Aggregates stats from all services (apollo, emailgen, postmark)
+ * Aggregates stats from all services (lead, emailgen, postmark)
  */
 router.get("/campaigns/:id/stats", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
@@ -806,7 +806,7 @@ router.get("/campaigns/:id/stats", serviceAuth, async (req: AuthenticatedRequest
 
 /**
  * GET /internal/campaigns/:id/leads - Get all leads for a campaign
- * Aggregates leads from apollo-service across all campaign runs
+ * Aggregates leads from lead-service across all campaign runs
  */
 router.get("/campaigns/:id/leads", serviceAuth, async (req: AuthenticatedRequest, res) => {
   try {
@@ -827,7 +827,7 @@ router.get("/campaigns/:id/leads", serviceAuth, async (req: AuthenticatedRequest
     // Get all run IDs for this campaign from runs-service
     const runIds = await getRunIds(req.clerkOrgId!, id);
 
-    // Fetch leads from apollo-service
+    // Fetch leads from lead-service
     const leads = await getLeadsForRuns(runIds, req.clerkOrgId!);
 
     // Map to expected format
@@ -874,7 +874,7 @@ router.get("/campaigns/:id/companies", serviceAuth, async (req: AuthenticatedReq
     // Get all run IDs for this campaign from runs-service
     const runIds = await getRunIds(req.clerkOrgId!, id);
 
-    // Fetch leads from apollo-service
+    // Fetch leads from lead-service
     const leads = await getLeadsForRuns(runIds, req.clerkOrgId!);
 
     // Aggregate into companies

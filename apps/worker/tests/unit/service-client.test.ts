@@ -3,11 +3,11 @@ import { describe, it, expect } from "vitest";
 describe("Service client", () => {
   it("should define service URLs", () => {
     const services = {
-      apolloService: "https://apollo.mcpfactory.org",
+      leadService: "https://lead.mcpfactory.org",
       postmarkService: "https://postmark.mcpfactory.org",
       companyService: "https://company.mcpfactory.org",
     };
-    expect(services.apolloService).toContain("mcpfactory.org");
+    expect(services.leadService).toContain("mcpfactory.org");
   });
 
   it("should define auth headers", () => {
