@@ -25,10 +25,11 @@ import {
 } from "@mcpfactory/runs-client";
 
 interface ServiceCallOptions {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   clerkOrgId?: string;
   apiKey?: string; // Service-specific API key
+  extraHeaders?: Record<string, string>;
 }
 
 export async function callService(
@@ -36,20 +37,25 @@ export async function callService(
   path: string,
   options: ServiceCallOptions
 ): Promise<unknown> {
-  const { method = "GET", body, clerkOrgId, apiKey } = options;
+  const { method = "GET", body, clerkOrgId, apiKey, extraHeaders } = options;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
-  
+
   // Add service secret for auth
   if (apiKey) {
     headers["X-API-Key"] = apiKey;
   }
-  
+
   // Only add Clerk org header if provided (some services don't need it)
   if (clerkOrgId) {
     headers["X-Clerk-Org-Id"] = clerkOrgId;
+  }
+
+  // Add any extra headers
+  if (extraHeaders) {
+    Object.assign(headers, extraHeaders);
   }
 
   const response = await fetch(`${serviceUrl}${path}`, {
@@ -218,6 +224,52 @@ export const brandService = {
         keyType,
       },
       apiKey: this.apiKey,
+    });
+  },
+};
+
+// Lead Guard - dedup + buffer service
+export const leadGuard = {
+  url: process.env.LEAD_GUARD_URL || "http://localhost:3006",
+  apiKey: process.env.LEAD_GUARD_API_KEY,
+  appId: "mcpfactory",
+
+  headers(clerkOrgId: string) {
+    return { "X-App-Id": this.appId, "X-Org-Id": clerkOrgId };
+  },
+
+  async push(clerkOrgId: string, namespace: string, parentRunId: string, leads: Array<{ email: string; externalId?: string; data?: unknown }>) {
+    return callService(this.url, "/buffer/push", {
+      method: "POST",
+      body: { namespace, parentRunId, leads },
+      apiKey: this.apiKey,
+      extraHeaders: this.headers(clerkOrgId),
+    });
+  },
+
+  async next(clerkOrgId: string, namespace: string, parentRunId: string) {
+    return callService(this.url, "/buffer/next", {
+      method: "POST",
+      body: { namespace, parentRunId },
+      apiKey: this.apiKey,
+      extraHeaders: this.headers(clerkOrgId),
+    });
+  },
+
+  async getCursor(clerkOrgId: string, namespace: string) {
+    return callService(this.url, `/cursor/${encodeURIComponent(namespace)}`, {
+      method: "GET",
+      apiKey: this.apiKey,
+      extraHeaders: this.headers(clerkOrgId),
+    });
+  },
+
+  async setCursor(clerkOrgId: string, namespace: string, state: unknown) {
+    return callService(this.url, `/cursor/${encodeURIComponent(namespace)}`, {
+      method: "PUT",
+      body: { state },
+      apiKey: this.apiKey,
+      extraHeaders: this.headers(clerkOrgId),
     });
   },
 };

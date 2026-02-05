@@ -50,7 +50,8 @@ export function startBrandProfileWorker(): Worker {
         // 1. Get sales profile from brand-service
         // brand-service will create the brand if it doesn't exist (getOrCreateBrand)
         let clientData: LeadSearchJobData["clientData"] = { companyName: brandDomain, brandUrl };
-        
+        let brandId = "";
+
         try {
           const profileResult = await brandService.getSalesProfile(
             clerkOrgId,
@@ -78,11 +79,12 @@ export function startBrandProfileWorker(): Worker {
 
             // Update campaign with brandId from brand-service
             if (profileResult.brandId) {
+              brandId = profileResult.brandId;
               try {
                 await campaignService.updateCampaign(campaignId, clerkOrgId, {
-                  brandId: profileResult.brandId,
+                  brandId,
                 });
-                console.log(`[brand-profile] Updated campaign ${campaignId} with brandId: ${profileResult.brandId}`);
+                console.log(`[brand-profile] Updated campaign ${campaignId} with brandId: ${brandId}`);
               } catch (updateErr) {
                 // Non-fatal - log and continue
                 console.error(`[brand-profile] Failed to update campaign brandId:`, updateErr);
@@ -102,6 +104,8 @@ export function startBrandProfileWorker(): Worker {
           {
             runId,
             clerkOrgId,
+            campaignId,
+            brandId,
             searchParams,
             clientData,
           } as LeadSearchJobData
