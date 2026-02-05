@@ -37,6 +37,11 @@ const TOOLS = [
           description:
             "Optional: Description of ideal customers (e.g., 'CTOs at tech startups')",
         },
+        max_leads: {
+          type: "number",
+          description:
+            "Optional: Maximum total number of leads for this campaign. Once reached, the campaign stops automatically.",
+        },
         budget: {
           type: "object",
           properties: {

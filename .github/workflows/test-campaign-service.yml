@@ -46,6 +46,9 @@ jobs:
         env:
           CAMPAIGN_SERVICE_DATABASE_URL: ${{ env.CAMPAIGN_SERVICE_DATABASE_URL }}
 
+      - name: Build runs-client dependency
+        run: pnpm --filter @mcpfactory/runs-client build
+
       - name: Run integration tests
         run: pnpm --filter @mcpfactory/campaign-service test:integration
         env:

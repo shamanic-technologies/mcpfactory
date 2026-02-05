@@ -228,10 +228,10 @@ export const brandService = {
   },
 };
 
-// Lead Guard - dedup + buffer service
-export const leadGuard = {
-  url: process.env.LEAD_GUARD_URL || "http://localhost:3006",
-  apiKey: process.env.LEAD_GUARD_API_KEY,
+// Lead Service - dedup + buffer service
+export const leadService = {
+  url: process.env.LEAD_SERVICE_URL || "http://localhost:3006",
+  apiKey: process.env.LEAD_SERVICE_API_KEY,
   appId: "mcpfactory",
 
   headers(clerkOrgId: string) {
@@ -271,6 +271,14 @@ export const leadGuard = {
       apiKey: this.apiKey,
       extraHeaders: this.headers(clerkOrgId),
     });
+  },
+
+  async getStats(clerkOrgId: string, namespace: string) {
+    return callService(this.url, `/stats/${encodeURIComponent(namespace)}`, {
+      method: "GET",
+      apiKey: this.apiKey,
+      extraHeaders: this.headers(clerkOrgId),
+    }) as Promise<{ totalServed: number }>;
   },
 };
 

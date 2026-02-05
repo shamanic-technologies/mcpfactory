@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, uniqueIndex, index, date, decimal, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, uniqueIndex, index, date, decimal, jsonb, integer } from "drizzle-orm/pg-core";
 
 // Local users table (maps to Clerk)
 export const users = pgTable(
@@ -64,6 +64,9 @@ export const campaigns = pgTable(
     maxBudgetWeeklyUsd: decimal("max_budget_weekly_usd", { precision: 10, scale: 2 }),
     maxBudgetMonthlyUsd: decimal("max_budget_monthly_usd", { precision: 10, scale: 2 }),
     maxBudgetTotalUsd: decimal("max_budget_total_usd", { precision: 10, scale: 2 }),
+
+    // Volume limit (optional, total leads across all runs)
+    maxLeads: integer("max_leads"),
 
     // Scheduling
     startDate: date("start_date"),

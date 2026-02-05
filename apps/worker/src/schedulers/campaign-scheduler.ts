@@ -1,5 +1,5 @@
 import { getQueues, QUEUE_NAMES, BrandUpsertJobData } from "../queues/index.js";
-import { campaignService, runsService } from "../lib/service-client.js";
+import { campaignService, leadService, runsService } from "../lib/service-client.js";
 import type { Run, RunWithCosts } from "@mcpfactory/runs-client";
 
 export interface Campaign {
@@ -12,6 +12,8 @@ export interface Campaign {
   maxBudgetWeeklyUsd?: string | null;
   maxBudgetMonthlyUsd?: string | null;
   maxBudgetTotalUsd?: string | null;
+  maxLeads?: number | null;
+  brandId?: string | null;
   personTitles?: string[];
   organizationLocations?: string[];
   qOrganizationKeywordTags?: string[];
@@ -128,7 +130,7 @@ async function shouldRunCampaign(campaign: Campaign): Promise<ShouldRunResult> {
 
     console.log(`[scheduler] Campaign ${campaign.id} has ${runs.length} runs (${runs.filter(r => r.status === "running").length} running)`);
 
-    // Budget is the only gate — if no running run, check budget
+    // Budget + volume are the gates — if no running run, check both
     let shouldRun = false;
     if (!hasRunningRun) {
       const budgetResult = await isBudgetExceeded(campaign, runs);
@@ -147,7 +149,23 @@ async function shouldRunCampaign(campaign: Campaign): Promise<ShouldRunResult> {
 
         shouldRun = false;
       } else {
-        shouldRun = true;
+        // Check volume limit
+        const volumeResult = await isVolumeExceeded(campaign);
+        if (volumeResult.exceeded) {
+          console.log(`[scheduler] Campaign ${campaign.id}: volume exceeded (${volumeResult.totalServed} >= ${volumeResult.maxLeads})`);
+
+          // Auto-stop campaign when volume cap reached
+          console.log(`[scheduler] Campaign ${campaign.id}: max leads reached, stopping campaign`);
+          try {
+            await campaignService.updateCampaign(campaign.id, campaign.clerkOrgId, { status: "stopped" } as any);
+          } catch (err) {
+            console.error(`[scheduler] Failed to auto-stop campaign ${campaign.id}:`, err);
+          }
+
+          shouldRun = false;
+        } else {
+          shouldRun = true;
+        }
       }
     }
 
@@ -249,4 +267,33 @@ export async function isBudgetExceeded(campaign: Campaign, allRuns: Run[]): Prom
   }
 
   return { exceeded: false };
+}
+
+interface VolumeCheckResult {
+  exceeded: boolean;
+  totalServed?: number;
+  maxLeads?: number;
+}
+
+export async function isVolumeExceeded(campaign: Campaign): Promise<VolumeCheckResult> {
+  if (!campaign.maxLeads || !campaign.brandId) {
+    return { exceeded: false };
+  }
+
+  try {
+    const stats = await leadService.getStats(campaign.clerkOrgId, campaign.brandId);
+    const totalServed = stats.totalServed;
+
+    console.log(`[scheduler] Campaign ${campaign.id} volume: ${totalServed} / ${campaign.maxLeads}`);
+
+    if (totalServed >= campaign.maxLeads) {
+      return { exceeded: true, totalServed, maxLeads: campaign.maxLeads };
+    }
+
+    return { exceeded: false, totalServed, maxLeads: campaign.maxLeads };
+  } catch (error) {
+    // Fail closed — if we can't check volume, don't run
+    console.error(`[scheduler] Failed to check volume for campaign ${campaign.id}, failing closed:`, error);
+    return { exceeded: true, totalServed: 0, maxLeads: campaign.maxLeads };
+  }
 }
