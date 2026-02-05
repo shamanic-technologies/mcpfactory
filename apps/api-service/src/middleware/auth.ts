@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "@clerk/backend";
-import { callService, services } from "../lib/service-client.js";
+import { callExternalService, externalServices } from "../lib/service-client.js";
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;
@@ -64,13 +64,13 @@ export async function authenticate(
  */
 async function validateApiKey(apiKey: string): Promise<{ userId: string | null; orgId: string } | null> {
   try {
-    const result = await callService<{
+    const result = await callExternalService<{
       valid: boolean;
       orgId?: string;
       clerkOrgId?: string;
       clerkUserId?: string | null;
     }>(
-      services.keys,
+      externalServices.key,
       "/validate",
       {
         headers: {
