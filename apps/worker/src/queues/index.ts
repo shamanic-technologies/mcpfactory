@@ -55,7 +55,8 @@ export interface BrandProfileJobData {
 export interface LeadSearchJobData {
   runId: string;
   clerkOrgId: string;
-  brandId?: string;
+  campaignId: string;
+  brandId: string;
   searchParams: {
     personTitles?: string[];
     organizationLocations?: string[];
