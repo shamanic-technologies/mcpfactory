@@ -15,18 +15,13 @@ All services are configured with Sentry. One project, multiple services identifi
 
 | Service | Tag |
 |---------|-----|
-| api-service | `service:api-service` |
-| worker | `service:worker` |
-| campaign-service | `service:campaign-service` |
-| apollo-service | `service:apollo-service` |
-| keys-service | `service:keys-service` |
-| client-service | `service:client-service` |
-| emailgeneration-service | `service:emailgeneration-service` |
 | mcp-service | `service:mcp-service` |
+| performance-service | `service:performance-service` |
+| dashboard | `service:dashboard` |
 
 ### Filtering in Sentry
 
-Use the search bar: `service:api-service` to filter errors by service.
+Use the search bar: `service:mcp-service` to filter errors by service.
 
 ---
 
@@ -47,21 +42,10 @@ Public status page at `status.mcpfactory.org`.
 
 | Name | URL | Method | Expected Status |
 |------|-----|--------|-----------------|
-| API Gateway | `https://api.mcpfactory.org/health` | GET | 200 |
 | MCP Service | `https://mcp.mcpfactory.org/health` | GET | 200 |
-| Landing | `https://mcpfactory.org` | GET | 200 |
 | Dashboard | `https://dashboard.mcpfactory.org` | GET | 200 |
 | Docs | `https://docs.mcpfactory.org` | GET | 200 |
-
-### Internal Services (Railway Private Network)
-
-These are not publicly accessible, but you can monitor them via the API Gateway health which depends on them:
-
-- keys-service (internal)
-- campaign-service (internal)
-- apollo-service (internal)
-- client-service (internal)
-- emailgeneration-service (internal)
+| Sales Landing | `https://salescoldemail.mcpfactory.org` | GET | 200 |
 
 ### Custom Domain Setup
 

@@ -12,7 +12,6 @@ MCP Factory is a DFY (Done-For-You), BYOK (Bring Your Own Keys) automation platf
 ```bash
 pnpm dev                    # All services via Turbo
 pnpm dev:dashboard          # Dashboard only (Next.js, port 3001)
-pnpm dev:api-service        # API gateway only (Express, port 3000)
 pnpm dev:<service-name>     # Any individual service
 ```
 
@@ -26,108 +25,51 @@ pnpm lint                   # Lint all packages
 ```bash
 pnpm --filter @mcpfactory/<package> test          # All tests for a service
 pnpm --filter @mcpfactory/<package> test:unit      # Unit tests only
-pnpm --filter @mcpfactory/<package> test:integration # Integration tests only
 pnpm --filter @mcpfactory/<package> vitest run tests/unit/specific.test.ts  # Single test file
-```
-
-### Database (per service that has a DB)
-```bash
-pnpm --filter @mcpfactory/<service> db:generate   # Generate migration files
-pnpm --filter @mcpfactory/<service> db:migrate    # Run migrations
-pnpm --filter @mcpfactory/<service> db:push       # Push schema directly
-pnpm --filter @mcpfactory/<service> db:studio     # Open Drizzle Studio GUI
 ```
 
 ## Architecture
 
 **Monorepo** using pnpm workspaces + Turborepo. Three workspace roots: `apps/`, `packages/`, `shared/`.
 
-### Apps (Microservices)
+### Apps
 
-- **api-service** (port 3000) — Express API gateway. All external requests hit here first. Handles dual auth (Clerk JWT from dashboard, X-API-Key from MCP clients), then proxies to internal services.
-- **dashboard** (port 3001) — Next.js 15 App Router. Clerk auth with `(dashboard)` route group for protected pages. Routes organized as `/brands/[brandId]/mcp/[slug]/campaigns/[id]/{emails,leads,replies,companies}`.
-- **keys-service** (port 3001 internal) — API key + BYOK key management with Drizzle/PostgreSQL.
-- **campaign-service** (port 3004) — Campaign CRUD and orchestration.
-- **client-service** (port 3002) — Client/org data management.
-- **apollo-service** (port 3003) — Apollo.io lead finding integration.
-- **emailgeneration-service** (port 3005) — Email content generation.
-- **worker** — BullMQ job processor using Redis/ioredis for async tasks.
-- **landing**, **docs**, **sales-cold-emails-landing** — Marketing/docs Next.js sites.
+- **dashboard** (port 3001) — Next.js 15 App Router. Clerk auth with `(dashboard)` route group for protected pages.
+- **docs** — Documentation site (docs.mcpfactory.org)
+- **mcp-service** — MCP server endpoint service
+- **performance-service** — Performance monitoring service
+- **sales-cold-emails-landing** — Marketing landing page (salescoldemail.mcpfactory.org)
 
 ### Packages (Published MCP Servers)
 
-Each package under `packages/` is a standalone MCP server published to npm (e.g., `@mcpfactory/sales-outreach`). Built with `tsup` for ESM. Uses `@modelcontextprotocol/sdk`.
+Each package under `packages/` is a standalone MCP server published to npm. Built with `tsup` for ESM. Uses `@modelcontextprotocol/sdk`.
+
+- `mcp-sales-outreach` — @mcpfactory/sales-outreach
+- `mcp-google-ads` — @mcpfactory/google-ads
+- `mcp-influencer-pitch` — @mcpfactory/influencer-pitch
+- `mcp-journalist-pitch` — @mcpfactory/journalist-pitch
+- `mcp-podcaster-pitch` — @mcpfactory/podcaster-pitch
+- `mcp-reddit-ads` — @mcpfactory/reddit-ads
+- `mcp-thought-leader` — @mcpfactory/thought-leader
 
 ### Shared Libraries
 
-- `shared/types/` — Shared TypeScript type definitions
-- `shared/auth/` — API key validation utilities
-- `shared/byok/` — BYOK key management
 - `shared/content/` — **Single source of truth for all marketing/docs content** (see Content Sync Rules below)
-
-## Key Patterns
-
-### Authentication Flow
-The api-service gateway supports two auth methods in `apps/api-service/src/middleware/auth.ts`:
-1. **Clerk JWT** (Bearer token) — from dashboard, extracts `orgId` from JWT claims
-2. **API Key** (X-API-Key header) — from MCP clients, validated against keys-service
-
-All routes require org context via `requireOrg` middleware. Internal service-to-service calls need no auth (Railway private networking).
-
-### Service Communication
-- `apps/api-service/src/lib/service-client.ts` — `callService()` for internal (no auth), `callExternalService()` for external APIs (with API key)
-- `apps/dashboard/src/lib/api.ts` — Frontend API client, all calls go through `/v1` prefix with Clerk Bearer token
-
-### Database
-All DB services use Drizzle ORM with PostgreSQL. Schemas in `src/db/schema.ts`. Types exported via `$inferSelect`/`$inferInsert`. UUIDs for primary keys, timestamps with timezone.
-
-**Auto-migrations:** All 5 DB services (keys, campaign, client, apollo, emailgeneration) run `migrate()` on startup before `app.listen()`. Schema changes are applied automatically on deploy — never run `db:push` manually in prod. To add a schema change: update `schema.ts`, run `db:generate`, commit the migration SQL file, deploy.
-
-**Env vars / DB URLs:** Prod env vars live in Railway (never in local `.env` files). No `.env` files are committed or expected locally. Tests that need a DB should mock it or use a test DB URL via CI secrets.
-
-**PRs:** Always merge to main immediately after creating the PR — never ask for confirmation.
-
-### Frontend
-Dashboard uses `"use client"` components with React hooks for state. Data fetching via `fetch` with Clerk `getToken()`. Tailwind CSS for styling.
+- `shared/pictures/` — Shared images and assets
 
 ## Tech Stack
 
 - **Runtime:** Node.js >=20, TypeScript 5.3 (strict, ES2022, NodeNext modules)
 - **Package manager:** pnpm 9.15.0
 - **Frontend:** Next.js 15, React 18, Tailwind CSS, Clerk
-- **Backend:** Express 4, Drizzle ORM, PostgreSQL, BullMQ, ioredis
 - **MCP:** @modelcontextprotocol/sdk, tsup builds
-- **Testing:** Vitest, Supertest
-- **Monitoring:** Sentry
+- **Testing:** Vitest
 - **CI:** GitHub Actions (build → parallel test jobs, lint with continue-on-error)
-- **Deploy:** Railway (private networking between services)
-
-## Mandatory Regression Tests
-
-**Every bug fix or issue resolution MUST include regression tests.** No exceptions.
-
-### Rules
-1. **Before fixing a bug**, write a failing test that reproduces the issue
-2. **After fixing**, confirm the test passes
-3. **Test file location**: place tests in the affected service's `tests/unit/` or `tests/integration/` directory
-4. **Naming convention**: `<description>.regression.test.ts` for regression-specific tests, or add test cases to existing test files if relevant
-5. **Run tests** before committing: `pnpm --filter @mcpfactory/<package> test`
-6. **CI coverage**: all test files are automatically picked up by the per-service CI workflows (`test-*.yml`). No extra CI config needed.
-
-### What to test
-- The exact scenario that caused the bug (input → expected output)
-- Edge cases related to the bug
-- If the fix touches a shared utility, test it at the shared level too
-
-### Checklist (for every issue/bug fix PR)
-- [ ] Regression test written that would have caught the original bug
-- [ ] Test fails without the fix, passes with it
-- [ ] Tests pass locally (`pnpm --filter @mcpfactory/<package> test`)
-- [ ] No existing tests broken
+- **Deploy:** Railway
 
 ## Content Sync Rules
 
-All marketing/docs content lives in `shared/content/src/`. The 4 public surfaces import from `@mcpfactory/content` instead of hardcoding values.
+All marketing/docs content lives in `shared/content/src/`. The public surfaces import from `@mcpfactory/content` instead of hardcoding values.
 
 ### SSoT module files
 - `shared/content/src/urls.ts` — All public URLs (dashboard, docs, API, GitHub, MCP endpoint)
@@ -137,10 +79,9 @@ All marketing/docs content lives in `shared/content/src/`. The 4 public surfaces
 - `shared/content/src/brand.ts` — Brand name, tagline, hero text
 
 ### Public surfaces (import from @mcpfactory/content)
-1. `apps/landing/` — mcpfactory.org
-2. `apps/docs/` — docs.mcpfactory.org
-3. `apps/sales-cold-emails-landing/` — salescoldemail.mcpfactory.org
-4. `README.md` — **GENERATED** (do not edit directly)
+1. `apps/docs/` — docs.mcpfactory.org
+2. `apps/sales-cold-emails-landing/` — salescoldemail.mcpfactory.org
+3. `README.md` — **GENERATED** (do not edit directly)
 
 ### When you change content
 
@@ -148,11 +89,10 @@ If you modify MCP packages, pricing, URLs, features, BYOK providers, or API endp
 
 1. Update the data in `shared/content/src/`
 2. Run `pnpm generate:readme` to regenerate README.md
-3. Verify apps build: `pnpm build:landing && pnpm build:docs`
+3. Verify apps build: `pnpm build`
 4. Commit the regenerated README.md alongside your changes
 
 ### Content rules
 - **NEVER** hardcode pricing, MCP names, quotas, or URLs in page components
 - **ALWAYS** import from `@mcpfactory/content`
 - **README.md is GENERATED** — edit `shared/content/` then run `pnpm generate:readme`
-- The landing page uses simplified 2-tier pricing (`LANDING_PRICING`), sales landing uses full 4-tier (`SALES_PRICING_TIERS`) — this is intentional

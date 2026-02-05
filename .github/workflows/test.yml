@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -45,50 +45,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run dashboard tests (API gateway usage)
+      - name: Run dashboard tests
         run: pnpm --filter @mcpfactory/dashboard test
-
-  test-campaign-service:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Run campaign-service unit tests
-        run: pnpm --filter @mcpfactory/campaign-service test:unit
-
-  test-worker:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Run worker no-legacy tests
-        run: pnpm --filter @mcpfactory/worker vitest run tests/unit/no-legacy.test.ts
 
   lint:
     runs-on: ubuntu-latest
