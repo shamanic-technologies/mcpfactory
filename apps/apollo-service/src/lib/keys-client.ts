@@ -6,7 +6,7 @@ export async function getByokKey(
   clerkOrgId: string,
   provider: string
 ): Promise<string> {
-  const keysServiceUrl = process.env.KEYS_SERVICE_URL || "http://localhost:3001";
+  const keysServiceUrl = process.env.KEY_SERVICE_URL || "http://localhost:3001";
 
   const response = await fetch(
     `${keysServiceUrl}/internal/keys/${provider}/decrypt?clerkOrgId=${clerkOrgId}`

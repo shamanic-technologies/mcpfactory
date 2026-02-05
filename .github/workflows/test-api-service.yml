@@ -21,6 +21,8 @@ jobs:
           node-version: "20"
       - uses: pnpm/action-setup@v4
       - run: pnpm install
+      - name: Build shared packages
+        run: pnpm --filter @mcpfactory/runs-client build
       - run: pnpm --filter @mcpfactory/api-service test
         env:
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}

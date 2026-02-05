@@ -21,6 +21,8 @@ jobs:
           node-version: "20"
       - uses: pnpm/action-setup@v4
       - run: pnpm install
+      - name: Build shared packages
+        run: pnpm --filter @mcpfactory/runs-client build
       - name: Run unit tests
         run: pnpm --filter @mcpfactory/emailgeneration-service test:unit
 
