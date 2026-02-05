@@ -134,9 +134,8 @@ GET /usage?period=month`}</code>
     "byok_cost_usd": 22.45
   },
   "plan": {
-    "name": "Pro",
-    "email_limit": 10000,
-    "price_usd": 20
+    "name": "Free",
+    "price_usd": 0
   }
 }`}</code>
         </pre>

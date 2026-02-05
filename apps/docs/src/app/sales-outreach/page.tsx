@@ -46,9 +46,7 @@ Or add to MCP config:
 - get_stats: Usage and community benchmarks
 
 ## Pricing
-- Free: $0 + BYOK costs, 1,000 emails
-- Pro: $20/mo + BYOK costs, 10,000 emails
-- Estimated BYOK cost: ~$0.02/email`;
+- Free + BYOK: $0, you only pay your API costs (~$0.02/email)`;
 
 export default function SalesOutreachDocs() {
   return (
@@ -184,28 +182,9 @@ export default function SalesOutreachDocs() {
         </pre>
 
         <h2>Pricing</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Plan</th>
-              <th>Price</th>
-              <th>Quota</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Free</td>
-              <td>{DOCS_PRICING.free.detail}</td>
-              <td>{DOCS_PRICING.free.emails}</td>
-            </tr>
-            <tr>
-              <td>Pro</td>
-              <td>{DOCS_PRICING.pro.detail}</td>
-              <td>{DOCS_PRICING.pro.emails}</td>
-            </tr>
-          </tbody>
-        </table>
-
+        <p>
+          <strong>Free · BYOK</strong> — {DOCS_PRICING.free.detail}. {DOCS_PRICING.free.emails}.
+        </p>
         <p>
           <strong>Estimated BYOK cost:</strong> {BYOK_COST_ESTIMATES.totalPerEmail} (OpenAI + Apollo + Resend)
         </p>

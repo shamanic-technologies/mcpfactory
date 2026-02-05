@@ -4,7 +4,7 @@
 export interface ApiKeyValidation {
   isValid: boolean;
   userId?: string;
-  plan?: "free" | "pro";
+  plan?: "free";
   quotaRemaining?: number;
 }
 
