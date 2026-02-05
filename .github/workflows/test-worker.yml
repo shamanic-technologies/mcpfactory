@@ -21,6 +21,7 @@ jobs:
           node-version: "20"
       - uses: pnpm/action-setup@v4
       - run: pnpm install
+      - run: pnpm --filter @mcpfactory/runs-client build
       - run: pnpm --filter @mcpfactory/worker test
         env:
           SERVICE_SECRET_KEY: test-secret
