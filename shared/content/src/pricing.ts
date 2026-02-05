@@ -66,8 +66,7 @@ export const LANDING_PRICING = {
  * Pricing for docs pages (sales-outreach).
  */
 export const DOCS_PRICING = {
-  free: { price: "$0", emails: "1,000 emails", detail: "Free + BYOK costs" },
-  pro: { price: "$20/mo", emails: "10,000 emails/month", detail: "Pro + BYOK costs" },
+  free: { price: "$0", emails: "Unlimited (BYOK)", detail: "Free + BYOK costs" },
   estimatedByokCost: "~$0.02/email",
 } as const;
 
@@ -79,5 +78,4 @@ export const BYOK_COST_ESTIMATES = {
 
 export const API_RATE_LIMITS = {
   free: "100 requests/minute",
-  pro: "1,000 requests/minute",
 } as const;

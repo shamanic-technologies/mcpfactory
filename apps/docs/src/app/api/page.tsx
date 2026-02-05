@@ -256,24 +256,9 @@ Content-Type: application/json
         </pre>
 
         <h2>Rate Limits</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Plan</th>
-              <th>Rate Limit</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Free</td>
-              <td>{API_RATE_LIMITS.free}</td>
-            </tr>
-            <tr>
-              <td>Pro</td>
-              <td>{API_RATE_LIMITS.pro}</td>
-            </tr>
-          </tbody>
-        </table>
+        <p>
+          <strong>Rate limit:</strong> {API_RATE_LIMITS.free}
+        </p>
 
         <h2>Errors</h2>
         <p>All errors return a JSON response:</p>
