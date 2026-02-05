@@ -29,7 +29,7 @@ try {
   workers = [
     startBrandUpsertWorker(),   // Step 1: Create run, get brand (non-concurrent)
     startBrandProfileWorker(),  // Step 2: Get sales profile from brand-service
-    startLeadSearchWorker(),    // Step 3: Search leads via Apollo
+    startLeadSearchWorker(),    // Step 3: Search leads via lead-service
     startEmailGenerateWorker(), // Step 4: Generate emails
     startEmailSendWorker(),     // Step 5: Send emails
   ];

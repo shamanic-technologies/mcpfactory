@@ -6,7 +6,7 @@
 // Internal services (no auth - private network)
 export const services = {
   keys: process.env.KEYS_SERVICE_URL || "http://localhost:3001",
-  apollo: process.env.APOLLO_SERVICE_URL || "http://localhost:3003",
+  lead: process.env.LEAD_SERVICE_URL || "http://localhost:3006",
   campaign: process.env.CAMPAIGN_SERVICE_URL || "http://localhost:3004",
   emailgen: process.env.EMAILGENERATION_SERVICE_URL || "http://localhost:3005",
   client: process.env.CLIENT_SERVICE_URL || "http://localhost:3002",
