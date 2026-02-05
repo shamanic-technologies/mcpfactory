@@ -50,6 +50,13 @@
       "when": 1770100000000,
       "tag": "0006_budget_only_scheduling",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1770256314682,
+      "tag": "0007_bent_darkstar",
+      "breakpoints": true
     }
   ]
 }

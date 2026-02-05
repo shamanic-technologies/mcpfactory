@@ -1,7 +1,7 @@
 import { Worker, Job } from "bullmq";
 import { getRedis } from "../lib/redis.js";
 import { getQueues, QUEUE_NAMES, LeadSearchJobData, EmailGenerateJobData } from "../queues/index.js";
-import { apolloService, leadGuard } from "../lib/service-client.js";
+import { apolloService, leadService } from "../lib/service-client.js";
 import { initRunTracking, finalizeRun } from "../lib/run-tracker.js";
 
 interface ApolloEnrichment {
@@ -54,7 +54,7 @@ export function startLeadSearchWorker(): Worker {
         // 1. Read cursor from lead-guard
         let cursor: CursorState = { lastPage: 0, exhausted: false };
         try {
-          const cursorResult = await leadGuard.getCursor(clerkOrgId, namespace) as { state: CursorState | null };
+          const cursorResult = await leadService.getCursor(clerkOrgId, namespace) as { state: CursorState | null };
           if (cursorResult?.state) {
             cursor = cursorResult.state;
           }
@@ -94,7 +94,7 @@ export function startLeadSearchWorker(): Worker {
               },
             }));
 
-            const pushResult = await leadGuard.push(clerkOrgId, namespace, runId, leads) as {
+            const pushResult = await leadService.push(clerkOrgId, namespace, runId, leads) as {
               buffered: number;
               skippedAlreadyServed: number;
             };
@@ -105,7 +105,7 @@ export function startLeadSearchWorker(): Worker {
 
           // Update cursor
           const exhausted = people.length < APOLLO_PAGE_SIZE;
-          await leadGuard.setCursor(clerkOrgId, namespace, { lastPage: nextPage, exhausted });
+          await leadService.setCursor(clerkOrgId, namespace, { lastPage: nextPage, exhausted });
           if (exhausted) {
             console.log(`[lead-search] Apollo results exhausted at page ${nextPage}`);
           }
@@ -116,7 +116,7 @@ export function startLeadSearchWorker(): Worker {
         // 3. Pull deduplicated leads from buffer one-by-one
         const dedupedLeads: BufferLead[] = [];
         while (dedupedLeads.length < MAX_LEADS_PER_RUN) {
-          const nextResult = await leadGuard.next(clerkOrgId, namespace, runId) as {
+          const nextResult = await leadService.next(clerkOrgId, namespace, runId) as {
             found: boolean;
             lead?: BufferLead;
           };

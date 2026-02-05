@@ -1,0 +1,1 @@
+ALTER TABLE "campaigns" ADD COLUMN "max_leads" integer;

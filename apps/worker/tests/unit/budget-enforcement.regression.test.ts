@@ -7,6 +7,9 @@ vi.mock("../../src/lib/service-client.js", () => ({
     listCampaigns: vi.fn(),
     updateCampaign: vi.fn(),
   },
+  leadService: {
+    getStats: vi.fn(),
+  },
   runsService: {
     ensureOrganization: vi.fn(),
     listRuns: vi.fn(),
@@ -24,10 +27,11 @@ vi.mock("../../src/lib/redis.js", () => ({
   getRedis: vi.fn(() => ({})),
 }));
 
-import { runsService } from "../../src/lib/service-client.js";
+import { runsService, leadService } from "../../src/lib/service-client.js";
 import {
   getBudgetWindows,
   isBudgetExceeded,
+  isVolumeExceeded,
   type Campaign,
 } from "../../src/schedulers/campaign-scheduler.js";
 
@@ -271,6 +275,60 @@ describe("Budget Enforcement", () => {
       expect(result.exceeded).toBe(true);
       expect(result.which).toBe("daily");
       expect(result.spendUsd).toBe(6);
+    });
+  });
+
+  describe("isVolumeExceeded", () => {
+    it("should return not exceeded when maxLeads is not set", async () => {
+      const campaign = makeCampaign({ maxBudgetDailyUsd: "10.00" });
+      const result = await isVolumeExceeded(campaign);
+      expect(result.exceeded).toBe(false);
+    });
+
+    it("should return not exceeded when brandId is not set", async () => {
+      const campaign = makeCampaign({ maxLeads: 5 });
+      const result = await isVolumeExceeded(campaign);
+      expect(result.exceeded).toBe(false);
+    });
+
+    it("should return exceeded when totalServed >= maxLeads", async () => {
+      const campaign = makeCampaign({ maxLeads: 5, brandId: "brand-123" });
+
+      vi.mocked(leadService.getStats).mockResolvedValue({ totalServed: 25 });
+
+      const result = await isVolumeExceeded(campaign);
+      expect(result.exceeded).toBe(true);
+      expect(result.totalServed).toBe(25);
+      expect(result.maxLeads).toBe(5);
+    });
+
+    it("should return exceeded when totalServed equals maxLeads exactly", async () => {
+      const campaign = makeCampaign({ maxLeads: 5, brandId: "brand-123" });
+
+      vi.mocked(leadService.getStats).mockResolvedValue({ totalServed: 5 });
+
+      const result = await isVolumeExceeded(campaign);
+      expect(result.exceeded).toBe(true);
+    });
+
+    it("should return not exceeded when totalServed < maxLeads", async () => {
+      const campaign = makeCampaign({ maxLeads: 10, brandId: "brand-123" });
+
+      vi.mocked(leadService.getStats).mockResolvedValue({ totalServed: 3 });
+
+      const result = await isVolumeExceeded(campaign);
+      expect(result.exceeded).toBe(false);
+      expect(result.totalServed).toBe(3);
+      expect(result.maxLeads).toBe(10);
+    });
+
+    it("should fail closed when lead-service is down", async () => {
+      const campaign = makeCampaign({ maxLeads: 5, brandId: "brand-123" });
+
+      vi.mocked(leadService.getStats).mockRejectedValue(new Error("Service down"));
+
+      const result = await isVolumeExceeded(campaign);
+      expect(result.exceeded).toBe(true);
     });
   });
 });
