@@ -95,18 +95,10 @@ const jsonLd = {
   offers: [
     {
       "@type": "Offer",
-      name: "Free",
+      name: "Free BYOK",
       price: "0",
       priceCurrency: "USD",
-      description: "1,000 emails free + BYOK costs",
-    },
-    {
-      "@type": "Offer",
-      name: "Pro",
-      price: "20",
-      priceCurrency: "USD",
-      priceValidUntil: "2027-12-31",
-      description: "10,000 emails/month + BYOK costs",
+      description: "Free — bring your own API keys, pay only your API costs",
     },
   ],
   aggregateRating: {

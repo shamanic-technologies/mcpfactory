@@ -85,15 +85,11 @@ export default async function Home() {
                 </a>
               </div>
 
-              {/* Pricing badges */}
+              {/* Pricing badge */}
               <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                <div className="bg-white/80 backdrop-blur border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
-                  <span className="text-gray-500 text-sm">{LANDING_PRICING.free.label}</span>
+                <div className="bg-white/80 backdrop-blur border border-accent-200 rounded-xl px-4 py-2 shadow-sm">
+                  <span className="text-accent-500 text-sm">{LANDING_PRICING.free.label}</span>
                   <span className="block font-bold text-gray-900">{LANDING_PRICING.free.display}</span>
-                </div>
-                <div className="bg-white/80 backdrop-blur border border-primary-200 rounded-xl px-4 py-2 shadow-sm">
-                  <span className="text-primary-500 text-sm">{LANDING_PRICING.pro.label}</span>
-                  <span className="block font-bold text-gray-900">{LANDING_PRICING.pro.display}</span>
                 </div>
               </div>
             </div>

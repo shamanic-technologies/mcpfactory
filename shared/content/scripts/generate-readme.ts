@@ -46,10 +46,7 @@ ${BRAND.name} provides Done-For-You (DFY) automation tools via the Model Context
 
 ## Pricing
 
-| Plan | Price | Included |
-|------|-------|----------|
-| **${LANDING_PRICING.free.label}** | ${LANDING_PRICING.free.display} | Generous quota per MCP (500-1000 actions) + BYOK costs |
-| **${LANDING_PRICING.pro.label}** | ${LANDING_PRICING.pro.display} | 10x quota, priority support, advanced analytics |
+**Free · BYOK** — ${LANDING_PRICING.free.display}. Generous quota per MCP (500-1000 actions).
 
 ## Available MCPs
 
