@@ -16,10 +16,7 @@ MCP Factory provides Done-For-You (DFY) automation tools via the Model Context P
 
 ## Pricing
 
-| Plan | Price | Included |
-|------|-------|----------|
-| **Free tier** | $0 + your API costs | Generous quota per MCP (500-1000 actions) + BYOK costs |
-| **Pro** | $20/mo | 10x quota, priority support, advanced analytics |
+**Free · BYOK** — $0 — you only pay your API costs. Generous quota per MCP (500-1000 actions).
 
 ## Available MCPs
 

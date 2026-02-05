@@ -56,11 +56,10 @@ export const SALES_PRICING_TIERS: PricingTier[] = [
 ];
 
 /**
- * Simplified 2-tier pricing used on the main landing page.
+ * Landing page pricing — BYOK free only.
  */
 export const LANDING_PRICING = {
-  free: { label: "Free tier", display: "$0 + your API costs" },
-  pro: { label: "Pro", display: "$20/mo" },
+  free: { label: "Free · BYOK", display: "$0 — you only pay your API costs" },
 } as const;
 
 /**
