@@ -21,6 +21,8 @@ jobs:
           node-version: "20"
       - uses: pnpm/action-setup@v4
       - run: pnpm install
+      - name: Build shared packages
+        run: pnpm --filter @mcpfactory/runs-client build
       - name: Run unit tests
         run: pnpm --filter @mcpfactory/campaign-service test:unit
 
@@ -45,9 +47,6 @@ jobs:
         run: pnpm --filter @mcpfactory/campaign-service exec drizzle-kit push --force
         env:
           CAMPAIGN_SERVICE_DATABASE_URL: ${{ env.CAMPAIGN_SERVICE_DATABASE_URL }}
-
-      - name: Build runs-client dependency
-        run: pnpm --filter @mcpfactory/runs-client build
 
       - name: Run integration tests
         run: pnpm --filter @mcpfactory/campaign-service test:integration
