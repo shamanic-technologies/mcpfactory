@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 
 describe("Service client", () => {
   it("should define service URLs from environment", () => {
-    expect(process.env.KEYS_SERVICE_URL).toBeDefined();
+    expect(process.env.KEY_SERVICE_URL).toBeDefined();
     expect(process.env.LEAD_SERVICE_URL).toBeDefined();
     expect(process.env.CAMPAIGN_SERVICE_URL).toBeDefined();
   });

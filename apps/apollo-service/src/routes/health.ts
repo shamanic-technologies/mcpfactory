@@ -9,7 +9,7 @@ router.get("/health", (req, res) => {
 });
 
 router.get("/health/debug", async (req, res) => {
-  const keysServiceUrl = process.env.KEYS_SERVICE_URL || "not set";
+  const keysServiceUrl = process.env.KEY_SERVICE_URL || "not set";
   const dbUrl = process.env.APOLLO_SERVICE_DATABASE_URL;
   
   let dbStatus = "unknown";
