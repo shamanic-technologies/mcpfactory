@@ -19,6 +19,7 @@ export const toolDefinitions = {
       max_weekly_budget_usd: z.number().optional().describe("Maximum weekly spend in USD"),
       max_monthly_budget_usd: z.number().optional().describe("Maximum monthly spend in USD"),
       max_total_budget_usd: z.number().optional().describe("Maximum total spend in USD (campaign stops permanently when reached)"),
+      max_leads: z.number().optional().describe("Maximum number of leads to contact (campaign stops permanently when reached)"),
       end_date: z.string().optional().describe("Optional campaign end date (ISO format)"),
       // Coming soon: reporting frequency
       // reporting: z.enum(["none", "daily", "weekly", "monthly"]).describe("How often to receive campaign reports"),
@@ -140,7 +141,7 @@ async function handleStatus() {
 }
 
 async function handleCreateCampaign(args: Record<string, unknown>) {
-  // Validate at least one budget is provided
+  // Validate at least one budget is provided (max_leads is optional, not a replacement for budget)
   if (!args.max_daily_budget_usd && !args.max_weekly_budget_usd && !args.max_monthly_budget_usd && !args.max_total_budget_usd) {
     throw new Error("At least one budget is required (max_daily_budget_usd, max_weekly_budget_usd, max_monthly_budget_usd, or max_total_budget_usd)");
   }
@@ -157,6 +158,7 @@ async function handleCreateCampaign(args: Record<string, unknown>) {
       maxBudgetWeeklyUsd: args.max_weekly_budget_usd,
       maxBudgetMonthlyUsd: args.max_monthly_budget_usd,
       maxBudgetTotalUsd: args.max_total_budget_usd,
+      maxLeads: args.max_leads,
       endDate: args.end_date,
     },
   });
