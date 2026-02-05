@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
-import { callService, services } from "../lib/service-client.js";
+import { callExternalService, externalServices } from "../lib/service-client.js";
 
 const router = Router();
 
@@ -10,8 +10,8 @@ const router = Router();
  */
 router.get("/keys", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
-    const result = await callService(
-      services.keys,
+    const result = await callExternalService(
+      externalServices.key,
       `/internal/keys?clerkOrgId=${req.orgId}`
     );
     res.json(result);
@@ -33,8 +33,8 @@ router.post("/keys", authenticate, requireOrg, async (req: AuthenticatedRequest,
       return res.status(400).json({ error: "provider and apiKey required" });
     }
 
-    const result = await callService(
-      services.keys,
+    const result = await callExternalService(
+      externalServices.key,
       "/internal/keys",
       {
         method: "POST",
@@ -56,8 +56,8 @@ router.delete("/keys/:provider", authenticate, requireOrg, async (req: Authentic
   try {
     const { provider } = req.params;
 
-    const result = await callService(
-      services.keys,
+    const result = await callExternalService(
+      externalServices.key,
       `/internal/keys/${provider}?clerkOrgId=${req.orgId}`,
       { method: "DELETE" }
     );
@@ -82,8 +82,8 @@ router.get("/internal/keys/:provider/decrypt", async (req, res) => {
       return res.status(400).json({ error: "clerkOrgId required" });
     }
 
-    const result = await callService(
-      services.keys,
+    const result = await callExternalService(
+      externalServices.key,
       `/internal/keys/${provider}/decrypt?clerkOrgId=${clerkOrgId}`
     );
     res.json(result);
@@ -102,8 +102,8 @@ router.get("/internal/keys/:provider/decrypt", async (req, res) => {
  */
 router.post("/api-keys/session", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
-    const result = await callService(
-      services.keys,
+    const result = await callExternalService(
+      externalServices.key,
       "/internal/api-keys/session",
       {
         method: "POST",
@@ -125,8 +125,8 @@ router.post("/api-keys", authenticate, requireOrg, async (req: AuthenticatedRequ
   try {
     const { name } = req.body;
 
-    const result = await callService(
-      services.keys,
+    const result = await callExternalService(
+      externalServices.key,
       "/internal/api-keys",
       {
         method: "POST",
@@ -146,8 +146,8 @@ router.post("/api-keys", authenticate, requireOrg, async (req: AuthenticatedRequ
  */
 router.get("/api-keys", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
-    const result = await callService(
-      services.keys,
+    const result = await callExternalService(
+      externalServices.key,
       `/internal/api-keys?clerkOrgId=${req.orgId}`
     );
     res.json(result);
@@ -165,8 +165,8 @@ router.delete("/api-keys/:id", authenticate, requireOrg, async (req: Authenticat
   try {
     const { id } = req.params;
 
-    const result = await callService(
-      services.keys,
+    const result = await callExternalService(
+      externalServices.key,
       `/internal/api-keys/${id}`,
       {
         method: "DELETE",

@@ -7,9 +7,13 @@ describe("Service client", () => {
     expect(process.env.CAMPAIGN_SERVICE_URL).toBeDefined();
   });
 
-  it("should use X-API-Key header for internal calls", () => {
+  it("should define KEY_SERVICE_API_KEY for external keys-service calls", () => {
+    expect(process.env.KEY_SERVICE_API_KEY).toBeDefined();
+  });
+
+  it("should use X-API-Key header for external service calls", () => {
     const headers = {
-      "X-API-Key": process.env.API_SERVICE_API_KEY,
+      "X-API-Key": process.env.KEY_SERVICE_API_KEY,
       "Content-Type": "application/json",
     };
     expect(headers["X-API-Key"]).toBeDefined();
