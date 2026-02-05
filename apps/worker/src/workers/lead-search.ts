@@ -35,7 +35,7 @@ const MAX_LEADS_PER_RUN = 50;
 /**
  * Lead Search Worker
  *
- * Searches Apollo for leads, pushes to lead-guard buffer for dedup,
+ * Searches Apollo for leads, pushes to lead-service buffer for dedup,
  * then pulls deduplicated leads one-by-one and queues email generation.
  */
 export function startLeadSearchWorker(): Worker {
@@ -51,7 +51,7 @@ export function startLeadSearchWorker(): Worker {
       console.log(`[lead-search] Client: ${clientData?.companyName || "(no client data)"}`);
 
       try {
-        // 1. Read cursor from lead-guard
+        // 1. Read cursor from lead-service
         let cursor: CursorState = { lastPage: 0, exhausted: false };
         try {
           const cursorResult = await leadService.getCursor(clerkOrgId, namespace) as { state: CursorState | null };
