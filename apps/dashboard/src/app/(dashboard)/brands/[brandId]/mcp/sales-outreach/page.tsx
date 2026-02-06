@@ -28,7 +28,11 @@ export default function BrandMcpSalesOutreachPage() {
 
   useEffect(() => {
     loadCampaigns();
-    const interval = setInterval(loadCampaigns, 5000);
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        loadCampaigns();
+      }
+    }, 30000);
     return () => clearInterval(interval);
   }, [brandId]);
 
@@ -44,12 +48,20 @@ export default function BrandMcpSalesOutreachPage() {
         const data = await res.json();
         setCampaigns(data.campaigns || []);
         
+        const campaignList = data.campaigns || [];
+        const statsEntries = await Promise.all(
+          campaignList.map(async (campaign: Campaign) => {
+            try {
+              const s = await getCampaignStats(token, campaign.id);
+              return [campaign.id, s] as const;
+            } catch {
+              return null;
+            }
+          })
+        );
         const stats: Record<string, CampaignStats> = {};
-        for (const campaign of data.campaigns || []) {
-          try {
-            const s = await getCampaignStats(token, campaign.id);
-            stats[campaign.id] = s;
-          } catch { /* Stats not available */ }
+        for (const entry of statsEntries) {
+          if (entry) stats[entry[0]] = entry[1];
         }
         setCampaignStats(stats);
       }

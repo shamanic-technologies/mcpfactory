@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { callService, services } from "../lib/service-client.js";
+import { callExternalService, externalServices } from "../lib/service-client.js";
 
 const router = Router();
 
 // Public route — no auth required
 router.get("/performance/leaderboard", async (req, res) => {
   try {
-    const data = await callService(
-      services.campaign,
+    const data = await callExternalService(
+      externalServices.campaign,
       "/internal/performance/leaderboard"
     );
     res.json(data);
