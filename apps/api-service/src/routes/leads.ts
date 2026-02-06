@@ -10,6 +10,28 @@ const router = Router();
  * Search for leads via lead-service
  */
 router.post("/leads/search", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  // #swagger.tags = ['Leads']
+  // #swagger.summary = 'Search for leads'
+  // #swagger.description = 'Search for leads using Apollo-compatible filters (titles, locations, industries, company size)'
+  // #swagger.security = [{ "bearerAuth": [] }, { "apiKey": [] }]
+  /* #swagger.requestBody = {
+    required: true,
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          required: ["person_titles"],
+          properties: {
+            person_titles: { type: "array", items: { type: "string" }, description: "Job titles to search for" },
+            organization_locations: { type: "array", items: { type: "string" }, description: "Company locations filter" },
+            organization_industries: { type: "array", items: { type: "string" }, description: "Industry tag IDs filter" },
+            organization_num_employees_ranges: { type: "array", items: { type: "string" }, description: "Employee count ranges" },
+            per_page: { type: "integer", description: "Results per page (max 100)", default: 10 }
+          }
+        }
+      }
+    }
+  } */
   try {
     const {
       person_titles,

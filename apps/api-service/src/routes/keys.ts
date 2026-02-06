@@ -9,6 +9,10 @@ const router = Router();
  * List BYOK keys for the organization
  */
 router.get("/keys", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  // #swagger.tags = ['Keys']
+  // #swagger.summary = 'List BYOK keys'
+  // #swagger.description = 'List all BYOK (Bring Your Own Key) API keys for the organization'
+  // #swagger.security = [{ "bearerAuth": [] }, { "apiKey": [] }]
   try {
     const result = await callExternalService(
       externalServices.key,
@@ -26,6 +30,25 @@ router.get("/keys", authenticate, requireOrg, async (req: AuthenticatedRequest, 
  * Add a BYOK key
  */
 router.post("/keys", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  // #swagger.tags = ['Keys']
+  // #swagger.summary = 'Add a BYOK key'
+  // #swagger.description = 'Store a new BYOK API key for a provider (e.g. openai, anthropic, apollo)'
+  // #swagger.security = [{ "bearerAuth": [] }, { "apiKey": [] }]
+  /* #swagger.requestBody = {
+    required: true,
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          required: ["provider", "apiKey"],
+          properties: {
+            provider: { type: "string", description: "Provider name (e.g. openai, anthropic, apollo)" },
+            apiKey: { type: "string", description: "The API key value" }
+          }
+        }
+      }
+    }
+  } */
   try {
     const { provider, apiKey } = req.body;
 
@@ -53,6 +76,10 @@ router.post("/keys", authenticate, requireOrg, async (req: AuthenticatedRequest,
  * Remove a BYOK key
  */
 router.delete("/keys/:provider", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  // #swagger.tags = ['Keys']
+  // #swagger.summary = 'Delete a BYOK key'
+  // #swagger.description = 'Remove a BYOK API key for a specific provider'
+  // #swagger.security = [{ "bearerAuth": [] }, { "apiKey": [] }]
   try {
     const { provider } = req.params;
 
@@ -74,6 +101,9 @@ router.delete("/keys/:provider", authenticate, requireOrg, async (req: Authentic
  * Requires X-API-Key header for service auth
  */
 router.get("/internal/keys/:provider/decrypt", async (req, res) => {
+  // #swagger.tags = ['Keys']
+  // #swagger.summary = 'Decrypt a BYOK key (internal)'
+  // #swagger.description = 'Get decrypted BYOK key value. Internal service-to-service endpoint.'
   try {
     const { provider } = req.params;
     const clerkOrgId = req.query.clerkOrgId as string;
@@ -101,6 +131,10 @@ router.get("/internal/keys/:provider/decrypt", async (req, res) => {
  * Get or create a session API key for Foxy chat
  */
 router.post("/api-keys/session", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  // #swagger.tags = ['API Keys']
+  // #swagger.summary = 'Get or create session API key'
+  // #swagger.description = 'Get or create a short-lived session API key for Foxy chat integration'
+  // #swagger.security = [{ "bearerAuth": [] }, { "apiKey": [] }]
   try {
     const result = await callExternalService(
       externalServices.key,
@@ -122,6 +156,23 @@ router.post("/api-keys/session", authenticate, requireOrg, async (req: Authentic
  * Generate a new API key for the organization
  */
 router.post("/api-keys", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  // #swagger.tags = ['API Keys']
+  // #swagger.summary = 'Create an API key'
+  // #swagger.description = 'Generate a new permanent API key for the organization'
+  // #swagger.security = [{ "bearerAuth": [] }, { "apiKey": [] }]
+  /* #swagger.requestBody = {
+    required: true,
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          properties: {
+            name: { type: "string", description: "Human-readable name for the API key" }
+          }
+        }
+      }
+    }
+  } */
   try {
     const { name } = req.body;
 
@@ -145,6 +196,10 @@ router.post("/api-keys", authenticate, requireOrg, async (req: AuthenticatedRequ
  * List API keys for the organization
  */
 router.get("/api-keys", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  // #swagger.tags = ['API Keys']
+  // #swagger.summary = 'List API keys'
+  // #swagger.description = 'List all API keys for the organization'
+  // #swagger.security = [{ "bearerAuth": [] }, { "apiKey": [] }]
   try {
     const result = await callExternalService(
       externalServices.key,
@@ -162,6 +217,10 @@ router.get("/api-keys", authenticate, requireOrg, async (req: AuthenticatedReque
  * Revoke an API key
  */
 router.delete("/api-keys/:id", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  // #swagger.tags = ['API Keys']
+  // #swagger.summary = 'Revoke an API key'
+  // #swagger.description = 'Delete/revoke an API key by ID'
+  // #swagger.security = [{ "bearerAuth": [] }, { "apiKey": [] }]
   try {
     const { id } = req.params;
 

@@ -9,6 +9,32 @@ const router = Router();
  * Qualify an email reply using AI
  */
 router.post("/qualify", authenticate, async (req: AuthenticatedRequest, res) => {
+  // #swagger.tags = ['Qualify']
+  // #swagger.summary = 'Qualify an email reply'
+  // #swagger.description = 'Uses AI to qualify/classify an inbound email reply (interested, not interested, out-of-office, etc.)'
+  // #swagger.security = [{ "bearerAuth": [] }, { "apiKey": [] }]
+  /* #swagger.requestBody = {
+    required: true,
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          required: ["fromEmail", "toEmail"],
+          properties: {
+            sourceService: { type: "string", description: "Source service identifier", example: "api" },
+            sourceOrgId: { type: "string", description: "Organization ID (defaults to auth org)" },
+            sourceRefId: { type: "string", description: "Reference ID in the source system" },
+            fromEmail: { type: "string", description: "Sender email address" },
+            toEmail: { type: "string", description: "Recipient email address" },
+            subject: { type: "string", description: "Email subject line" },
+            bodyText: { type: "string", description: "Plain text email body" },
+            bodyHtml: { type: "string", description: "HTML email body" },
+            byokApiKey: { type: "string", description: "BYOK API key for AI provider" }
+          }
+        }
+      }
+    }
+  } */
   try {
     const {
       sourceService = "api",

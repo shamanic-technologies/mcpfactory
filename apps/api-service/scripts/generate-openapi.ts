@@ -13,9 +13,11 @@ const doc = {
       "API Gateway for MCPFactory. Handles authentication, proxies to internal services, and exposes the public REST API.",
     version: "1.0.0",
   },
-  host: process.env.SERVICE_URL || "https://api.mcpfactory.org",
-  basePath: "/",
-  schemes: ["https"],
+  servers: [
+    {
+      url: process.env.SERVICE_URL || "https://api.mcpfactory.org",
+    },
+  ],
   securityDefinitions: {
     bearerAuth: {
       type: "apiKey" as const,
@@ -27,7 +29,7 @@ const doc = {
       type: "apiKey" as const,
       in: "header" as const,
       name: "X-API-Key",
-      description: "API key for service-to-service communication",
+      description: "API key for service-to-service communication and MCP clients",
     },
   },
 };

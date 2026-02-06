@@ -5,6 +5,9 @@ const router = Router();
 
 // Public route — no auth required
 router.get("/performance/leaderboard", async (req, res) => {
+  // #swagger.tags = ['Performance']
+  // #swagger.summary = 'Get performance leaderboard'
+  // #swagger.description = 'Returns public performance leaderboard data. No authentication required.'
   try {
     const data = await callExternalService(
       externalServices.campaign,
