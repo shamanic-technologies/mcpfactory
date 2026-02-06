@@ -7,8 +7,9 @@ describe("Service client", () => {
     expect(process.env.CAMPAIGN_SERVICE_URL).toBeDefined();
   });
 
-  it("should define KEY_SERVICE_API_KEY for external keys-service calls", () => {
+  it("should define API keys for external service calls", () => {
     expect(process.env.KEY_SERVICE_API_KEY).toBeDefined();
+    expect(process.env.CAMPAIGN_SERVICE_API_KEY).toBeDefined();
   });
 
   it("should use X-API-Key header for external service calls", () => {

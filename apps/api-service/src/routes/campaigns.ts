@@ -30,8 +30,8 @@ router.get("/campaigns", authenticate, requireOrg, async (req: AuthenticatedRequ
     const brandId = req.query.brandId as string;
     const queryString = brandId ? `?brandId=${brandId}` : "";
     
-    const result = await callService(
-      services.campaign,
+    const result = await callExternalService(
+      externalServices.campaign,
       `/internal/campaigns${queryString}`,
       {
         headers: buildInternalHeaders(req),
@@ -78,8 +78,8 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
       }
     }
     
-    const result = await callService(
-      services.campaign,
+    const result = await callExternalService(
+      externalServices.campaign,
       "/internal/campaigns",
       {
         method: "POST",
@@ -112,8 +112,8 @@ router.get("/campaigns/:id", authenticate, requireOrg, async (req: Authenticated
   try {
     const { id } = req.params;
 
-    const result = await callService(
-      services.campaign,
+    const result = await callExternalService(
+      externalServices.campaign,
       `/internal/campaigns/${id}`,
       {
         headers: { "x-clerk-org-id": req.orgId! },
@@ -134,8 +134,8 @@ router.patch("/campaigns/:id", authenticate, requireOrg, async (req: Authenticat
   try {
     const { id } = req.params;
 
-    const result = await callService(
-      services.campaign,
+    const result = await callExternalService(
+      externalServices.campaign,
       `/internal/campaigns/${id}`,
       {
         method: "PATCH",
@@ -158,8 +158,8 @@ router.post("/campaigns/:id/stop", authenticate, requireOrg, async (req: Authent
   try {
     const { id } = req.params;
 
-    const result = await callService(
-      services.campaign,
+    const result = await callExternalService(
+      externalServices.campaign,
       `/internal/campaigns/${id}/stop`,
       {
         method: "POST",
@@ -189,8 +189,8 @@ router.post("/campaigns/:id/resume", authenticate, requireOrg, async (req: Authe
   try {
     const { id } = req.params;
 
-    const result = await callService(
-      services.campaign,
+    const result = await callExternalService(
+      externalServices.campaign,
       `/internal/campaigns/${id}/resume`,
       {
         method: "POST",
@@ -212,8 +212,8 @@ router.get("/campaigns/:id/runs", authenticate, requireOrg, async (req: Authenti
   try {
     const { id } = req.params;
 
-    const result = await callService(
-      services.campaign,
+    const result = await callExternalService(
+      externalServices.campaign,
       `/internal/campaigns/${id}/runs`,
       {
         headers: { "x-clerk-org-id": req.orgId! },
@@ -234,8 +234,8 @@ router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: Authent
   try {
     const { id } = req.params;
 
-    const result = await callService(
-      services.campaign,
+    const result = await callExternalService(
+      externalServices.campaign,
       `/internal/campaigns/${id}/stats`,
       {
         headers: { "x-clerk-org-id": req.orgId! },
@@ -256,8 +256,8 @@ router.get("/campaigns/:id/debug", authenticate, requireOrg, async (req: Authent
   try {
     const { id } = req.params;
 
-    const result = await callService(
-      services.campaign,
+    const result = await callExternalService(
+      externalServices.campaign,
       `/internal/campaigns/${id}/debug`,
       {
         headers: { "x-clerk-org-id": req.orgId! },
@@ -278,8 +278,8 @@ router.get("/campaigns/:id/leads", authenticate, requireOrg, async (req: Authent
   try {
     const { id } = req.params;
 
-    const result = await callService(
-      services.campaign,
+    const result = await callExternalService(
+      externalServices.campaign,
       `/internal/campaigns/${id}/leads`,
       {
         headers: { "x-clerk-org-id": req.orgId! },
@@ -334,8 +334,8 @@ router.get("/campaigns/:id/companies", authenticate, requireOrg, async (req: Aut
   try {
     const { id } = req.params;
 
-    const result = await callService(
-      services.campaign,
+    const result = await callExternalService(
+      externalServices.campaign,
       `/internal/campaigns/${id}/companies`,
       {
         headers: { "x-clerk-org-id": req.orgId! },
@@ -411,8 +411,8 @@ router.get("/campaigns/:id/emails", authenticate, requireOrg, async (req: Authen
     const { id } = req.params;
 
     // 1. Get all runs for this campaign
-    const runsResult = await callService(
-      services.campaign,
+    const runsResult = await callExternalService(
+      externalServices.campaign,
       `/internal/campaigns/${id}/runs`,
       {
         headers: { "x-clerk-org-id": req.orgId! },

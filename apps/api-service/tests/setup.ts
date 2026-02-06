@@ -25,6 +25,7 @@ process.env.KEY_SERVICE_URL = "http://localhost:3001";
 process.env.KEY_SERVICE_API_KEY = "test-key-service-api-key";
 process.env.LEAD_SERVICE_URL = "http://localhost:3006";
 process.env.CAMPAIGN_SERVICE_URL = "http://localhost:3004";
+process.env.CAMPAIGN_SERVICE_API_KEY = "test-campaign-service-api-key";
 process.env.CLIENT_SERVICE_URL = "http://localhost:3002";
 
 beforeAll(() => console.log("Test suite starting..."));
