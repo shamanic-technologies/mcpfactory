@@ -233,15 +233,26 @@ router.get("/campaigns/:id/runs", authenticate, requireOrg, async (req: Authenti
 router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
+    const headers = { "x-clerk-org-id": req.orgId! };
 
-    const result = await callExternalService(
-      externalServices.campaign,
-      `/internal/campaigns/${id}/stats`,
-      {
-        headers: { "x-clerk-org-id": req.orgId! },
-      }
-    );
-    res.json(result);
+    const [stats, leadsResult] = await Promise.all([
+      callExternalService(
+        externalServices.campaign,
+        `/internal/campaigns/${id}/stats`,
+        { headers }
+      ),
+      callExternalService(
+        externalServices.campaign,
+        `/internal/campaigns/${id}/leads`,
+        { headers }
+      ).catch(() => ({ leads: [] })),
+    ]);
+
+    // Campaign service stats.leadsFound is unreliable — use actual leads count
+    const leadsCount = ((leadsResult as any).leads || []).length;
+    (stats as any).leadsFound = leadsCount;
+
+    res.json(stats);
   } catch (error: any) {
     console.error("Get campaign stats error:", error);
     res.status(500).json({ error: error.message || "Failed to get campaign stats" });
