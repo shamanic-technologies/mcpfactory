@@ -13,6 +13,12 @@ import brandRoutes from "./routes/brand.js";
 import leadsRoutes from "./routes/leads.js";
 import activityRoutes from "./routes/activity.js";
 import performanceRoutes from "./routes/performance.js";
+import { readFileSync, existsSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +37,17 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// OpenAPI spec endpoint
+const openapiPath = join(__dirname, "..", "openapi.json");
+app.get("/openapi.json", (_req, res) => {
+  if (existsSync(openapiPath)) {
+    const spec = JSON.parse(readFileSync(openapiPath, "utf-8"));
+    res.json(spec);
+  } else {
+    res.status(404).json({ error: "OpenAPI spec not generated yet. Run: pnpm generate:openapi" });
+  }
+});
 
 // Public routes
 app.use(healthRoutes);

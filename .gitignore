@@ -32,6 +32,9 @@ coverage/
 # MCP
 .mcp.json
 
+# Generated OpenAPI specs
+openapi.json
+
 # Misc
 *.tsbuildinfo
 .eslintcache

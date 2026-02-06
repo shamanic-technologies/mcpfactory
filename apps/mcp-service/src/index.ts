@@ -43,6 +43,23 @@ function extractApiKey(req: Request): string | null {
   return null;
 }
 
+// OpenAPI spec endpoint
+import { readFileSync, existsSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const openapiPath = join(__dirname, "..", "openapi.json");
+
+app.get("/openapi.json", (_req, res) => {
+  if (existsSync(openapiPath)) {
+    const spec = JSON.parse(readFileSync(openapiPath, "utf-8"));
+    res.json(spec);
+  } else {
+    res.status(404).json({ error: "OpenAPI spec not generated yet. Run: pnpm generate:openapi" });
+  }
+});
+
 // Health check
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "mcp-service" });

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && pnpm generate:openapi",
+    "generate:openapi": "tsx scripts/generate-openapi.ts",
     "start": "node --import ./dist/instrument.js dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -18,7 +19,8 @@
     "@sentry/node": "^8.0.0",
     "cors": "^2.8.5",
     "express": "^4.21.0",
-    "svix": "^1.84.1"
+    "svix": "^1.84.1",
+    "swagger-autogen": "^2.23.7"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
