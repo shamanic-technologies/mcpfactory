@@ -3,16 +3,6 @@ import { callExternalService, externalServices } from "../lib/service-client.js"
 
 const router = Router();
 
-interface Campaign {
-  id: string;
-  brandId: string | null;
-  brandUrl: string | null;
-}
-
-interface Run {
-  id: string;
-}
-
 interface DeliveryStats {
   emailsSent: number;
   emailsOpened: number;
@@ -79,16 +69,16 @@ function sumStats(a: DeliveryStats, b: DeliveryStats): DeliveryStats {
   };
 }
 
-/** Call a delivery service's /stats endpoint; return EMPTY_STATS on failure. */
+/** Call a delivery service's /stats endpoint with filter-based query. */
 async function fetchDeliveryStats(
   service: { url: string; apiKey: string },
-  runIds: string[]
+  filters: Record<string, string>
 ): Promise<DeliveryStats> {
   try {
     const result = await callExternalService<{ stats: DeliveryStats }>(
       service,
       "/stats",
-      { method: "POST", body: { runIds } }
+      { method: "POST", body: filters }
     );
     return result.stats || EMPTY_STATS;
   } catch {
@@ -97,10 +87,10 @@ async function fetchDeliveryStats(
 }
 
 /** Fetch stats from both Postmark and Instantly, return combined totals. */
-async function fetchCombinedDeliveryStats(runIds: string[]): Promise<DeliveryStats> {
+async function fetchCombinedDeliveryStats(filters: Record<string, string>): Promise<DeliveryStats> {
   const [postmarkStats, instantlyStats] = await Promise.all([
-    fetchDeliveryStats(externalServices.postmark, runIds),
-    fetchDeliveryStats(externalServices.instantly, runIds),
+    fetchDeliveryStats(externalServices.postmark, filters),
+    fetchDeliveryStats(externalServices.instantly, filters),
   ]);
   return sumStats(postmarkStats, instantlyStats);
 }
@@ -127,77 +117,26 @@ function applyStatsToEntry(
 
 /**
  * Enrich leaderboard email stats from both postmark-service and instantly-service.
- * The campaign-service only queries postmark internally, but emails may also go
- * through Instantly. This fetches from both and sums the results.
+ * Uses brandId and appId filters directly — no need to fetch campaigns or runs.
  */
 async function enrichWithDeliveryStats(data: LeaderboardData): Promise<void> {
-  // Get all campaigns (API-key auth, no org needed)
-  const allCampaignsResult = await callExternalService<{ campaigns: Campaign[] }>(
-    externalServices.campaign,
-    "/internal/campaigns/all"
-  );
-
-  const campaigns = allCampaignsResult.campaigns || [];
-  console.log(`[perf] Found ${campaigns.length} campaigns from /internal/campaigns/all`);
-  if (campaigns.length === 0) return;
-
-  // Get runs for all campaigns in parallel
-  const runsResults = await Promise.all(
-    campaigns.map(async (campaign) => {
-      try {
-        const result = await callExternalService<{ runs: Run[] }>(
-          externalServices.campaign,
-          `/internal/campaigns/${campaign.id}/runs/all`
-        );
-        return { campaign, runIds: (result.runs || []).map((r) => r.id) };
-      } catch (err) {
-        console.warn(`[perf] Failed to get runs for campaign ${campaign.id}:`, (err as Error).message);
-        return { campaign, runIds: [] as string[] };
-      }
-    })
-  );
-
-  // Group runIds by brand key (brandId or brandUrl)
-  const runIdsByBrand = new Map<string, string[]>();
-  const allRunIds: string[] = [];
-
-  for (const { campaign, runIds } of runsResults) {
-    if (runIds.length === 0) continue;
-    allRunIds.push(...runIds);
-
-    const brandKey = campaign.brandId || campaign.brandUrl;
-    if (brandKey) {
-      const existing = runIdsByBrand.get(brandKey) || [];
-      existing.push(...runIds);
-      runIdsByBrand.set(brandKey, existing);
-    }
-  }
-
-  console.log(`[perf] Total runIds: ${allRunIds.length}, brands with runs: ${runIdsByBrand.size}`);
-  if (allRunIds.length === 0) return;
-
-  // Fetch combined delivery stats (postmark + instantly) per brand, in parallel
+  // Fetch combined delivery stats per brand using brandId filter
   await Promise.all(
     data.brands.map(async (brand) => {
-      const brandRunIds =
-        (brand.brandId && runIdsByBrand.get(brand.brandId)) ||
-        (brand.brandUrl && runIdsByBrand.get(brand.brandUrl)) ||
-        null;
-      if (!brandRunIds || brandRunIds.length === 0) {
-        console.log(`[perf] No runIds for brand ${brand.brandDomain} (brandId=${brand.brandId}, brandUrl=${brand.brandUrl})`);
+      if (!brand.brandId) {
+        console.log(`[perf] No brandId for brand ${brand.brandDomain}, skipping delivery enrichment`);
         return;
       }
 
-      console.log(`[perf] Fetching delivery stats for brand ${brand.brandDomain} with ${brandRunIds.length} runIds`);
-      const stats = await fetchCombinedDeliveryStats(brandRunIds);
+      const stats = await fetchCombinedDeliveryStats({ brandId: brand.brandId, appId: "mcpfactory" });
       console.log(`[perf] Brand ${brand.brandDomain} delivery: sent=${stats.emailsSent}, opened=${stats.emailsOpened}`);
       if (stats.emailsSent === 0) return;
       applyStatsToEntry(brand, stats);
     })
   );
 
-  // Fetch aggregate stats for model leaderboard
-  const aggregateStats = await fetchCombinedDeliveryStats(allRunIds);
+  // Fetch aggregate stats for model leaderboard using appId filter
+  const aggregateStats = await fetchCombinedDeliveryStats({ appId: "mcpfactory" });
   console.log(`[perf] Aggregate delivery: sent=${aggregateStats.emailsSent}, opened=${aggregateStats.emailsOpened}`);
 
   if (aggregateStats.emailsSent > 0 && data.models.length > 0) {
