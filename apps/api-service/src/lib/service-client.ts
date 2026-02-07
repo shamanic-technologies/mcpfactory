@@ -5,13 +5,16 @@
 
 // Internal services (no auth - private network)
 export const services = {
-  lead: process.env.LEAD_SERVICE_URL || "http://localhost:3006",
   emailgen: process.env.EMAILGENERATION_SERVICE_URL || "http://localhost:3005",
   client: process.env.CLIENT_SERVICE_URL || "http://localhost:3002",
 };
 
 // External services (need API key)
 export const externalServices = {
+  lead: {
+    url: process.env.LEAD_SERVICE_URL || "http://localhost:3006",
+    apiKey: process.env.LEAD_SERVICE_API_KEY || "",
+  },
   campaign: {
     url: process.env.CAMPAIGN_SERVICE_URL || "http://localhost:3004",
     apiKey: process.env.CAMPAIGN_SERVICE_API_KEY || "",

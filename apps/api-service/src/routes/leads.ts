@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
-import { callService, services } from "../lib/service-client.js";
-import { buildInternalHeaders } from "../lib/internal-headers.js";
+import { callExternalService, externalServices } from "../lib/service-client.js";
 
 const router = Router();
 
@@ -45,12 +44,12 @@ router.post("/leads/search", authenticate, requireOrg, async (req: Authenticated
       return res.status(400).json({ error: "person_titles array is required" });
     }
 
-    const result = await callService(
-      services.lead,
+    const result = await callExternalService(
+      externalServices.lead,
       "/search",
       {
         method: "POST",
-        headers: buildInternalHeaders(req),
+        headers: { "x-clerk-org-id": req.orgId! },
         body: {
           personTitles: person_titles,
           organizationLocations: organization_locations,
