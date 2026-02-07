@@ -1,21 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useMemo } from "react";
 import Link from "next/link";
 import { GlobeAltIcon } from "@heroicons/react/24/outline";
-import { getCampaignStats, type CampaignStats } from "@/lib/api";
+import { useAuthQuery } from "@/lib/use-auth-query";
+import {
+  listBrands,
+  listCampaigns,
+  getCampaignBatchStats,
+  type Brand,
+  type Campaign,
+  type CampaignStats,
+} from "@/lib/api";
 
-interface Brand {
-  id: string;
-  domain: string;
-  name: string | null;
-  brandUrl: string;
-  createdAt: string;
-}
-
-interface Campaign {
-  id: string;
+interface CampaignWithBrand extends Campaign {
   brandId: string | null;
 }
 
@@ -29,68 +27,41 @@ function formatCost(cents: string | null | undefined): string | null {
 }
 
 export default function BrandsPage() {
-  const { getToken } = useAuth();
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [brandCosts, setBrandCosts] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
+  const { data: brandsData, isLoading: brandsLoading } = useAuthQuery(
+    ["brands"],
+    (token) => listBrands(token)
+  );
+  const brands = brandsData?.brands ?? [];
 
-  useEffect(() => {
-    async function fetchBrands() {
-      try {
-        const token = await getToken();
-        if (!token) return;
+  const { data: campaignsData } = useAuthQuery(["campaigns"], (token) =>
+    listCampaigns(token)
+  );
+  const campaigns = (campaignsData?.campaigns ?? []) as CampaignWithBrand[];
 
-        // Fetch brands and all campaigns in parallel
-        const [brandsRes, campaignsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/brands`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/campaigns`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+  const campaignIds = useMemo(() => campaigns.map((c) => c.id), [campaigns]);
 
-        let loadedBrands: Brand[] = [];
-        if (brandsRes.ok) {
-          const data = await brandsRes.json();
-          loadedBrands = data.brands || [];
-          setBrands(loadedBrands);
-        }
+  const { data: batchStats } = useAuthQuery(
+    ["campaignBatchStats", campaignIds],
+    (token) => getCampaignBatchStats(token, campaignIds),
+    { enabled: campaignIds.length > 0 }
+  );
 
-        // Group campaigns by brandId and fetch stats
-        if (campaignsRes.ok && loadedBrands.length > 0) {
-          const campaignsData = await campaignsRes.json();
-          const campaigns: Campaign[] = campaignsData.campaigns || [];
-
-          // Fetch stats for all campaigns
-          const statsMap: Record<string, CampaignStats> = {};
-          for (const campaign of campaigns) {
-            try {
-              statsMap[campaign.id] = await getCampaignStats(token, campaign.id);
-            } catch { /* Stats not available */ }
-          }
-
-          // Sum costs per brand
-          const costs: Record<string, number> = {};
-          for (const campaign of campaigns) {
-            if (!campaign.brandId) continue;
-            const stats = statsMap[campaign.id];
-            if (stats?.totalCostInUsdCents) {
-              costs[campaign.brandId] = (costs[campaign.brandId] || 0) + (parseFloat(stats.totalCostInUsdCents) || 0);
-            }
-          }
-          setBrandCosts(costs);
-        }
-      } catch (error) {
-        console.error("Failed to fetch brands:", error);
-      } finally {
-        setLoading(false);
+  const brandCosts = useMemo(() => {
+    if (!batchStats || !campaigns.length) return {};
+    const costs: Record<string, number> = {};
+    for (const campaign of campaigns) {
+      if (!campaign.brandId) continue;
+      const stats = batchStats[campaign.id];
+      if (stats?.totalCostInUsdCents) {
+        costs[campaign.brandId] =
+          (costs[campaign.brandId] || 0) +
+          (parseFloat(stats.totalCostInUsdCents) || 0);
       }
     }
-    fetchBrands();
-  }, [getToken]);
+    return costs;
+  }, [batchStats, campaigns]);
 
-  if (loading) {
+  if (brandsLoading) {
     return (
       <div className="p-4 md:p-8">
         <div className="animate-pulse space-y-4">

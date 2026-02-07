@@ -1,25 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getCampaignStats, type CampaignStats } from "@/lib/api";
-
-interface Brand {
-  id: string;
-  domain: string;
-  name: string | null;
-  brandUrl: string;
-  createdAt: string;
-}
-
-interface Campaign {
-  id: string;
-  name: string;
-  status: string;
-  createdAt: string;
-}
+import { useAuthQuery } from "@/lib/use-auth-query";
+import { getBrand, listCampaignsByBrand, getCampaignBatchStats, type Brand, type Campaign, type CampaignStats } from "@/lib/api";
 
 function formatCost(cents: string | null | undefined): string | null {
   if (!cents) return null;
@@ -41,60 +26,31 @@ const MCPS = [
 ];
 
 export default function BrandOverviewPage() {
-  const { getToken } = useAuth();
   const params = useParams();
   const brandId = params.brandId as string;
-  const [brand, setBrand] = useState<Brand | null>(null);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [campaignStats, setCampaignStats] = useState<Record<string, CampaignStats>>({});
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const token = await getToken();
+  const { data: brandData, isLoading: brandLoading } = useAuthQuery(
+    ["brand", brandId],
+    (token) => getBrand(token, brandId)
+  );
+  const brand = brandData?.brand ?? null;
 
-        // Fetch brand
-        const brandRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/brands/${brandId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (brandRes.ok) {
-          const data = await brandRes.json();
-          setBrand(data.brand);
-        }
+  const { data: campaignsData } = useAuthQuery(
+    ["campaigns", { brandId }],
+    (token) => listCampaignsByBrand(token, brandId)
+  );
+  const campaigns = campaignsData?.campaigns ?? [];
 
-        // Fetch campaigns for this brand
-        const campaignsRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/campaigns?brandId=${brandId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (campaignsRes.ok) {
-          const data = await campaignsRes.json();
-          const loadedCampaigns = data.campaigns || [];
-          setCampaigns(loadedCampaigns);
+  const campaignIds = useMemo(() => campaigns.map(c => c.id), [campaigns]);
 
-          // Fetch stats for each campaign
-          if (token && loadedCampaigns.length > 0) {
-            const stats: Record<string, CampaignStats> = {};
-            for (const campaign of loadedCampaigns) {
-              try {
-                stats[campaign.id] = await getCampaignStats(token, campaign.id);
-              } catch { /* Stats not available */ }
-            }
-            setCampaignStats(stats);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, [brandId, getToken]);
+  const { data: batchStats } = useAuthQuery(
+    ["campaignBatchStats", { brandId }, campaignIds],
+    (token) => getCampaignBatchStats(token, campaignIds),
+    { enabled: campaignIds.length > 0 }
+  );
+  const campaignStats = batchStats ?? {};
 
-  if (loading) {
+  if (brandLoading) {
     return (
       <div className="p-4 md:p-8">
         <div className="animate-pulse space-y-4">
@@ -122,9 +78,9 @@ export default function BrandOverviewPage() {
         <h1 className="text-2xl font-semibold text-gray-900">
           {brand.name || brand.domain}
         </h1>
-        <a 
-          href={brand.brandUrl} 
-          target="_blank" 
+        <a
+          href={brand.brandUrl}
+          target="_blank"
           rel="noopener noreferrer"
           className="text-sm text-primary-600 hover:underline"
         >
@@ -161,7 +117,7 @@ export default function BrandOverviewPage() {
             // For now all campaigns are from sales-outreach MCP
             const mcpCampaigns = mcp.slug === "sales-outreach" ? campaigns : [];
             const activeCampaigns = mcpCampaigns.filter(c => c.status === "ongoing");
-            
+
             return (
               <div
                 key={mcp.slug}
@@ -221,8 +177,8 @@ export default function BrandOverviewPage() {
                           <span className="text-sm text-gray-700 truncate">{campaign.name}</span>
                           <span className={`
                             px-2 py-0.5 text-xs rounded-full
-                            ${campaign.status === "ongoing" 
-                              ? "bg-green-100 text-green-700" 
+                            ${campaign.status === "ongoing"
+                              ? "bg-green-100 text-green-700"
                               : "bg-gray-100 text-gray-600"
                             }
                           `}>

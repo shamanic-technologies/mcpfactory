@@ -1,40 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useState } from "react";
 import { useParams } from "next/navigation";
+import { useAuthQuery } from "@/lib/use-auth-query";
+import { listCampaignEmails, type Email } from "@/lib/api";
 
-interface RunCost {
-  costName: string;
-  quantity: string;
-  unitCostInUsdCents: string;
-  totalCostInUsdCents: string;
-}
-
-interface GenerationRun {
-  status: string;
-  startedAt: string;
-  completedAt: string | null;
-  totalCostInUsdCents: string;
-  costs: RunCost[];
-}
-
-interface Email {
-  id: string;
-  subject: string;
-  bodyHtml: string;
-  bodyText: string;
-  leadFirstName: string;
-  leadLastName: string;
-  leadTitle: string;
-  leadCompany: string;
-  leadIndustry: string;
-  clientCompanyName: string;
-  createdAt: string;
-  generationRun: GenerationRun | null;
-}
-
-function formatCostRounded(run: GenerationRun | null): string | null {
+function formatCostRounded(run: Email["generationRun"]): string | null {
   if (!run) return null;
   const cents = parseFloat(run.totalCostInUsdCents);
   if (isNaN(cents) || cents === 0) return null;
@@ -56,35 +27,16 @@ function formatDuration(startedAt: string, completedAt: string | null): string |
 }
 
 export default function CampaignEmailsPage() {
-  const { getToken } = useAuth();
   const params = useParams();
-  const [emails, setEmails] = useState<Email[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
 
-  useEffect(() => {
-    async function loadEmails() {
-      try {
-        const token = await getToken();
-        if (!token) return;
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "https://api.mcpfactory.org"}/v1/campaigns/${params.id}/emails`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setEmails(data.emails || []);
-        }
-      } catch (err) {
-        console.error("Failed to load emails:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadEmails();
-  }, [params.id, getToken]);
+  const { data, isLoading } = useAuthQuery(
+    ["campaignEmails", params.id],
+    (token) => listCampaignEmails(token, params.id as string)
+  );
+  const emails = data?.emails ?? [];
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-4 md:p-8">
         <div className="animate-pulse space-y-4">

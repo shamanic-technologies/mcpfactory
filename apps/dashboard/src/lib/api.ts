@@ -191,3 +191,175 @@ export async function stopCampaign(token: string, campaignId: string): Promise<{
 export async function resumeCampaign(token: string, campaignId: string): Promise<{ campaign: Campaign }> {
   return apiCall<{ campaign: Campaign }>(`/campaigns/${campaignId}/resume`, { token, method: "POST" });
 }
+
+// Brands
+export interface Brand {
+  id: string;
+  domain: string;
+  name: string | null;
+  brandUrl: string;
+  createdAt: string;
+}
+
+export async function listBrands(token: string): Promise<{ brands: Brand[] }> {
+  return apiCall<{ brands: Brand[] }>("/brands", { token });
+}
+
+export async function getBrand(token: string, brandId: string): Promise<{ brand: Brand }> {
+  return apiCall<{ brand: Brand }>(`/brands/${brandId}`, { token });
+}
+
+// Brand sales profile
+export interface SalesProfile {
+  companyName: string | null;
+  valueProposition: string | null;
+  companyOverview: string | null;
+  targetAudience: string | null;
+  customerPainPoints: string[];
+  keyFeatures: string[];
+  productDifferentiators: string[];
+  competitors: string[];
+  socialProof: {
+    caseStudies: string[];
+    testimonials: string[];
+    results: string[];
+  };
+  callToAction: string | null;
+  additionalContext: string | null;
+  extractedAt: string;
+}
+
+export async function getBrandSalesProfile(
+  token: string,
+  brandId: string
+): Promise<{ profile: SalesProfile | null }> {
+  try {
+    return await apiCall<{ profile: SalesProfile }>(`/brands/${brandId}/sales-profile`, { token });
+  } catch (err: unknown) {
+    // 404 means no profile yet — not an error
+    if (err instanceof Error && err.message.includes("not found")) {
+      return { profile: null };
+    }
+    throw err;
+  }
+}
+
+// Brand runs
+export interface RunCost {
+  costName: string;
+  quantity: string;
+  unitCostInUsdCents: string;
+  totalCostInUsdCents: string;
+}
+
+export interface BrandRun {
+  id: string;
+  taskName: string;
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+  totalCostInUsdCents: string | null;
+  costs: RunCost[];
+}
+
+export async function listBrandRuns(token: string, brandId: string): Promise<{ runs: BrandRun[] }> {
+  return apiCall<{ runs: BrandRun[] }>(`/brands/${brandId}/runs`, { token });
+}
+
+// Campaign by brand
+export async function listCampaignsByBrand(token: string, brandId: string): Promise<{ campaigns: Campaign[] }> {
+  return apiCall<{ campaigns: Campaign[] }>(`/campaigns?brandId=${brandId}`, { token });
+}
+
+// Single campaign
+export async function getCampaign(token: string, campaignId: string): Promise<{ campaign: Campaign }> {
+  return apiCall<{ campaign: Campaign }>(`/campaigns/${campaignId}`, { token });
+}
+
+// Campaign sub-resources
+export interface Lead {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  emailStatus: string | null;
+  title: string | null;
+  organizationName: string | null;
+  organizationDomain: string | null;
+  organizationIndustry: string | null;
+  organizationSize: string | null;
+  linkedinUrl: string | null;
+  status: string;
+  createdAt: string;
+  enrichmentRun: {
+    status: string;
+    startedAt: string;
+    completedAt: string | null;
+    totalCostInUsdCents: string;
+    costs: RunCost[];
+  } | null;
+}
+
+export async function listCampaignLeads(token: string, campaignId: string): Promise<{ leads: Lead[] }> {
+  return apiCall<{ leads: Lead[] }>(`/campaigns/${campaignId}/leads`, { token });
+}
+
+export interface Email {
+  id: string;
+  subject: string;
+  bodyHtml: string;
+  bodyText: string;
+  leadFirstName: string;
+  leadLastName: string;
+  leadTitle: string;
+  leadCompany: string;
+  leadIndustry: string;
+  clientCompanyName: string;
+  createdAt: string;
+  generationRun: {
+    status: string;
+    startedAt: string;
+    completedAt: string | null;
+    totalCostInUsdCents: string;
+    costs: RunCost[];
+  } | null;
+}
+
+export async function listCampaignEmails(token: string, campaignId: string): Promise<{ emails: Email[] }> {
+  return apiCall<{ emails: Email[] }>(`/campaigns/${campaignId}/emails`, { token });
+}
+
+export interface Reply {
+  id: string;
+  emailId: string;
+  leadName: string | null;
+  leadEmail: string;
+  classification: string | null;
+  snippet: string | null;
+  receivedAt: string;
+}
+
+export async function listCampaignReplies(token: string, campaignId: string): Promise<{ replies: Reply[] }> {
+  return apiCall<{ replies: Reply[] }>(`/campaigns/${campaignId}/replies`, { token });
+}
+
+export interface CompanyCost {
+  costName: string;
+  quantity: number;
+  totalCostInUsdCents: number;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  domain: string | null;
+  industry: string | null;
+  employeeCount: string | null;
+  leadsCount: number;
+  totalCostInUsdCents: string | null;
+  costs: CompanyCost[];
+}
+
+export async function listCampaignCompanies(token: string, campaignId: string): Promise<{ companies: Company[] }> {
+  return apiCall<{ companies: Company[] }>(`/campaigns/${campaignId}/companies`, { token });
+}

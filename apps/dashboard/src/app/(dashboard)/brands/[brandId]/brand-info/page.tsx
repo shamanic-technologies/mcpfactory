@@ -1,44 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useState } from "react";
 import { useParams } from "next/navigation";
-
-interface SalesProfile {
-  companyName: string | null;
-  valueProposition: string | null;
-  companyOverview: string | null;
-  targetAudience: string | null;
-  customerPainPoints: string[];
-  keyFeatures: string[];
-  productDifferentiators: string[];
-  competitors: string[];
-  socialProof: {
-    caseStudies: string[];
-    testimonials: string[];
-    results: string[];
-  };
-  callToAction: string | null;
-  additionalContext: string | null;
-  extractedAt: string;
-}
-
-interface RunCost {
-  costName: string;
-  quantity: string;
-  unitCostInUsdCents: string;
-  totalCostInUsdCents: string;
-}
-
-interface BrandRun {
-  id: string;
-  taskName: string;
-  status: string;
-  startedAt: string;
-  completedAt: string | null;
-  totalCostInUsdCents: string | null;
-  costs: RunCost[];
-}
+import { useAuthQuery } from "@/lib/use-auth-query";
+import { getBrandSalesProfile, listBrandRuns, type SalesProfile, type BrandRun, type RunCost } from "@/lib/api";
 
 function timeAgo(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -60,77 +25,25 @@ function formatCost(cents: string | null | undefined): string | null {
 }
 
 export default function BrandInfoPage() {
-  const { getToken } = useAuth();
   const params = useParams();
   const brandId = params.brandId as string;
-  const [profile, setProfile] = useState<SalesProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"current" | "history">("current");
-  const [runs, setRuns] = useState<BrandRun[]>([]);
-  const [runsLoading, setRunsLoading] = useState(false);
-  const [runsLoaded, setRunsLoaded] = useState(false);
 
-  useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const token = await getToken();
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/brands/${brandId}/sales-profile`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+  const { data: profileData, isLoading, error: profileError } = useAuthQuery(
+    ["brandSalesProfile", brandId],
+    (token) => getBrandSalesProfile(token, brandId)
+  );
+  const profile = profileData?.profile ?? null;
+  const error = profileError?.message ?? null;
 
-        if (res.status === 404) {
-          setProfile(null);
-          return;
-        }
+  const { data: runsData, isLoading: runsLoading } = useAuthQuery(
+    ["brandRuns", brandId],
+    (token) => listBrandRuns(token, brandId),
+    { enabled: activeTab === "history" }
+  );
+  const runs = runsData?.runs ?? [];
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch brand info");
-        }
-
-        const data = await res.json();
-        setProfile(data.profile);
-      } catch (err: any) {
-        console.error("Failed to fetch profile:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchProfile();
-  }, [brandId, getToken]);
-
-  useEffect(() => {
-    if (activeTab !== "history" || runsLoaded) return;
-    async function fetchRuns() {
-      setRunsLoading(true);
-      try {
-        const token = await getToken();
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/brands/${brandId}/runs`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setRuns(data.runs || []);
-        }
-      } catch (err) {
-        console.error("Failed to fetch runs:", err);
-      } finally {
-        setRunsLoading(false);
-        setRunsLoaded(true);
-      }
-    }
-    fetchRuns();
-  }, [activeTab, brandId, getToken, runsLoaded]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-4 md:p-8">
         <div className="animate-pulse space-y-4">

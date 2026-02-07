@@ -1,18 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useState } from "react";
 import { useParams } from "next/navigation";
-
-interface Reply {
-  id: string;
-  emailId: string;
-  leadName: string | null;
-  leadEmail: string;
-  classification: string | null;
-  snippet: string | null;
-  receivedAt: string;
-}
+import { useAuthQuery } from "@/lib/use-auth-query";
+import { listCampaignReplies, type Reply } from "@/lib/api";
 
 const CLASSIFICATION_COLORS: Record<string, string> = {
   willing_to_meet: "bg-green-100 text-green-700 border-green-200",
@@ -31,33 +22,14 @@ const CLASSIFICATION_LABELS: Record<string, string> = {
 };
 
 export default function CampaignRepliesPage() {
-  const { getToken } = useAuth();
   const params = useParams();
-  const [replies, setReplies] = useState<Reply[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadReplies() {
-      try {
-        const token = await getToken();
-        if (!token) return;
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "https://api.mcpfactory.org"}/v1/campaigns/${params.id}/replies`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setReplies(data.replies || []);
-        }
-      } catch (err) {
-        console.error("Failed to load replies:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadReplies();
-  }, [params.id]);
+  const { data, isLoading } = useAuthQuery(
+    ["campaignReplies", params.id],
+    (token) => listCampaignReplies(token, params.id as string)
+  );
+  const replies = data?.replies ?? [];
 
   const filteredReplies = filter 
     ? replies.filter(r => r.classification === filter) 
@@ -69,7 +41,7 @@ export default function CampaignRepliesPage() {
     return acc;
   }, {} as Record<string, number>);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-4 md:p-8">
         <div className="animate-pulse space-y-4">

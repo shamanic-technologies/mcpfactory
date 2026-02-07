@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useAuth } from "@clerk/nextjs";
-import { Campaign, CampaignStats, getCampaignStats } from "./api";
+import { createContext, useContext, type ReactNode } from "react";
+import { useAuthQuery, useQueryClient } from "@/lib/use-auth-query";
+import { getCampaign, getCampaignStats, type Campaign, type CampaignStats } from "./api";
 
 interface CampaignContextType {
   campaign: Campaign | null;
@@ -20,49 +20,28 @@ interface CampaignProviderProps {
 }
 
 export function CampaignProvider({ children, campaignId }: CampaignProviderProps) {
-  const { getToken } = useAuth();
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [stats, setStats] = useState<CampaignStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  async function refreshStats() {
-    try {
-      const token = await getToken();
-      if (!token || !campaignId) return;
-      const s = await getCampaignStats(token, campaignId);
-      setStats(s);
-    } catch (err) {
-      console.error("Failed to load campaign stats:", err);
-    }
-  }
+  const { data: campaignData, isLoading: campaignLoading } = useAuthQuery(
+    ["campaign", campaignId],
+    (token) => getCampaign(token, campaignId)
+  );
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const token = await getToken();
-        if (!token) return;
+  const { data: statsData, isLoading: statsLoading } = useAuthQuery(
+    ["campaignStats", campaignId],
+    (token) => getCampaignStats(token, campaignId)
+  );
 
-        // Fetch campaign details
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "https://api.mcpfactory.org"}/v1/campaigns/${campaignId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setCampaign(data.campaign);
-        }
+  const loading = campaignLoading || statsLoading;
+  const campaign = campaignData?.campaign ?? null;
+  const stats = statsData ?? null;
 
-        // Fetch stats
-        await refreshStats();
-      } catch (err) {
-        console.error("Failed to load campaign:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, [campaignId]);
+  const refreshStats = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["campaignStats", campaignId] });
+  };
+
+  // setCampaign is kept for interface compat but is a no-op (queries manage state)
+  const setCampaign = () => {};
 
   return (
     <CampaignContext.Provider value={{ campaign, stats, loading, setCampaign, refreshStats }}>
