@@ -4,12 +4,18 @@ import { callService, services, callExternalService, externalServices } from "..
 import { buildInternalHeaders } from "../lib/internal-headers.js";
 import { getRunsBatch, type RunWithCosts } from "@mcpfactory/runs-client";
 
-function sendLifecycleEmail(eventType: string, req: AuthenticatedRequest, metadata: Record<string, unknown>) {
+function sendLifecycleEmail(
+  eventType: string,
+  req: AuthenticatedRequest,
+  { brandId, campaignId, ...metadata }: Record<string, unknown>
+) {
   callExternalService(externalServices.lifecycle, "/send", {
     method: "POST",
     body: {
       appId: "mcpfactory",
       eventType,
+      brandId,
+      campaignId,
       clerkOrgId: req.orgId,
       clerkUserId: req.userId,
       metadata,
@@ -155,6 +161,7 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
     const campaign = (result as any).campaign;
     if (campaign) {
       sendLifecycleEmail("campaign_created", req, {
+        brandId: campaign.brandId,
         campaignId: campaign.id,
         campaignName: req.body.name || campaign.name,
       });
@@ -245,6 +252,7 @@ router.post("/campaigns/:id/stop", authenticate, requireOrg, async (req: Authent
     // Fire-and-forget lifecycle email
     const campaign = (result as any).campaign;
     sendLifecycleEmail("campaign_stopped", req, {
+      brandId: campaign?.brandId,
       campaignId: id,
       campaignName: campaign?.name,
     });
