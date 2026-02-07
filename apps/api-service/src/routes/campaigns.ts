@@ -159,7 +159,7 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
 
     // Fire-and-forget lifecycle email
     const campaign = (result as any).campaign;
-    if (campaign) {
+    if (campaign?.brandId && campaign?.id) {
       sendLifecycleEmail("campaign_created", req, {
         brandId: campaign.brandId,
         campaignId: campaign.id,
@@ -251,11 +251,13 @@ router.post("/campaigns/:id/stop", authenticate, requireOrg, async (req: Authent
 
     // Fire-and-forget lifecycle email
     const campaign = (result as any).campaign;
-    sendLifecycleEmail("campaign_stopped", req, {
-      brandId: campaign?.brandId,
-      campaignId: id,
-      campaignName: campaign?.name,
-    });
+    if (campaign?.brandId) {
+      sendLifecycleEmail("campaign_stopped", req, {
+        brandId: campaign.brandId,
+        campaignId: id,
+        campaignName: campaign?.name,
+      });
+    }
 
     res.json(result);
   } catch (error: any) {
