@@ -351,8 +351,11 @@ router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: Authent
     // Override leadsFound from lead-service (campaign-service count is unreliable)
     if (leadStats) {
       const ls = leadStats as any;
-      (stats as any).leadsFound = ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.count ?? 0;
       console.log("[campaigns] Lead-service stats response:", JSON.stringify(ls));
+      const leadCount = ls.servedCount ?? ls.served ?? ls.count ?? ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.stats?.count ?? ls.stats?.servedCount ?? 0;
+      if (leadCount > 0) {
+        (stats as any).leadsFound = leadCount;
+      }
     }
 
     // Campaign service email delivery stats are unreliable — fetch directly from services
@@ -437,7 +440,10 @@ router.post("/campaigns/batch-stats", authenticate, requireOrg, async (req: Auth
       // Override leads from lead-service
       if (enrichment?.leadStats) {
         const ls = enrichment.leadStats as any;
-        merged.leadsFound = ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.count ?? merged.leadsFound ?? 0;
+        const leadCount = ls.servedCount ?? ls.served ?? ls.count ?? ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.stats?.count ?? ls.stats?.servedCount ?? 0;
+        if (leadCount > 0) {
+          merged.leadsFound = leadCount;
+        }
       }
 
       // Override delivery stats from postmark + instantly
