@@ -88,8 +88,6 @@ export async function callExternalService<T>(
 
   const url = `${service.url}${path}`;
 
-  console.log(`[callExternalService] ${method} ${url}`);
-
   try {
     const response = await fetch(url, {
       method,
@@ -101,11 +99,8 @@ export async function callExternalService<T>(
       body: body ? JSON.stringify(body) : undefined,
     });
 
-    console.log(`[callExternalService] Response status: ${response.status}`);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.log(`[callExternalService] Error response: ${errorText}`);
       try {
         const errorJson = JSON.parse(errorText);
         throw new Error(errorJson.error || `Service call failed: ${response.status}`);

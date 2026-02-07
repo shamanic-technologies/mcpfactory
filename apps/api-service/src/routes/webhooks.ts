@@ -46,7 +46,6 @@ router.post("/webhooks/clerk", async (req: Request, res: Response) => {
   }
 
   const eventType = event.type as string;
-  console.log(`[webhooks/clerk] Received event: ${eventType}`);
 
   try {
     if (eventType === "user.created") {
