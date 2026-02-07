@@ -119,12 +119,9 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
     }
   } */
   try {
-    console.log("Create campaign - orgId:", req.orgId);
-    
     // If brandUrl provided, scrape it first so company info is available for runs
     const { brandUrl } = req.body;
     if (brandUrl) {
-      console.log("Scraping brand:", brandUrl);
       try {
         await callExternalService(
           externalServices.scraping,
@@ -138,7 +135,6 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
             },
           }
         );
-        console.log("Brand scraped successfully");
       } catch (scrapeError: any) {
         console.warn("Failed to scrape brand (continuing anyway):", scrapeError.message);
         // Don't fail campaign creation if scrape fails - worker will handle missing data

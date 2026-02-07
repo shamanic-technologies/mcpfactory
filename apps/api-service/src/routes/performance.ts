@@ -124,12 +124,10 @@ async function enrichWithDeliveryStats(data: LeaderboardData): Promise<void> {
   await Promise.all(
     data.brands.map(async (brand) => {
       if (!brand.brandId) {
-        console.log(`[perf] No brandId for brand ${brand.brandDomain}, skipping delivery enrichment`);
         return;
       }
 
       const stats = await fetchCombinedDeliveryStats({ brandId: brand.brandId, appId: "mcpfactory" });
-      console.log(`[perf] Brand ${brand.brandDomain} delivery: sent=${stats.emailsSent}, opened=${stats.emailsOpened}`);
       if (stats.emailsSent === 0) return;
       applyStatsToEntry(brand, stats);
     })
@@ -137,7 +135,6 @@ async function enrichWithDeliveryStats(data: LeaderboardData): Promise<void> {
 
   // Fetch aggregate stats for model leaderboard using appId filter
   const aggregateStats = await fetchCombinedDeliveryStats({ appId: "mcpfactory" });
-  console.log(`[perf] Aggregate delivery: sent=${aggregateStats.emailsSent}, opened=${aggregateStats.emailsOpened}`);
 
   if (aggregateStats.emailsSent > 0 && data.models.length > 0) {
     // Distribute delivery stats across models proportionally by emailsGenerated
