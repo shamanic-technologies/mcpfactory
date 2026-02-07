@@ -138,6 +138,7 @@ async function enrichWithDeliveryStats(data: LeaderboardData): Promise<void> {
   );
 
   const campaigns = allCampaignsResult.campaigns || [];
+  console.log(`[perf] Found ${campaigns.length} campaigns from /internal/campaigns/all`);
   if (campaigns.length === 0) return;
 
   // Get runs for all campaigns in parallel
@@ -149,7 +150,8 @@ async function enrichWithDeliveryStats(data: LeaderboardData): Promise<void> {
           `/internal/campaigns/${campaign.id}/runs/all`
         );
         return { campaign, runIds: (result.runs || []).map((r) => r.id) };
-      } catch {
+      } catch (err) {
+        console.warn(`[perf] Failed to get runs for campaign ${campaign.id}:`, (err as Error).message);
         return { campaign, runIds: [] as string[] };
       }
     })
@@ -171,6 +173,7 @@ async function enrichWithDeliveryStats(data: LeaderboardData): Promise<void> {
     }
   }
 
+  console.log(`[perf] Total runIds: ${allRunIds.length}, brands with runs: ${runIdsByBrand.size}`);
   if (allRunIds.length === 0) return;
 
   // Fetch combined delivery stats (postmark + instantly) per brand, in parallel
@@ -180,9 +183,14 @@ async function enrichWithDeliveryStats(data: LeaderboardData): Promise<void> {
         (brand.brandId && runIdsByBrand.get(brand.brandId)) ||
         (brand.brandUrl && runIdsByBrand.get(brand.brandUrl)) ||
         null;
-      if (!brandRunIds || brandRunIds.length === 0) return;
+      if (!brandRunIds || brandRunIds.length === 0) {
+        console.log(`[perf] No runIds for brand ${brand.brandDomain} (brandId=${brand.brandId}, brandUrl=${brand.brandUrl})`);
+        return;
+      }
 
+      console.log(`[perf] Fetching delivery stats for brand ${brand.brandDomain} with ${brandRunIds.length} runIds`);
       const stats = await fetchCombinedDeliveryStats(brandRunIds);
+      console.log(`[perf] Brand ${brand.brandDomain} delivery: sent=${stats.emailsSent}, opened=${stats.emailsOpened}`);
       if (stats.emailsSent === 0) return;
       applyStatsToEntry(brand, stats);
     })
@@ -190,6 +198,7 @@ async function enrichWithDeliveryStats(data: LeaderboardData): Promise<void> {
 
   // Fetch aggregate stats for model leaderboard
   const aggregateStats = await fetchCombinedDeliveryStats(allRunIds);
+  console.log(`[perf] Aggregate delivery: sent=${aggregateStats.emailsSent}, opened=${aggregateStats.emailsOpened}`);
 
   if (aggregateStats.emailsSent > 0 && data.models.length > 0) {
     // Distribute delivery stats across models proportionally by emailsGenerated
