@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getCampaignStats, CampaignStats } from "@/lib/api";
+import { getCampaignBatchStats, CampaignStats } from "@/lib/api";
 import { SkeletonKeysList } from "@/components/skeleton";
 import { FunnelMetrics } from "@/components/campaign/funnel-metrics";
 import { ReplyBreakdown } from "@/components/campaign/reply-breakdown";
@@ -49,21 +49,18 @@ export default function BrandMcpSalesOutreachPage() {
         setCampaigns(data.campaigns || []);
         
         const campaignList = data.campaigns || [];
-        const statsEntries = await Promise.all(
-          campaignList.map(async (campaign: Campaign) => {
-            try {
-              const s = await getCampaignStats(token, campaign.id);
-              return [campaign.id, s] as const;
-            } catch {
-              return null;
-            }
-          })
-        );
-        const stats: Record<string, CampaignStats> = {};
-        for (const entry of statsEntries) {
-          if (entry) stats[entry[0]] = entry[1];
+        // Fetch all campaign stats in a single batch call
+        if (campaignList.length > 0) {
+          try {
+            const stats = await getCampaignBatchStats(
+              token,
+              campaignList.map((c: Campaign) => c.id)
+            );
+            setCampaignStats(stats);
+          } catch (err) {
+            console.error("Failed to load batch stats:", err);
+          }
         }
-        setCampaignStats(stats);
       }
     } catch (err) {
       console.error("Failed to load campaigns:", err);
@@ -172,6 +169,7 @@ export default function BrandMcpSalesOutreachPage() {
                 {stats && (
                   <div className="flex gap-4 text-xs text-gray-500">
                     <span>{stats.leadsFound || 0} leads</span>
+                    <span>{stats.emailsGenerated || 0} generated</span>
                     <span>{stats.emailsSent || 0} sent</span>
                     <span>{stats.emailsReplied || 0} replies</span>
                     {formatCost(stats.totalCostInUsdCents) && (

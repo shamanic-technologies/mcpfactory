@@ -172,6 +172,18 @@ export async function getCampaignStats(token: string, campaignId: string): Promi
   return apiCall<CampaignStats>(`/campaigns/${campaignId}/stats`, { token });
 }
 
+export async function getCampaignBatchStats(
+  token: string,
+  campaignIds: string[]
+): Promise<Record<string, CampaignStats>> {
+  const result = await apiCall<{ stats: Record<string, CampaignStats> }>("/campaigns/batch-stats", {
+    token,
+    method: "POST",
+    body: { campaignIds },
+  });
+  return result.stats;
+}
+
 export async function stopCampaign(token: string, campaignId: string): Promise<{ campaign: Campaign }> {
   return apiCall<{ campaign: Campaign }>(`/campaigns/${campaignId}/stop`, { token, method: "POST" });
 }

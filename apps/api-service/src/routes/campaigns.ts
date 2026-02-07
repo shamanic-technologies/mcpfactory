@@ -19,6 +19,50 @@ function sendLifecycleEmail(eventType: string, req: AuthenticatedRequest, metada
 
 const router = Router();
 
+/** Fetch delivery stats from postmark + instantly and return summed result. */
+async function fetchDeliveryStats(
+  runIds: string[],
+  orgId: string
+): Promise<Record<string, number> | null> {
+  if (runIds.length === 0) return null;
+
+  const [postmarkResult, instantlyResult] = await Promise.all([
+    callExternalService(
+      externalServices.postmark,
+      "/stats",
+      { method: "POST", headers: { "x-clerk-org-id": orgId }, body: { runIds } }
+    ).catch((err) => {
+      console.warn("[campaigns] Postmark stats failed:", (err as Error).message);
+      return null;
+    }),
+    callExternalService(
+      externalServices.instantly,
+      "/stats",
+      { method: "POST", headers: { "x-clerk-org-id": orgId }, body: { runIds } }
+    ).catch((err) => {
+      console.warn("[campaigns] Instantly stats failed:", (err as Error).message);
+      return null;
+    }),
+  ]);
+
+  const ps = (postmarkResult as any)?.stats;
+  const is = (instantlyResult as any)?.stats;
+  if (!ps && !is) return null;
+
+  return {
+    emailsSent: (ps?.emailsSent || 0) + (is?.emailsSent || 0),
+    emailsOpened: (ps?.emailsOpened || 0) + (is?.emailsOpened || 0),
+    emailsClicked: (ps?.emailsClicked || 0) + (is?.emailsClicked || 0),
+    emailsReplied: (ps?.emailsReplied || 0) + (is?.emailsReplied || 0),
+    emailsBounced: (ps?.emailsBounced || 0) + (is?.emailsBounced || 0),
+    repliesWillingToMeet: (ps?.repliesWillingToMeet || 0) + (is?.repliesWillingToMeet || 0),
+    repliesInterested: (ps?.repliesInterested || 0) + (is?.repliesInterested || 0),
+    repliesNotInterested: (ps?.repliesNotInterested || 0) + (is?.repliesNotInterested || 0),
+    repliesOutOfOffice: (ps?.repliesOutOfOffice || 0) + (is?.repliesOutOfOffice || 0),
+    repliesUnsubscribe: (ps?.repliesUnsubscribe || 0) + (is?.repliesUnsubscribe || 0),
+  };
+}
+
 /**
  * GET /v1/campaigns
  * List campaigns for the organization
@@ -282,27 +326,131 @@ router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: Authent
     const { id } = req.params;
     const headers = { "x-clerk-org-id": req.orgId! };
 
-    const [stats, leadsResult] = await Promise.all([
+    // Fetch campaign-service stats, lead-service stats, and runs in parallel
+    const [stats, leadStats, runsResult] = await Promise.all([
       callExternalService(
         externalServices.campaign,
         `/internal/campaigns/${id}/stats`,
         { headers }
       ),
+      callService(
+        services.lead,
+        `/stats?campaignId=${id}`,
+        { headers: buildInternalHeaders(req) }
+      ).catch((err) => {
+        console.warn("[campaigns] Lead-service stats failed:", (err as Error).message);
+        return null;
+      }),
       callExternalService(
         externalServices.campaign,
-        `/internal/campaigns/${id}/leads`,
+        `/internal/campaigns/${id}/runs`,
         { headers }
-      ).catch(() => ({ leads: [] })),
+      ).catch(() => ({ runs: [] })),
     ]);
 
-    // Campaign service stats.leadsFound is unreliable — use actual leads count
-    const leadsCount = ((leadsResult as any).leads || []).length;
-    (stats as any).leadsFound = leadsCount;
+    // Override leadsFound from lead-service (campaign-service count is unreliable)
+    if (leadStats) {
+      const ls = leadStats as any;
+      (stats as any).leadsFound = ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.count ?? 0;
+      console.log("[campaigns] Lead-service stats response:", JSON.stringify(ls));
+    }
+
+    // Campaign service email delivery stats are unreliable — fetch directly from services
+    const runs = ((runsResult as any).runs || []) as Array<{ id: string }>;
+    const runIds = runs.map((r) => r.id);
+    const delivery = await fetchDeliveryStats(runIds, req.orgId!);
+    if (delivery) {
+      Object.assign(stats as any, delivery);
+    }
 
     res.json(stats);
   } catch (error: any) {
     console.error("Get campaign stats error:", error);
     res.status(500).json({ error: error.message || "Failed to get campaign stats" });
+  }
+});
+
+/**
+ * POST /v1/campaigns/batch-stats
+ * Get stats for multiple campaigns in one call
+ */
+router.post("/campaigns/batch-stats", authenticate, requireOrg, async (req: AuthenticatedRequest, res) => {
+  // #swagger.tags = ['Campaigns']
+  // #swagger.summary = 'Batch get campaign stats'
+  // #swagger.description = 'Get stats for multiple campaigns in a single request'
+  // #swagger.security = [{ "bearerAuth": [] }, { "apiKey": [] }]
+  try {
+    const { campaignIds } = req.body;
+    if (!Array.isArray(campaignIds) || campaignIds.length === 0) {
+      return res.status(400).json({ error: "campaignIds must be a non-empty array" });
+    }
+
+    const orgId = req.orgId!;
+    const headers = { "x-clerk-org-id": orgId };
+
+    // 1. Get base stats from campaign-service batch endpoint
+    const batchResult = await callExternalService(
+      externalServices.campaign,
+      "/internal/campaigns/batch-stats",
+      { method: "POST", headers, body: { campaignIds } }
+    ).catch((err) => {
+      console.warn("[batch-stats] Campaign batch-stats failed:", (err as Error).message);
+      return null;
+    });
+
+    console.log("[batch-stats] Campaign batch-stats response shape:", JSON.stringify(batchResult).slice(0, 500));
+
+    // 2. For each campaign, fetch runs + lead stats in parallel
+    const enrichments = await Promise.all(
+      campaignIds.map(async (id: string) => {
+        const [runsResult, leadStats] = await Promise.all([
+          callExternalService(
+            externalServices.campaign,
+            `/internal/campaigns/${id}/runs`,
+            { headers }
+          ).catch(() => ({ runs: [] })),
+          callService(
+            services.lead,
+            `/stats?campaignId=${id}`,
+            { headers: { "x-clerk-org-id": orgId } }
+          ).catch(() => null),
+        ]);
+
+        const runIds = ((runsResult as any).runs || []).map((r: any) => r.id);
+        const delivery = await fetchDeliveryStats(runIds, orgId);
+
+        return { campaignId: id, leadStats, delivery };
+      })
+    );
+
+    // 3. Merge base stats with enrichments
+    const stats: Record<string, any> = {};
+    for (const id of campaignIds) {
+      // Try common response shapes for batch-stats
+      const br = batchResult as any;
+      const base = br?.[id] || br?.stats?.[id] || {};
+      const enrichment = enrichments.find((e) => e.campaignId === id);
+
+      const merged = { ...base, campaignId: id };
+
+      // Override leads from lead-service
+      if (enrichment?.leadStats) {
+        const ls = enrichment.leadStats as any;
+        merged.leadsFound = ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.count ?? merged.leadsFound ?? 0;
+      }
+
+      // Override delivery stats from postmark + instantly
+      if (enrichment?.delivery) {
+        Object.assign(merged, enrichment.delivery);
+      }
+
+      stats[id] = merged;
+    }
+
+    res.json({ stats });
+  } catch (error: any) {
+    console.error("Batch stats error:", error);
+    res.status(500).json({ error: error.message || "Failed to get batch stats" });
   }
 });
 
