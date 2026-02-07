@@ -36,6 +36,10 @@ export const externalServices = {
     url: process.env.LIFECYCLE_EMAILS_SERVICE_URL || "http://localhost:3008",
     apiKey: process.env.LIFECYCLE_EMAILS_SERVICE_API_KEY || "",
   },
+  instantly: {
+    url: process.env.INSTANTLY_SERVICE_URL || "http://localhost:3011",
+    apiKey: process.env.INSTANTLY_SERVICE_API_KEY || "",
+  },
 };
 
 interface ServiceCallOptions {

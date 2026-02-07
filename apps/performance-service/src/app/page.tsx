@@ -1,5 +1,5 @@
 import { URLS } from "@mcpfactory/content";
-import { fetchLeaderboard, formatPercent, formatModelName } from "@/lib/fetch-leaderboard";
+import { fetchLeaderboard, formatPercent, formatModelName, formatCostDollars } from "@/lib/fetch-leaderboard";
 import { LeaderboardTabs } from "@/components/leaderboard-tabs";
 
 export const revalidate = 3600;
@@ -11,16 +11,19 @@ export default async function HomePage() {
   const models = data?.models || [];
   const hero = data?.hero;
 
-  // Compute aggregate summary numbers across all brands
+  // Compute aggregate summary numbers
   const totalEmails = brands.reduce((s, b) => s + b.emailsSent, 0);
   const totalOpened = brands.reduce((s, b) => s + b.emailsOpened, 0);
   const totalClicked = brands.reduce((s, b) => s + b.emailsClicked, 0);
   const totalReplied = brands.reduce((s, b) => s + b.emailsReplied, 0);
+  const totalGenerated = models.reduce((s, m) => s + m.emailsGenerated, 0);
+  const totalCostCents = brands.reduce((s, b) => s + b.totalCostUsdCents, 0);
   const avgOpenRate = totalEmails > 0 ? totalOpened / totalEmails : 0;
   const avgClickRate = totalEmails > 0 ? totalClicked / totalEmails : 0;
   const avgReplyRate = totalEmails > 0 ? totalReplied / totalEmails : 0;
 
   const hasEmails = totalEmails > 0;
+  const hasActivity = totalGenerated > 0 || totalCostCents > 0;
   const hasBrands = brands.length > 0;
 
   return (
@@ -38,30 +41,53 @@ export default async function HomePage() {
             Every metric from every campaign. No cherry-picking, no hidden numbers.
           </p>
 
-          {hasEmails ? (
+          {hasActivity || hasEmails ? (
             <>
               {/* Key numbers row */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
                 <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
-                  <p className="text-3xl font-bold text-gray-800">{totalEmails.toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-gray-800">
+                    {totalGenerated > 0 ? totalGenerated.toLocaleString() : "—"}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Emails Generated</p>
+                </div>
+                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                  <p className="text-3xl font-bold text-gray-800">
+                    {totalEmails > 0 ? totalEmails.toLocaleString() : "—"}
+                  </p>
                   <p className="text-xs text-gray-500 mt-1">Emails Sent</p>
                 </div>
                 <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
-                  <p className="text-3xl font-bold text-primary-500">{formatPercent(avgOpenRate)}</p>
-                  <p className="text-xs text-gray-500 mt-1">Avg Open Rate</p>
+                  <p className="text-3xl font-bold text-accent-500">{formatCostDollars(totalCostCents)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Total Spent</p>
                 </div>
                 <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
-                  <p className="text-3xl font-bold text-accent-500">{formatPercent(avgClickRate)}</p>
-                  <p className="text-xs text-gray-500 mt-1">Avg Visit Rate</p>
-                </div>
-                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
-                  <p className="text-3xl font-bold text-secondary-500">{formatPercent(avgReplyRate)}</p>
-                  <p className="text-xs text-gray-500 mt-1">Avg Reply Rate</p>
+                  <p className="text-3xl font-bold text-secondary-500">
+                    {brands.length}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">{brands.length === 1 ? "Brand" : "Brands"}</p>
                 </div>
               </div>
 
+              {hasEmails && (
+                <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
+                  <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                    <p className="text-3xl font-bold text-primary-500">{formatPercent(avgOpenRate)}</p>
+                    <p className="text-xs text-gray-500 mt-1">Avg Open Rate</p>
+                  </div>
+                  <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                    <p className="text-3xl font-bold text-accent-500">{formatPercent(avgClickRate)}</p>
+                    <p className="text-xs text-gray-500 mt-1">Avg Visit Rate</p>
+                  </div>
+                  <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
+                    <p className="text-3xl font-bold text-secondary-500">{formatPercent(avgReplyRate)}</p>
+                    <p className="text-xs text-gray-500 mt-1">Avg Reply Rate</p>
+                  </div>
+                </div>
+              )}
+
               {/* Best conversion + best value cards */}
-              {hero && (
+              {hero && hero.bestConversionModel.conversionRate > 0 && (
                 <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-4">
                   <div className="bg-white rounded-2xl p-6 border border-primary-200 shadow-sm">
                     <p className="text-sm text-gray-500 uppercase tracking-wider mb-1">Best Conversion Rate</p>
@@ -90,29 +116,9 @@ export default async function HomePage() {
               </p>
             </>
           ) : hasBrands ? (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
-                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
-                  <p className="text-3xl font-bold text-gray-400">—</p>
-                  <p className="text-xs text-gray-500 mt-1">Emails Sent</p>
-                </div>
-                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
-                  <p className="text-3xl font-bold text-gray-400">—</p>
-                  <p className="text-xs text-gray-500 mt-1">Avg Open Rate</p>
-                </div>
-                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
-                  <p className="text-3xl font-bold text-gray-400">—</p>
-                  <p className="text-xs text-gray-500 mt-1">Avg Visit Rate</p>
-                </div>
-                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-gray-200">
-                  <p className="text-3xl font-bold text-gray-400">—</p>
-                  <p className="text-xs text-gray-500 mt-1">Avg Reply Rate</p>
-                </div>
-              </div>
-              <p className="text-xs text-gray-400 mt-2">
-                {brands.length} {brands.length === 1 ? "brand" : "brands"} registered. Metrics will populate as campaigns send emails.
-              </p>
-            </>
+            <p className="text-gray-500">
+              Campaigns are being set up. Metrics will appear here shortly.
+            </p>
           ) : (
             <p className="text-gray-500">
               Performance data will appear here as campaigns run. Check back soon.
