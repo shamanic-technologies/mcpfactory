@@ -1,73 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getCampaignBatchStats, CampaignStats } from "@/lib/api";
+import { useAuthQuery } from "@/lib/use-auth-query";
+import { listCampaignsByBrand, getCampaignBatchStats, type Campaign, type CampaignStats } from "@/lib/api";
 import { SkeletonKeysList } from "@/components/skeleton";
 import { FunnelMetrics } from "@/components/campaign/funnel-metrics";
 import { ReplyBreakdown } from "@/components/campaign/reply-breakdown";
 
-interface Campaign {
-  id: string;
-  name: string;
-  status: string;
-  createdAt: string;
-  personTitles?: string[];
-  organizationLocations?: string[];
-}
-
 export default function BrandMcpSalesOutreachPage() {
-  const { getToken } = useAuth();
   const params = useParams();
   const brandId = params.brandId as string;
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [campaignStats, setCampaignStats] = useState<Record<string, CampaignStats>>({});
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadCampaigns();
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") {
-        loadCampaigns();
-      }
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [brandId]);
+  const { data: campaignsData, isLoading } = useAuthQuery(
+    ["campaigns", { brandId }],
+    (token) => listCampaignsByBrand(token, brandId)
+  );
+  const campaigns = campaignsData?.campaigns ?? [];
 
-  async function loadCampaigns() {
-    try {
-      const token = await getToken();
-      if (!token) return;
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/campaigns?brandId=${brandId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setCampaigns(data.campaigns || []);
-        
-        const campaignList = data.campaigns || [];
-        // Fetch all campaign stats in a single batch call
-        if (campaignList.length > 0) {
-          try {
-            const stats = await getCampaignBatchStats(
-              token,
-              campaignList.map((c: Campaign) => c.id)
-            );
-            setCampaignStats(stats);
-          } catch (err) {
-            console.error("Failed to load batch stats:", err);
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load campaigns:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const campaignIds = useMemo(() => campaigns.map(c => c.id), [campaigns]);
+
+  const { data: batchStats } = useAuthQuery(
+    ["campaignBatchStats", { brandId }, campaignIds],
+    (token) => getCampaignBatchStats(token, campaignIds),
+    { enabled: campaignIds.length > 0 }
+  );
+  const campaignStats = batchStats ?? {};
 
   // Aggregate stats
   const totals = Object.values(campaignStats).reduce(
@@ -116,7 +75,7 @@ export default function BrandMcpSalesOutreachPage() {
       {/* Stats Overview */}
       {campaigns.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-          <FunnelMetrics 
+          <FunnelMetrics
             leadsFound={totals.leadsFound}
             emailsGenerated={totals.emailsGenerated}
             emailsSent={totals.emailsSent}
@@ -136,7 +95,7 @@ export default function BrandMcpSalesOutreachPage() {
 
       {/* Campaigns List */}
       <div className="space-y-4">
-        {loading ? (
+        {isLoading ? (
           <SkeletonKeysList />
         ) : campaigns.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">

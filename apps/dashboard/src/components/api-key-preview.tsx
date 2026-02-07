@@ -1,34 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-import { listApiKeys, createApiKey, ApiKey, NewApiKey } from "@/lib/api";
+import { listApiKeys, createApiKey, type NewApiKey } from "@/lib/api";
+import { useAuthQuery, useQueryClient } from "@/lib/use-auth-query";
 
 export function ApiKeyPreview() {
   const { getToken } = useAuth();
-  const [keys, setKeys] = useState<ApiKey[]>([]);
+  const queryClient = useQueryClient();
   const [newKey, setNewKey] = useState<NewApiKey | null>(null);
-  const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    loadKeys();
-  }, []);
-
-  async function loadKeys() {
-    try {
-      const token = await getToken();
-      if (!token) return;
-      const data = await listApiKeys(token);
-      setKeys(data.keys);
-    } catch (err) {
-      console.error("Failed to load keys:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { data, isLoading } = useAuthQuery(["apiKeys"], (token) =>
+    listApiKeys(token)
+  );
+  const keys = data?.keys ?? [];
 
   async function handleCreate() {
     setCreating(true);
@@ -37,7 +25,7 @@ export function ApiKeyPreview() {
       if (!token) return;
       const data = await createApiKey(token, "Dashboard Key");
       setNewKey(data);
-      await loadKeys();
+      queryClient.invalidateQueries({ queryKey: ["apiKeys"] });
     } catch (err) {
       console.error("Failed to create key:", err);
     } finally {
@@ -51,7 +39,7 @@ export function ApiKeyPreview() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="bg-white rounded-2xl border border-gray-200 p-6 animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-24 mb-3"></div>

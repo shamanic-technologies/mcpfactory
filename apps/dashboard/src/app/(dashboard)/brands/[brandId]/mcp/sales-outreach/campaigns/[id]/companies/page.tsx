@@ -1,25 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useState } from "react";
 import { useParams } from "next/navigation";
-
-interface AggregatedCost {
-  costName: string;
-  quantity: number;
-  totalCostInUsdCents: number;
-}
-
-interface Company {
-  id: string;
-  name: string;
-  domain: string | null;
-  industry: string | null;
-  employeeCount: string | null;
-  leadsCount: number;
-  totalCostInUsdCents: string | null;
-  costs: AggregatedCost[];
-}
+import { useAuthQuery } from "@/lib/use-auth-query";
+import { listCampaignCompanies, type Company } from "@/lib/api";
 
 function formatCostRounded(totalCents: string | null): string | null {
   if (!totalCents) return null;
@@ -36,35 +20,15 @@ function formatCostDetailed(cents: number): string {
 }
 
 export default function CampaignCompaniesPage() {
-  const { getToken } = useAuth();
   const params = useParams();
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useAuthQuery(
+    ["campaignCompanies", params.id],
+    (token) => listCampaignCompanies(token, params.id as string)
+  );
+  const companies = data?.companies ?? [];
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
-  useEffect(() => {
-    async function loadCompanies() {
-      try {
-        const token = await getToken();
-        if (!token) return;
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "https://api.mcpfactory.org"}/v1/campaigns/${params.id}/companies`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setCompanies(data.companies || []);
-        }
-      } catch (err) {
-        console.error("Failed to load companies:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadCompanies();
-  }, [params.id, getToken]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-4 md:p-8">
         <div className="animate-pulse space-y-4">

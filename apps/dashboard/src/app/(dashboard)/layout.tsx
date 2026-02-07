@@ -7,6 +7,7 @@ import { OrgActivator } from "@/components/org-activator";
 import { UserActivityTracker } from "@/components/user-activity-tracker";
 import { MobileSidebarProvider, useMobileSidebar } from "@/components/mobile-sidebar-context";
 import { ChatWidget } from "@/components/chat/chat-widget";
+import { QueryProvider } from "@/lib/query-provider";
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -59,8 +60,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <MobileSidebarProvider>
-      <DashboardContent>{children}</DashboardContent>
-    </MobileSidebarProvider>
+    <QueryProvider>
+      <MobileSidebarProvider>
+        <DashboardContent>{children}</DashboardContent>
+      </MobileSidebarProvider>
+    </QueryProvider>
   );
 }

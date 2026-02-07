@@ -1,42 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useState } from "react";
 import { useParams } from "next/navigation";
+import { useAuthQuery } from "@/lib/use-auth-query";
+import { listCampaignLeads, type Lead, type RunCost } from "@/lib/api";
 
-interface RunCost {
-  costName: string;
-  quantity: string;
-  unitCostInUsdCents: string;
-  totalCostInUsdCents: string;
-}
-
-interface EnrichmentRun {
-  status: string;
-  startedAt: string;
-  completedAt: string | null;
-  totalCostInUsdCents: string;
-  costs: RunCost[];
-}
-
-interface Lead {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  email: string;
-  emailStatus: string | null;
-  title: string | null;
-  organizationName: string | null;
-  organizationDomain: string | null;
-  organizationIndustry: string | null;
-  organizationSize: string | null;
-  linkedinUrl: string | null;
-  status: string;
-  createdAt: string;
-  enrichmentRun: EnrichmentRun | null;
-}
-
-function formatCostRounded(run: EnrichmentRun | null): string | null {
+function formatCostRounded(run: Lead["enrichmentRun"]): string | null {
   if (!run) return null;
   const cents = parseFloat(run.totalCostInUsdCents);
   if (isNaN(cents) || cents === 0) return null;
@@ -58,35 +27,16 @@ function formatDuration(startedAt: string, completedAt: string | null): string |
 }
 
 export default function CampaignLeadsPage() {
-  const { getToken } = useAuth();
   const params = useParams();
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
-  useEffect(() => {
-    async function loadLeads() {
-      try {
-        const token = await getToken();
-        if (!token) return;
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "https://api.mcpfactory.org"}/v1/campaigns/${params.id}/leads`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setLeads(data.leads || []);
-        }
-      } catch (err) {
-        console.error("Failed to load leads:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadLeads();
-  }, [params.id, getToken]);
+  const { data, isLoading } = useAuthQuery(
+    ["campaignLeads", params.id],
+    (token) => listCampaignLeads(token, params.id as string)
+  );
+  const leads = data?.leads ?? [];
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-4 md:p-8">
         <div className="animate-pulse space-y-4">

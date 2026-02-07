@@ -1,36 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { listApiKeys, createApiKey, deleteApiKey, ApiKey, NewApiKey } from "@/lib/api";
+import { useAuthQuery, useQueryClient } from "@/lib/use-auth-query";
+import { listApiKeys, createApiKey, deleteApiKey, type ApiKey, type NewApiKey } from "@/lib/api";
 import { SkeletonApiKey } from "@/components/skeleton";
 
 export default function ApiKeysPage() {
   const { getToken } = useAuth();
-  const [keys, setKeys] = useState<ApiKey[]>([]);
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useAuthQuery(["apiKeys"], (token) => listApiKeys(token));
+  const keys: ApiKey[] = data?.keys ?? [];
+
   const [newKey, setNewKey] = useState<NewApiKey | null>(null);
-  const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadKeys();
-  }, []);
-
-  async function loadKeys() {
-    try {
-      const token = await getToken();
-      if (!token) return;
-      const data = await listApiKeys(token);
-      setKeys(data.keys);
-    } catch (err) {
-      console.error("Failed to load keys:", err);
-      setError(err instanceof Error ? err.message : "Failed to load API keys");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleCreate() {
     setCreating(true);
@@ -41,7 +26,7 @@ export default function ApiKeysPage() {
       if (!token) throw new Error("Not authenticated");
       const data = await createApiKey(token, "Dashboard Key");
       setNewKey(data);
-      await loadKeys();
+      await queryClient.invalidateQueries({ queryKey: ["apiKeys"] });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create key");
     } finally {
@@ -55,7 +40,7 @@ export default function ApiKeysPage() {
       const token = await getToken();
       if (!token) throw new Error("Not authenticated");
       await deleteApiKey(token, id);
-      setKeys(keys.filter((k) => k.id !== id));
+      await queryClient.invalidateQueries({ queryKey: ["apiKeys"] });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete key");
     }
@@ -104,7 +89,7 @@ export default function ApiKeysPage() {
         </div>
       )}
 
-      {loading ? (
+      {isLoading ? (
         <SkeletonApiKey />
       ) : (
         <div className="space-y-6 max-w-2xl">
@@ -126,7 +111,7 @@ export default function ApiKeysPage() {
 
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <h3 className="font-medium text-gray-800 mb-4">Your API Keys</h3>
-            
+
             {keys.length === 0 ? (
               <p className="text-gray-500 text-sm">No API keys yet. Create one to get started.</p>
             ) : (

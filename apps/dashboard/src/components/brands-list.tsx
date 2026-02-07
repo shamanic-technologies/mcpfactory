@@ -1,48 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { GlobeAltIcon } from "@heroicons/react/24/outline";
-
-interface Brand {
-  id: string;
-  domain: string;
-  name: string | null;
-  brandUrl: string;
-  createdAt: string;
-}
+import { useAuthQuery } from "@/lib/use-auth-query";
+import { listBrands } from "@/lib/api";
 
 export function BrandsList() {
-  const { getToken } = useAuth();
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useAuthQuery(["brands"], (token) =>
+    listBrands(token)
+  );
+  const brands = data?.brands ?? [];
 
-  useEffect(() => {
-    async function fetchBrands() {
-      try {
-        const token = await getToken();
-        // Use API gateway which proxies to brand-service
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/brands`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setBrands(data.brands || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch brands:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchBrands();
-  }, [getToken]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="animate-pulse">
         <div className="h-6 bg-gray-200 rounded w-32 mb-3"></div>
