@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authenticate, requireOrg, AuthenticatedRequest } from "../middleware/auth.js";
 import { callService, services, callExternalService, externalServices } from "../lib/service-client.js";
 import { buildInternalHeaders } from "../lib/internal-headers.js";
-import { getRunsBatch, type RunWithCosts } from "@mcpfactory/runs-client";
+import { getRunsBatch, getRun, type RunWithCosts } from "@mcpfactory/runs-client";
 
 function sendLifecycleEmail(eventType: string, req: AuthenticatedRequest, metadata: Record<string, unknown>) {
   callExternalService(externalServices.lifecycle, "/send", {
@@ -351,13 +351,28 @@ router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: Authent
     // Override leadsFound from lead-service (campaign-service count is unreliable)
     if (leadStats) {
       const ls = leadStats as any;
-      (stats as any).leadsFound = ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.count ?? 0;
       console.log("[campaigns] Lead-service stats response:", JSON.stringify(ls));
+      const leadCount = ls.servedCount ?? ls.served ?? ls.count ?? ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.stats?.count ?? ls.stats?.servedCount ?? 0;
+      if (leadCount > 0) {
+        (stats as any).leadsFound = leadCount;
+      }
     }
 
     // Campaign service email delivery stats are unreliable — fetch directly from services
     const runs = ((runsResult as any).runs || []) as Array<{ id: string }>;
     const runIds = runs.map((r) => r.id);
+    console.log(`[campaigns] Campaign ${id}: campaign-service runIds=${JSON.stringify(runIds)}`);
+
+    // Debug: check if campaign-service run IDs exist in runs-service
+    if (runIds.length > 0) {
+      try {
+        const runsServiceRun = await getRun(runIds[0]);
+        console.log(`[campaigns] runs-service lookup for ${runIds[0]}: found=${!!runsServiceRun}, serviceName=${runsServiceRun?.serviceName}, taskName=${runsServiceRun?.taskName}`);
+      } catch (err) {
+        console.log(`[campaigns] runs-service lookup for ${runIds[0]}: NOT FOUND (${(err as Error).message})`);
+      }
+    }
+
     const delivery = await fetchDeliveryStats(runIds, req.orgId!);
     if (delivery) {
       Object.assign(stats as any, delivery);
@@ -437,7 +452,10 @@ router.post("/campaigns/batch-stats", authenticate, requireOrg, async (req: Auth
       // Override leads from lead-service
       if (enrichment?.leadStats) {
         const ls = enrichment.leadStats as any;
-        merged.leadsFound = ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.count ?? merged.leadsFound ?? 0;
+        const leadCount = ls.servedCount ?? ls.served ?? ls.count ?? ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.stats?.count ?? ls.stats?.servedCount ?? 0;
+        if (leadCount > 0) {
+          merged.leadsFound = leadCount;
+        }
       }
 
       // Override delivery stats from postmark + instantly
