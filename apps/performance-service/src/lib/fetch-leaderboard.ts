@@ -125,3 +125,8 @@ export function formatCostCents(cents: number | null): string {
   if (cents < 100) return `${cents}c`;
   return `$${(cents / 100).toFixed(2)}`;
 }
+
+export function formatCostDollars(cents: number): string {
+  if (cents === 0) return "—";
+  return `$${(cents / 100).toFixed(2)}`;
+}

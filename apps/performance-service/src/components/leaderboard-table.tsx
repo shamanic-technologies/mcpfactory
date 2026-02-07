@@ -12,7 +12,7 @@ import {
 
 const LOGO_DEV_TOKEN = process.env.NEXT_PUBLIC_LOGO_DEV_TOKEN;
 
-type SortKey = "openRate" | "clickRate" | "replyRate" | "costPerOpenCents" | "costPerClickCents" | "costPerReplyCents" | "emailsSent";
+type SortKey = "openRate" | "clickRate" | "replyRate" | "costPerOpenCents" | "costPerClickCents" | "costPerReplyCents" | "emailsSent" | "totalCostUsdCents" | "emailsGenerated";
 
 function SortHeader({
   label,
@@ -39,7 +39,7 @@ function SortHeader({
 }
 
 export function BrandLeaderboard({ brands }: { brands: BrandLeaderboardEntry[] }) {
-  const [sortKey, setSortKey] = useState<SortKey>("replyRate");
+  const [sortKey, setSortKey] = useState<SortKey>("totalCostUsdCents");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   function handleSort(key: SortKey) {
@@ -52,8 +52,8 @@ export function BrandLeaderboard({ brands }: { brands: BrandLeaderboardEntry[] }
   }
 
   const sorted = [...brands].sort((a, b) => {
-    const av = a[sortKey] ?? 0;
-    const bv = b[sortKey] ?? 0;
+    const av = a[sortKey as keyof BrandLeaderboardEntry] ?? 0;
+    const bv = b[sortKey as keyof BrandLeaderboardEntry] ?? 0;
     return sortDir === "desc" ? Number(bv) - Number(av) : Number(av) - Number(bv);
   });
 
@@ -65,6 +65,7 @@ export function BrandLeaderboard({ brands }: { brands: BrandLeaderboardEntry[] }
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Brand
             </th>
+            <SortHeader label="Spent" sortKey="totalCostUsdCents" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
             <SortHeader label="Emails" sortKey="emailsSent" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
             <SortHeader label="% Opens" sortKey="openRate" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
             <SortHeader label="% Visits" sortKey="clickRate" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
@@ -98,6 +99,7 @@ export function BrandLeaderboard({ brands }: { brands: BrandLeaderboardEntry[] }
                   </span>
                 </div>
               </td>
+              <td className="px-4 py-4 text-sm font-medium text-gray-900">{formatCostCents(brand.totalCostUsdCents)}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{brand.emailsSent > 0 ? brand.emailsSent.toLocaleString() : "—"}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{brand.emailsSent > 0 ? formatPercent(brand.openRate) : "—"}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{brand.emailsSent > 0 ? formatPercent(brand.clickRate) : "—"}</td>
@@ -114,7 +116,7 @@ export function BrandLeaderboard({ brands }: { brands: BrandLeaderboardEntry[] }
 }
 
 export function ModelLeaderboard({ models }: { models: ModelLeaderboardEntry[] }) {
-  const [sortKey, setSortKey] = useState<SortKey>("replyRate");
+  const [sortKey, setSortKey] = useState<SortKey>("emailsGenerated");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   function handleSort(key: SortKey) {
@@ -140,12 +142,12 @@ export function ModelLeaderboard({ models }: { models: ModelLeaderboardEntry[] }
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Model
             </th>
-            <SortHeader label="Emails" sortKey="emailsSent" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+            <SortHeader label="Generated" sortKey="emailsGenerated" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+            <SortHeader label="Spent" sortKey="totalCostUsdCents" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+            <SortHeader label="Sent" sortKey="emailsSent" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
             <SortHeader label="% Opens" sortKey="openRate" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
             <SortHeader label="% Visits" sortKey="clickRate" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
             <SortHeader label="% Replies" sortKey="replyRate" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-            <SortHeader label="$/Open" sortKey="costPerOpenCents" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-            <SortHeader label="$/Visit" sortKey="costPerClickCents" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
             <SortHeader label="$/Reply" sortKey="costPerReplyCents" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
           </tr>
         </thead>
@@ -156,16 +158,13 @@ export function ModelLeaderboard({ models }: { models: ModelLeaderboardEntry[] }
                 <span className="text-sm font-medium text-gray-900">
                   {formatModelName(model.model)}
                 </span>
-                <span className="text-xs text-gray-400 ml-2">
-                  {model.emailsGenerated > 0 ? `${model.emailsGenerated.toLocaleString()} generated` : "—"}
-                </span>
               </td>
+              <td className="px-4 py-4 text-sm font-medium text-gray-900">{model.emailsGenerated > 0 ? model.emailsGenerated.toLocaleString() : "—"}</td>
+              <td className="px-4 py-4 text-sm text-gray-600">{formatCostCents(model.totalCostUsdCents)}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{model.emailsSent > 0 ? model.emailsSent.toLocaleString() : "—"}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{model.emailsSent > 0 ? formatPercent(model.openRate) : "—"}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{model.emailsSent > 0 ? formatPercent(model.clickRate) : "—"}</td>
-              <td className="px-4 py-4 text-sm font-medium text-gray-900">{model.emailsSent > 0 ? formatPercent(model.replyRate) : "—"}</td>
-              <td className="px-4 py-4 text-sm text-gray-600">{formatCostCents(model.costPerOpenCents)}</td>
-              <td className="px-4 py-4 text-sm text-gray-600">{formatCostCents(model.costPerClickCents)}</td>
+              <td className="px-4 py-4 text-sm text-gray-600">{model.emailsSent > 0 ? formatPercent(model.replyRate) : "—"}</td>
               <td className="px-4 py-4 text-sm text-gray-600">{formatCostCents(model.costPerReplyCents)}</td>
             </tr>
           ))}
