@@ -151,7 +151,7 @@ router.post("/campaigns", authenticate, requireOrg, async (req: AuthenticatedReq
       {
         method: "POST",
         headers: buildInternalHeaders(req),
-        body: req.body,
+        body: { ...req.body, appId: "mcpfactory" },
       }
     );
 
