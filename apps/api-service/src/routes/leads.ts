@@ -49,7 +49,7 @@ router.post("/leads/search", authenticate, requireOrg, async (req: Authenticated
       "/search",
       {
         method: "POST",
-        headers: { "x-clerk-org-id": req.orgId! },
+        headers: { "x-app-id": "mcpfactory", "x-org-id": req.orgId! },
         body: {
           personTitles: person_titles,
           organizationLocations: organization_locations,

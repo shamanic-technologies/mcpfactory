@@ -336,7 +336,7 @@ router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: Authent
       callExternalService(
         externalServices.lead,
         `/stats?campaignId=${id}`,
-        { headers }
+        { headers: { "x-app-id": "mcpfactory", "x-org-id": req.orgId! } }
       ).catch((err) => {
         console.warn("[campaigns] Lead-service stats failed:", (err as Error).message);
         return null;
@@ -412,7 +412,7 @@ router.post("/campaigns/batch-stats", authenticate, requireOrg, async (req: Auth
           callExternalService(
             externalServices.lead,
             `/stats?campaignId=${id}`,
-            { headers }
+            { headers: { "x-app-id": "mcpfactory", "x-org-id": orgId } }
           ).catch(() => null),
         ]);
 
