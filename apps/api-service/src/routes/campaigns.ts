@@ -381,6 +381,7 @@ router.post("/campaigns/batch-stats", authenticate, requireOrg, async (req: Auth
   // #swagger.security = [{ "bearerAuth": [] }, { "apiKey": [] }]
   try {
     const { campaignIds } = req.body;
+    console.log("[batch-stats] Called with", campaignIds?.length, "campaign IDs");
     if (!Array.isArray(campaignIds) || campaignIds.length === 0) {
       return res.status(400).json({ error: "campaignIds must be a non-empty array" });
     }
@@ -447,6 +448,7 @@ router.post("/campaigns/batch-stats", authenticate, requireOrg, async (req: Auth
       stats[id] = merged;
     }
 
+    console.log("[batch-stats] Returning stats for", Object.keys(stats).length, "campaigns, sample:", JSON.stringify(Object.values(stats)[0]).slice(0, 300));
     res.json({ stats });
   } catch (error: any) {
     console.error("Batch stats error:", error);
