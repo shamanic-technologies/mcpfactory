@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": ["ENABLE_EXPERIMENTAL_COREPACK", "CLERK_SECRET_KEY"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
