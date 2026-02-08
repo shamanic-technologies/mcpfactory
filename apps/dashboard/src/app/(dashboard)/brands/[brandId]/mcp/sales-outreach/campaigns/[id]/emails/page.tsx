@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
-import { useAuthQuery } from "@/lib/use-auth-query";
-import { listCampaignEmails, type Email } from "@/lib/api";
+import { type Email } from "@/lib/api";
+import { useCampaign } from "@/lib/campaign-context";
 
 function formatCostRounded(run: Email["generationRun"]): string | null {
   if (!run) return null;
@@ -27,14 +26,8 @@ function formatDuration(startedAt: string, completedAt: string | null): string |
 }
 
 export default function CampaignEmailsPage() {
-  const params = useParams();
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
-
-  const { data, isLoading } = useAuthQuery(
-    ["campaignEmails", params.id],
-    (token) => listCampaignEmails(token, params.id as string)
-  );
-  const emails = data?.emails ?? [];
+  const { emails, loading: isLoading } = useCampaign();
 
   if (isLoading) {
     return (
