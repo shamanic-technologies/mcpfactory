@@ -345,7 +345,7 @@ router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: Authent
       callService(
         services.emailgen,
         "/stats",
-        { method: "POST", body: { campaignId: id, appId: "mcpfactory" } }
+        { method: "POST", body: { campaignId: id, appId: "mcpfactory" }, headers: { "x-clerk-org-id": orgId } }
       ).catch((err) => {
         console.warn("[campaigns] Emailgen stats failed:", (err as Error).message);
         return null;
@@ -419,7 +419,7 @@ router.post("/campaigns/batch-stats", authenticate, requireOrg, async (req: Auth
           callService(
             services.emailgen,
             "/stats",
-            { method: "POST", body: { campaignId: id, appId: "mcpfactory" } }
+            { method: "POST", body: { campaignId: id, appId: "mcpfactory" }, headers: { "x-clerk-org-id": orgId } }
           ).catch(() => null),
           fetchDeliveryStats({ campaignId: id }, orgId),
         ]);
