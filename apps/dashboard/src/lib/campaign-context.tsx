@@ -2,11 +2,12 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import { useAuthQuery, useQueryClient } from "@/lib/use-auth-query";
-import { getCampaign, getCampaignStats, type Campaign, type CampaignStats } from "./api";
+import { getCampaign, getCampaignStats, listCampaignEmails, type Campaign, type CampaignStats, type Email } from "./api";
 
 interface CampaignContextType {
   campaign: Campaign | null;
   stats: CampaignStats | null;
+  emails: Email[];
   loading: boolean;
   setCampaign: (campaign: Campaign | null) => void;
   refreshStats: () => Promise<void>;
@@ -32,9 +33,15 @@ export function CampaignProvider({ children, campaignId }: CampaignProviderProps
     (token) => getCampaignStats(token, campaignId)
   );
 
-  const loading = campaignLoading || statsLoading;
+  const { data: emailsData, isLoading: emailsLoading } = useAuthQuery(
+    ["campaignEmails", campaignId],
+    (token) => listCampaignEmails(token, campaignId)
+  );
+
+  const loading = campaignLoading || statsLoading || emailsLoading;
   const campaign = campaignData?.campaign ?? null;
   const stats = statsData ?? null;
+  const emails = emailsData?.emails ?? [];
 
   const refreshStats = async () => {
     await queryClient.invalidateQueries({ queryKey: ["campaignStats", campaignId] });
@@ -44,7 +51,7 @@ export function CampaignProvider({ children, campaignId }: CampaignProviderProps
   const setCampaign = () => {};
 
   return (
-    <CampaignContext.Provider value={{ campaign, stats, loading, setCampaign, refreshStats }}>
+    <CampaignContext.Provider value={{ campaign, stats, emails, loading, setCampaign, refreshStats }}>
       {children}
     </CampaignContext.Provider>
   );

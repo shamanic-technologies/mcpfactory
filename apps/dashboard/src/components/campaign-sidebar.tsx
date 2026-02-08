@@ -38,9 +38,10 @@ interface CampaignSidebarProps {
   campaignId: string;
   brandId: string;
   stats?: CampaignStats;
+  emailCount?: number;
 }
 
-export function CampaignSidebar({ campaignId, brandId, stats }: CampaignSidebarProps) {
+export function CampaignSidebar({ campaignId, brandId, stats, emailCount }: CampaignSidebarProps) {
   const basePath = `/brands/${brandId}/mcp/sales-outreach/campaigns/${campaignId}`;
   const backHref = `/brands/${brandId}/mcp/sales-outreach`;
 
@@ -70,7 +71,7 @@ export function CampaignSidebar({ campaignId, brandId, stats }: CampaignSidebarP
       label: "Emails",
       href: `${basePath}/emails`,
       icon: <EmailsIcon />,
-      badge: stats?.emailsGenerated || stats?.emailsSent,
+      badge: emailCount || undefined,
     },
     {
       id: "replies",
