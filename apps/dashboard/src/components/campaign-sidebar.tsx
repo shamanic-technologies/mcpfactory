@@ -57,14 +57,14 @@ export function CampaignSidebar({ campaignId, brandId, stats, emailCount }: Camp
       label: "Companies",
       href: `${basePath}/companies`,
       icon: <CompaniesIcon />,
-      badge: stats?.leadsFound ? Math.round(stats.leadsFound / 3) : undefined,
+      badge: stats?.leadsServed ? Math.round(stats.leadsServed / 3) : undefined,
     },
     {
       id: "leads",
       label: "Leads",
       href: `${basePath}/leads`,
       icon: <LeadsIcon />,
-      badge: stats?.leadsFound,
+      badge: stats?.leadsServed,
     },
     {
       id: "emails",

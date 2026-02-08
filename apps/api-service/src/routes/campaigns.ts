@@ -355,12 +355,16 @@ router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: Authent
 
     const stats: Record<string, any> = { campaignId: id };
 
-    // Lead count from lead-service
+    // Lead stats from lead-service: { served, buffered, skipped }
     if (leadStats) {
-      const ls = leadStats as any;
-      stats.leadsFound = ls.servedCount ?? ls.served ?? ls.count ?? ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.stats?.count ?? ls.stats?.servedCount ?? 0;
+      const ls = leadStats as { served: number; buffered: number; skipped: number };
+      stats.leadsServed = ls.served;
+      stats.leadsBuffered = ls.buffered;
+      stats.leadsSkipped = ls.skipped;
     } else {
-      stats.leadsFound = 0;
+      stats.leadsServed = 0;
+      stats.leadsBuffered = 0;
+      stats.leadsSkipped = 0;
     }
 
     // Emailgen stats
@@ -432,12 +436,16 @@ router.post("/campaigns/batch-stats", authenticate, requireOrg, async (req: Auth
     for (const r of results) {
       const merged: Record<string, any> = { campaignId: r.campaignId };
 
-      // Lead count
+      // Lead stats from lead-service: { served, buffered, skipped }
       if (r.leadStats) {
-        const ls = r.leadStats as any;
-        merged.leadsFound = ls.servedCount ?? ls.served ?? ls.count ?? ls.leadsFound ?? ls.totalLeads ?? ls.stats?.leadsFound ?? ls.stats?.count ?? ls.stats?.servedCount ?? 0;
+        const ls = r.leadStats as { served: number; buffered: number; skipped: number };
+        merged.leadsServed = ls.served;
+        merged.leadsBuffered = ls.buffered;
+        merged.leadsSkipped = ls.skipped;
       } else {
-        merged.leadsFound = 0;
+        merged.leadsServed = 0;
+        merged.leadsBuffered = 0;
+        merged.leadsSkipped = 0;
       }
 
       // Emailgen stats

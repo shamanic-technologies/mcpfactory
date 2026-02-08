@@ -149,7 +149,9 @@ export interface Campaign {
 export interface CampaignStats {
   campaignId: string;
   totalCostInUsdCents?: string | null;
-  leadsFound: number;
+  leadsServed: number;
+  leadsBuffered: number;
+  leadsSkipped: number;
   emailsGenerated: number;
   emailsSent: number;
   emailsOpened: number;
