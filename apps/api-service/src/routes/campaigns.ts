@@ -332,6 +332,14 @@ router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: Authent
     const { id } = req.params;
     const orgId = req.orgId!;
 
+    // Fetch campaign runs first (needed for emailgen stats)
+    const runsResult = await callExternalService(
+      externalServices.campaign,
+      `/internal/campaigns/${id}/runs`,
+      { headers: { "x-clerk-org-id": orgId } }
+    ).catch(() => null) as { runs: Array<{ id: string }> } | null;
+    const runIds = (runsResult?.runs || []).map((r) => r.id);
+
     // Fetch stats from all services in parallel using campaignId filter
     const [leadStats, emailgenStats, delivery] = await Promise.all([
       callExternalService(
@@ -342,14 +350,16 @@ router.get("/campaigns/:id/stats", authenticate, requireOrg, async (req: Authent
         console.warn("[campaigns] Lead-service stats failed:", (err as Error).message);
         return null;
       }),
-      callService(
-        services.emailgen,
-        "/stats",
-        { method: "POST", body: { campaignId: id, appId: "mcpfactory" }, headers: { "x-clerk-org-id": orgId } }
-      ).catch((err) => {
-        console.warn("[campaigns] Emailgen stats failed:", (err as Error).message);
-        return null;
-      }),
+      runIds.length > 0
+        ? callService(
+            services.emailgen,
+            "/stats",
+            { method: "POST", body: { runIds, appId: "mcpfactory" }, headers: { "x-clerk-org-id": orgId } }
+          ).catch((err) => {
+            console.warn("[campaigns] Emailgen stats failed:", (err as Error).message);
+            return null;
+          })
+        : null,
       fetchDeliveryStats({ campaignId: id }, orgId),
     ]);
 
@@ -410,17 +420,27 @@ router.post("/campaigns/batch-stats", authenticate, requireOrg, async (req: Auth
     // Fetch stats for each campaign in parallel using campaignId filter
     const results = await Promise.all(
       campaignIds.map(async (id: string) => {
+        // Fetch runs first for emailgen stats
+        const runsResult = await callExternalService(
+          externalServices.campaign,
+          `/internal/campaigns/${id}/runs`,
+          { headers: { "x-clerk-org-id": orgId } }
+        ).catch(() => null) as { runs: Array<{ id: string }> } | null;
+        const runIds = (runsResult?.runs || []).map((r) => r.id);
+
         const [leadStats, emailgenStats, delivery] = await Promise.all([
           callExternalService(
             externalServices.lead,
             `/stats?campaignId=${id}`,
             { headers: { "x-app-id": "mcpfactory", "x-org-id": orgId } }
           ).catch(() => null),
-          callService(
-            services.emailgen,
-            "/stats",
-            { method: "POST", body: { campaignId: id, appId: "mcpfactory" }, headers: { "x-clerk-org-id": orgId } }
-          ).catch(() => null),
+          runIds.length > 0
+            ? callService(
+                services.emailgen,
+                "/stats",
+                { method: "POST", body: { runIds, appId: "mcpfactory" }, headers: { "x-clerk-org-id": orgId } }
+              ).catch(() => null)
+            : null,
           fetchDeliveryStats({ campaignId: id }, orgId),
         ]);
 
