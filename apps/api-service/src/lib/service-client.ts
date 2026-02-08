@@ -111,7 +111,7 @@ export async function callExternalService<T>(
 
     return response.json();
   } catch (error: any) {
-    console.error(`[callExternalService] Fetch error:`, error.message);
+    console.error(`[callExternalService] Fetch error for ${path}:`, error.message);
     throw error;
   }
 }
