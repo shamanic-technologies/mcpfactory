@@ -10,8 +10,8 @@ interface Props {
 
 export function BrandCampaignSidebarWrapper({ brandId }: Props) {
   const params = useParams();
-  const { stats, emails } = useCampaign();
+  const { stats, emails, leads } = useCampaign();
   const campaignId = params.id as string;
 
-  return <CampaignSidebar campaignId={campaignId} brandId={brandId} stats={stats ?? undefined} emailCount={emails.length} />;
+  return <CampaignSidebar campaignId={campaignId} brandId={brandId} stats={stats ?? undefined} emailCount={emails.length} leadCount={leads.length} />;
 }
