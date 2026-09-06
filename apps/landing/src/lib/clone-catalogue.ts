@@ -41,29 +41,51 @@ export type Clone = {
    * than inferred, so a clone can never quietly claim to be more local than it is.
    */
   readonly localisedHosts: readonly string[];
+  /**
+   * TRUE for a page WE wrote that merely rides the clone machinery: its own host, the
+   * same password, the same noindex, the same raw-bytes route. It is not a photograph of
+   * anyone, so `brandised` is true from the start and `source` names the directory in
+   * this repo rather than a URL. The lab is where the next distribute.you landing is
+   * built against the competitor copies beside it, before it replaces the live one.
+   */
+  readonly authored: boolean;
 };
 
 export const CLONES: readonly Clone[] = [
-  { slug: "explee", source: "https://explee.com/", capturedAt: "2026-09-06", brandised: false, localisedHosts: [] },
-  { slug: "revid", source: "https://www.revid.ai/", capturedAt: "2026-09-06", brandised: false, localisedHosts: [] },
-  { slug: "outrank", source: "https://www.outrank.so/", capturedAt: "2026-09-06", brandised: false, localisedHosts: [] },
-  { slug: "trustmrr", source: "https://trustmrr.com/", capturedAt: "2026-09-06", brandised: false, localisedHosts: [] },
+  { slug: "explee", source: "https://explee.com/", capturedAt: "2026-09-06", brandised: false, authored: false, localisedHosts: [] },
+  { slug: "revid", source: "https://www.revid.ai/", capturedAt: "2026-09-06", brandised: false, authored: false, localisedHosts: [] },
+  { slug: "outrank", source: "https://www.outrank.so/", capturedAt: "2026-09-06", brandised: false, authored: false, localisedHosts: [] },
+  { slug: "trustmrr", source: "https://trustmrr.com/", capturedAt: "2026-09-06", brandised: false, authored: false, localisedHosts: [] },
   {
     slug: "gojiberry",
     source: "https://gojiberry.ai/",
     capturedAt: "2026-09-06",
     brandised: false,
+    authored: false,
     // Framer: the origin serves the HTML and nothing else, so without this the clone is a
     // shell rendering out of framerusercontent.com. 494 assets rapatriated.
     localisedHosts: [
       "app.framerstatic.com",
-      "cdn.jsdelivr.net",
+      // cdn.jsdelivr.net is referenced only from INSIDE files.tlt-cdn.com/tlt.js, a
+      // third-party script the localiser copied verbatim without walking; nothing was
+      // mirrored for it, so it is not claimed here (the guard checks the directory exists).
       "files.tlt-cdn.com",
       "fonts.gstatic.com",
       "framer.com",
       "framerusercontent.com",
       "visitor.app.gojiberry.ai",
     ],
+  },
+  {
+    // Ours: the next distribute.you landing, built in the lab beside the clones it borrows
+    // from. Served at lab-distribute.distribute.you under the same password until it is
+    // promoted to the apex. Hand-written HTML/CSS/JS, no framework, no build step.
+    slug: "distribute",
+    source: "apps/landing/clones/distribute (authored in this repo)",
+    capturedAt: "2026-09-06",
+    brandised: true,
+    authored: true,
+    localisedHosts: [],
   },
 ];
 
