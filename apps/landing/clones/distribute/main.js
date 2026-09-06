@@ -146,8 +146,10 @@
   var budgetEl = document.getElementById("calc-budget");
   var meetingsEl = document.getElementById("calc-meetings");
   var feeEl = document.getElementById("calc-fee");
+  /* Managed plan: $1,000 fixed + 10% of the paid media, media buys meetings at ~$600. */
   var COST_PER_MEETING = 600;
-  var FEE_SHARE = 0.3;
+  var AGENCY_FIXED = 1000;
+  var AGENCY_SHARE = 0.1;
   function fmt(n) {
     return "$" + Math.round(n).toLocaleString("en-US");
   }
@@ -157,14 +159,75 @@
     var pct = ((budget - slider.min) / (slider.max - slider.min)) * 100;
     slider.style.setProperty("--pct", pct + "%");
     budgetEl.textContent = fmt(budget);
-    var meetings = Math.max(1, Math.round(budget / COST_PER_MEETING));
+    var media = Math.max(0, (budget - AGENCY_FIXED) / (1 + AGENCY_SHARE));
+    var meetings = Math.max(0, Math.round(media / COST_PER_MEETING));
     meetingsEl.textContent = "~" + meetings;
-    feeEl.textContent = fmt(budget * FEE_SHARE);
+    feeEl.textContent = fmt(AGENCY_FIXED + media * AGENCY_SHARE);
   }
   if (slider) {
     slider.addEventListener("input", updateCalc);
     updateCalc();
   }
+
+  /* Live showcase cards (explee): counters seeded from the last read of each brand's
+     ongoing campaign, then nudged in-session. A tick paints the number green and floats a
+     "+N" above it (lp-delta-flash). Contacted moves often, the deeper steps rarely. */
+  var STATUSES = ["Sending", "Writing emails", "Reading replies", "Finding leads", "Following up"];
+  var liveCards = Array.prototype.slice.call(document.querySelectorAll("[data-live]"));
+  function fmtInt(n) { return n.toLocaleString("en-US"); }
+  function tick() {
+    if (!liveCards.length || document.hidden) return;
+    var card = liveCards[Math.floor(Math.random() * liveCards.length)];
+    var steps = card.getAttribute("data-steps").split(",").map(Number);
+    var r = Math.random();
+    var idx = r < 0.82 ? 0 : r < 0.97 ? 1 : 2;
+    if (idx >= steps.length) idx = 0;
+    var add = idx === 0 ? 1 + Math.floor(Math.random() * 6) : 1;
+    steps[idx] += add;
+    card.setAttribute("data-steps", steps.join(","));
+    var el = card.querySelector('[data-n="' + idx + '"]');
+    if (!el) return;
+    el.textContent = fmtInt(steps[idx]);
+    el.classList.add("up");
+    setTimeout(function () { el.classList.remove("up"); }, 1400);
+    var d = document.createElement("span");
+    d.className = "delta";
+    d.textContent = "+" + add;
+    el.parentElement.appendChild(d);
+    setTimeout(function () { d.remove(); }, 1500);
+    var st = card.querySelector("[data-status]");
+    if (st && Math.random() < 0.5) st.textContent = STATUSES[Math.floor(Math.random() * STATUSES.length)];
+  }
+  function schedule() {
+    setTimeout(function () { tick(); schedule(); }, 2500 + Math.random() * 5500);
+  }
+  if (liveCards.length && !reduced) schedule();
+
+  /* Channel hub arcs (gojiberry): one curve from the centre tile to each logo. */
+  var hub = document.querySelector(".hub");
+  function drawHub() {
+    if (!hub) return;
+    var svg = hub.querySelector(".hub-lines");
+    var logos = hub.querySelectorAll(".ch-logo");
+    if (!svg || !logos.length || getComputedStyle(svg).display === "none") return;
+    var hr = hub.getBoundingClientRect();
+    var sr = svg.getBoundingClientRect();
+    var W = sr.width, H = sr.height;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    var cx = W / 2;
+    var paths = "";
+    logos.forEach(function (l, i) {
+      var lr = l.getBoundingClientRect();
+      var x = lr.left - sr.left + lr.width / 2;
+      var t = Math.abs(x - cx) / (W / 2);
+      var op = (0.15 + 0.5 * (1 - t)).toFixed(2);
+      paths += '<path d="M' + cx + ' 0 C ' + cx + ' ' + (H * 0.55) + ', ' + x + ' ' + (H * 0.35) + ', ' + x + ' ' + H + '" fill="none" stroke="#2563eb" stroke-opacity="' + op + '" stroke-width="1"/>';
+    });
+    svg.innerHTML = paths;
+    void hr;
+  }
+  drawHub();
+  window.addEventListener("resize", drawHub);
 
   /* Hero line art (explee canvas): curves from both edges converging on the launch
      field, with dots travelling along them toward the centre. */
