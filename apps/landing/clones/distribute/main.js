@@ -146,10 +146,8 @@
   var budgetEl = document.getElementById("calc-budget");
   var meetingsEl = document.getElementById("calc-meetings");
   var feeEl = document.getElementById("calc-fee");
-  /* Managed plan: $1,000 fixed + 10% of the paid media, media buys meetings at ~$600. */
   var COST_PER_MEETING = 600;
-  var AGENCY_FIXED = 1000;
-  var AGENCY_SHARE = 0.1;
+  var FEE_SHARE = 0.3;
   function fmt(n) {
     return "$" + Math.round(n).toLocaleString("en-US");
   }
@@ -159,10 +157,9 @@
     var pct = ((budget - slider.min) / (slider.max - slider.min)) * 100;
     slider.style.setProperty("--pct", pct + "%");
     budgetEl.textContent = fmt(budget);
-    var media = Math.max(0, (budget - AGENCY_FIXED) / (1 + AGENCY_SHARE));
-    var meetings = Math.max(0, Math.round(media / COST_PER_MEETING));
+    var meetings = Math.max(1, Math.round(budget / COST_PER_MEETING));
     meetingsEl.textContent = "~" + meetings;
-    feeEl.textContent = fmt(AGENCY_FIXED + media * AGENCY_SHARE);
+    feeEl.textContent = fmt(budget * FEE_SHARE);
   }
   if (slider) {
     slider.addEventListener("input", updateCalc);
@@ -202,32 +199,6 @@
     setTimeout(function () { tick(); schedule(); }, 2500 + Math.random() * 5500);
   }
   if (liveCards.length && !reduced) schedule();
-
-  /* Channel hub arcs (gojiberry): one curve from the centre tile to each logo. */
-  var hub = document.querySelector(".hub");
-  function drawHub() {
-    if (!hub) return;
-    var svg = hub.querySelector(".hub-lines");
-    var logos = hub.querySelectorAll(".ch-logo");
-    if (!svg || !logos.length || getComputedStyle(svg).display === "none") return;
-    var hr = hub.getBoundingClientRect();
-    var sr = svg.getBoundingClientRect();
-    var W = sr.width, H = sr.height;
-    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
-    var cx = W / 2;
-    var paths = "";
-    logos.forEach(function (l, i) {
-      var lr = l.getBoundingClientRect();
-      var x = lr.left - sr.left + lr.width / 2;
-      var t = Math.abs(x - cx) / (W / 2);
-      var op = (0.15 + 0.5 * (1 - t)).toFixed(2);
-      paths += '<path d="M' + cx + ' 0 C ' + cx + ' ' + (H * 0.55) + ', ' + x + ' ' + (H * 0.35) + ', ' + x + ' ' + H + '" fill="none" stroke="#2563eb" stroke-opacity="' + op + '" stroke-width="1"/>';
-    });
-    svg.innerHTML = paths;
-    void hr;
-  }
-  drawHub();
-  window.addEventListener("resize", drawHub);
 
   /* Hero line art (explee canvas): curves from both edges converging on the launch
      field, with dots travelling along them toward the centre. */

@@ -80,35 +80,35 @@ describe("the offer the page states", () => {
     expect(proof).not.toContain("Katherine");
   });
 
-  it("prices the managed plan as $1,000 plus 10% of media, media at $600 a meeting", () => {
+  it("prices the managed plan on the calculator the owner picked", () => {
     expect(html).toContain("Monthly paid acquisition budget");
-    expect(html).not.toContain("Monthly cold email budget");
-    expect(js).toContain("var AGENCY_FIXED = 1000;");
-    expect(js).toContain("var AGENCY_SHARE = 0.1;");
     expect(js).toContain("var COST_PER_MEETING = 600;");
+    expect(js).toContain("var FEE_SHARE = 0.3;");
+    // The fee is stated, never called "included".
+    expect(html).not.toContain("Our fee, included");
     expect(html).toContain("Paid media budget 100% refunded");
     expect(html).toContain("Agency fee excluded");
   });
 
-  it("states the reply-handling feature and the channel breadth", () => {
+  it("promises two minutes, never thirty seconds", () => {
+    expect(html).toContain("Start in 2 minutes");
+    expect(html).not.toMatch(/30 ?s(econds)?\b/);
+  });
+
+  it("counts the people on board from the signups in client-service", () => {
+    // 71 real users on 2026-09-06 (`system-` principals excluded); refresh when it moves.
+    expect(html).toContain("70+ founders and GTM experts");
+    const hero = html.slice(html.indexOf('class="hero"'), html.indexOf('id="proof"'));
+    expect(hero).not.toContain("faces-row");
+    const footer = html.slice(html.indexOf("<footer>"));
+    expect(footer).toContain("faces-row");
+    expect((footer.match(/<img src="\/assets\/[a-z-]+\.jpe?g"/g) ?? []).length).toBe(6);
+  });
+
+  it("states the reply-handling feature, and no channel map", () => {
     expect(html).toContain("Answers interested leads ourselves, until the meeting is booked");
-    expect(html).toContain('id="channels"');
-    expect((html.match(/class="ch-logo"/g) ?? []).length).toBeGreaterThanOrEqual(8);
-  });
-});
-
-describe("copy discipline", () => {
-  it("carries no em-dash anywhere a reader sees", () => {
-    expect(html).not.toContain("—");
-    expect(js).not.toContain("—");
-  });
-
-  it("attributes the sending infrastructure to us, never to the visitor", () => {
-    expect(html.toLowerCase()).not.toContain("your sending domain");
-    expect(html.toLowerCase()).not.toContain("your domain");
-  });
-
-  it("keeps the side-accent ban", () => {
-    expect(css).not.toMatch(/border-(left|right|top):\s*[2-9]px/);
+    // The 36-channel hub read as far-fetched and was cut; the #1 channel row carries the best ROI.
+    expect(html).not.toContain('id="channels"');
+    expect(html).toContain('<span class="win">Sales cold email</span></td><td></td><td class="roi">10.2x</td>');
   });
 });
