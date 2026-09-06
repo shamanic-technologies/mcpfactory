@@ -25,13 +25,46 @@ export type Clone = {
    * our own marks), so that "identical at t=0" stays true by construction.
    */
   readonly brandised: boolean;
+  /**
+   * Third-party hosts whose assets were RAPATRIATED into `__external/<host>/…` and whose
+   * references were rewritten to point there (`scripts/localise-clone.mjs`).
+   *
+   * Empty means the clone is a pure copy: every byte is the origin's and any cross-origin
+   * asset still loads from wherever it always did. Non-empty is the ONE sanctioned
+   * exception to leaving the bytes alone, and it exists because some sites host nothing
+   * themselves — a Framer page keeps every image, font and bundle on
+   * `framerusercontent.com`, so a same-origin capture yields the HTML and nothing else and
+   * the "clone" would render entirely out of somebody else's CDN.
+   *
+   * Only REFERENCES are rewritten, never content, and only for asset hosts: analytics, tag
+   * managers and embedded players are left pointing at their origin. Stated here rather
+   * than inferred, so a clone can never quietly claim to be more local than it is.
+   */
+  readonly localisedHosts: readonly string[];
 };
 
 export const CLONES: readonly Clone[] = [
-  { slug: "explee", source: "https://explee.com/", capturedAt: "2026-09-06", brandised: false },
-  { slug: "revid", source: "https://www.revid.ai/", capturedAt: "2026-09-06", brandised: false },
-  { slug: "outrank", source: "https://www.outrank.so/", capturedAt: "2026-09-06", brandised: false },
-  { slug: "trustmrr", source: "https://trustmrr.com/", capturedAt: "2026-09-06", brandised: false },
+  { slug: "explee", source: "https://explee.com/", capturedAt: "2026-09-06", brandised: false, localisedHosts: [] },
+  { slug: "revid", source: "https://www.revid.ai/", capturedAt: "2026-09-06", brandised: false, localisedHosts: [] },
+  { slug: "outrank", source: "https://www.outrank.so/", capturedAt: "2026-09-06", brandised: false, localisedHosts: [] },
+  { slug: "trustmrr", source: "https://trustmrr.com/", capturedAt: "2026-09-06", brandised: false, localisedHosts: [] },
+  {
+    slug: "gojiberry",
+    source: "https://gojiberry.ai/",
+    capturedAt: "2026-09-06",
+    brandised: false,
+    // Framer: the origin serves the HTML and nothing else, so without this the clone is a
+    // shell rendering out of framerusercontent.com. 494 assets rapatriated.
+    localisedHosts: [
+      "app.framerstatic.com",
+      "cdn.jsdelivr.net",
+      "files.tlt-cdn.com",
+      "fonts.gstatic.com",
+      "framer.com",
+      "framerusercontent.com",
+      "visitor.app.gojiberry.ai",
+    ],
+  },
 ];
 
 /**
