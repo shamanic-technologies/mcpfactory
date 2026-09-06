@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useAuthQuery } from "@/lib/use-auth-query";
-import { getPublicChannelLegs } from "@/lib/api";
+import { getPublicChannels } from "@/lib/api";
 import { pollOptions } from "@/lib/query-options";
 import { funnelLegIndexFromWire, type FunnelLegIndex } from "@/lib/stated-campaign-leg";
 
@@ -20,6 +20,6 @@ import { funnelLegIndexFromWire, type FunnelLegIndex } from "@/lib/stated-campai
  * So a failed catalogue read costs the SHARPER name, never the name.
  */
 export function useFunnelLegIndex(): FunnelLegIndex {
-  const { data } = useAuthQuery(["publicChannelLegs"], () => getPublicChannelLegs(), pollOptions);
+  const { data } = useAuthQuery(["publicChannels"], () => getPublicChannels(), pollOptions);
   return useMemo(() => funnelLegIndexFromWire(data), [data]);
 }

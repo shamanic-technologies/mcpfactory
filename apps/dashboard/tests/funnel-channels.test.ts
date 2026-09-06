@@ -5,7 +5,6 @@ import {
   offerFunnelTotalCents,
   offerScopedCents,
   PROVISIONABLE_CHANNEL_SLUGS,
-  typedFunnelTotalUsd,
   type ChannelFeatureRow,
   channelIsFundable,
 } from "../src/lib/funnel-channels";
@@ -374,21 +373,6 @@ describe("offerScopedCents", () => {
         OFFER,
       ),
     ).toBe(5000);
-  });
-});
-
-describe("typedFunnelTotalUsd", () => {
-  // The product minimum binds the funnel TOTAL: $12 + $12 clears a $24 floor,
-  // so a customer splitting one funded funnel is never refused for each half
-  // being under a bar the whole clears.
-  it("adds the channels up", () => {
-    expect(typedFunnelTotalUsd({ [SALES]: 12, [FEEDBACK]: 12 })).toBe(24);
-  });
-
-  it("reads a blank or negative channel as nothing funded", () => {
-    expect(typedFunnelTotalUsd({ [SALES]: 0, [FEEDBACK]: 0 })).toBe(0);
-    expect(typedFunnelTotalUsd({ [SALES]: 30, [FEEDBACK]: -5 })).toBe(30);
-    expect(typedFunnelTotalUsd({})).toBe(0);
   });
 });
 

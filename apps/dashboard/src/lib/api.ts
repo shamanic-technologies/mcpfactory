@@ -7,6 +7,7 @@ import {
   type LeadStandingCounts,
 } from "./leads-server-page";
 import type { PublicChannelLegsWire } from "./stated-campaign-leg";
+import type { PublishedChannelTerms } from "./channel-minimums";
 import type { ChannelFunnelEconomicsPair } from "./funnel-leg-price";
 import { ORG_DESYNC_ERROR, ORG_DESYNC_STATUS } from "./org-desync";
 import { keepLastGoodFields, keepLastGoodList } from "./keep-last-good";
@@ -1883,23 +1884,33 @@ const BrandFunnelBudgetsResponseSchema = z.object({
 export type BrandFunnelBudgets = z.infer<typeof BrandFunnelBudgetsResponseSchema>;
 
 /**
- * Every leg the platform can name, as features-service publishes them.
+ * Every channel the platform publishes, as features-service states it: the LEGS
+ * it can perform, and the commercial TERMS it runs on.
  *
- * `GET /public/channels` is the ONE authority on a leg's identity: it mints the
- * `legKey` a campaign and a budget are keyed on and serves the two steps it connects
- * beside it, so a consumer names a leg with one value and reads its parts as data
- * rather than taking the token apart. Public, no auth, no org scope.
+ * `GET /public/channels` is the ONE authority on both. It mints the `legKey` a
+ * campaign and a budget are keyed on and serves the two steps it connects beside
+ * it, so a consumer names a leg with one value and reads its parts as data
+ * rather than taking the token apart; and it states what a day of that channel
+ * costs to run, which is the floor a funded ceiling must clear. Public, no auth,
+ * no org scope.
  *
- * Declared narrow ON PURPOSE: this reader exists to build a lookup table, so every
- * field it does not use is left undeclared rather than mirrored. The channel
- * CATALOGUE this app renders (marks, names, funnels) is a different read entirely —
- * it is projected off the features the session already holds — and nothing here
- * replaces it.
+ * ONE read for both, because they are one catalogue and two reads of it is how
+ * a leg and its price would come to be answered by different snapshots.
+ *
+ * Still declared NARROW: every field no consumer uses is left undeclared rather
+ * than mirrored. `terms` is `.nullish()` for the same reason it is optional
+ * upstream — a channel that publishes none states no floor, which is a real
+ * answer and not an error. The channel CATALOGUE this app renders (marks, names,
+ * funnels) is a different read entirely — projected off the features the session
+ * already holds — and nothing here replaces it.
  */
-const PublicChannelLegsSchema = z.object({
+const PublicChannelsSchema = z.object({
   channels: z.array(
     z.object({
       slug: z.string(),
+      terms: z
+        .object({ dailyOperatingCostCents: z.coerce.number().nullish() })
+        .nullish(),
       stepTransitions: z
         .array(
           z.object({
@@ -1913,16 +1924,19 @@ const PublicChannelLegsSchema = z.object({
   ),
 });
 
-/** GET /public/channels — read for the leg identities alone. */
-export async function getPublicChannelLegs(token?: string): Promise<PublicChannelLegsWire[]> {
+/** One published channel, as narrowly as this app reads one. */
+export type PublicChannelWire = PublicChannelLegsWire & PublishedChannelTerms;
+
+/** GET /public/channels — the legs a channel performs and what it costs to run. */
+export async function getPublicChannels(token?: string): Promise<PublicChannelWire[]> {
   const raw = await apiCall<unknown>(`/public/channels`, { token });
-  const parsed = PublicChannelLegsSchema.safeParse(raw);
+  const parsed = PublicChannelsSchema.safeParse(raw);
   if (!parsed.success) {
-    console.error("[dashboard] getPublicChannelLegs: response shape mismatch", {
+    console.error("[dashboard] getPublicChannels: response shape mismatch", {
       issues: parsed.error.issues,
       raw,
     });
-    throw new Error("[dashboard] getPublicChannelLegs: invalid response shape");
+    throw new Error("[dashboard] getPublicChannels: invalid response shape");
   }
   return parsed.data.channels;
 }
@@ -1940,7 +1954,7 @@ export async function getPublicChannelLegs(token?: string): Promise<PublicChanne
  * has never run) and carries no economics at all. It is NOT a zero: a consumer must say
  * nothing rather than state a price we have not measured.
  *
- * Declared NARROW on purpose, like `getPublicChannelLegs` beside it: this reader exists
+ * Declared NARROW on purpose, like `getPublicChannels` beside it: this reader exists
  * to price a step, so `returnPerDollar`, the evidence block and the per-step milestone
  * flags are left undeclared rather than mirrored.
  */

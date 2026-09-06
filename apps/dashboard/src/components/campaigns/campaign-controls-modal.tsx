@@ -21,14 +21,20 @@ import {
   groupControlRowsByFunnel,
   groupHeadingState,
   hasChanges,
-  projectedFunnelTotalsUsd,
+  pairKey,
+  projectedPairTotalsUsd,
   rollupStatus,
   type ControlDraft,
   type ControlRow,
   type ControlRowGroup,
   type OfferableChannel,
 } from "@/lib/campaign-controls";
-import { funnelBudgetBelowMinimum, funnelBudgetTip } from "@/lib/sales-funnels";
+import { useChannelMinimums } from "@/lib/use-channel-minimums";
+import {
+  channelBudgetBelowMinimum,
+  channelBudgetFloorMessage,
+  channelMinimumCents,
+} from "@/lib/channel-minimums";
 import { CampaignIdentity } from "@/components/campaigns/campaign-identity";
 import { SalesFunnelMark } from "@/components/marks/sales-funnel-mark";
 import { Skeleton } from "@/components/skeleton";
@@ -185,16 +191,34 @@ export function CampaignControlsModal({
   const [failures, setFailures] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  const savedFunnelCents = useMemo(() => {
+  // What billing funds each (funnel, channel) PAIR at, across every offer — the
+  // grain the channel's floor binds. An older billing serving no per-pair rows
+  // meant one channel per funnel, which is what the funnel figure has always
+  // stood for, so it stands in for the pair there.
+  const savedPairCents = useMemo(() => {
     const out: Record<string, number> = {};
-    for (const f of budgetsQ.data?.funnels ?? []) out[f.funnelKey] = f.dailyBudgetCents;
+    const pairs = budgetsQ.data?.channels;
+    if (pairs === undefined) {
+      for (const row of rows) {
+        if (!row.scope) continue;
+        const funnel = budgetsQ.data?.funnels.find((f) => f.funnelKey === row.scope!.def.key);
+        out[pairKey(row.scope.def.key, row.scope.featureSlug)] = funnel?.dailyBudgetCents ?? 0;
+      }
+      return out;
+    }
+    for (const c of pairs) out[pairKey(c.funnelKey, c.featureSlug)] = c.dailyBudgetCents;
     return out;
-  }, [budgetsQ.data]);
+  }, [budgetsQ.data, rows]);
 
   const projected = useMemo(
-    () => projectedFunnelTotalsUsd(rows, drafts, savedFunnelCents),
-    [rows, drafts, savedFunnelCents],
+    () => projectedPairTotalsUsd(rows, drafts, savedPairCents),
+    [rows, drafts, savedPairCents],
   );
+
+  // Each channel's own published daily operating cost. No floor for a channel is
+  // read as "state none": billing holds the same rule against the same figure,
+  // and refusing on a floor we could not read would refuse money it accepts.
+  const minimums = useChannelMinimums();
 
   const diff = useMemo(() => controlsDiff(rows, drafts), [rows, drafts]);
   const summary = diffSummary(rows, diff);
@@ -208,11 +232,15 @@ export function CampaignControlsModal({
       rows
         .filter((row) => {
           if (!row.scope) return false;
-          const key = row.scope.def.key;
-          return funnelBudgetBelowMinimum(key, projected[key] ?? 0, savedFunnelCents[key] ?? 0);
+          const key = pairKey(row.scope.def.key, row.scope.featureSlug);
+          return channelBudgetBelowMinimum(
+            channelMinimumCents(minimums, row.scope.featureSlug),
+            projected[key] ?? 0,
+            savedPairCents[key] ?? 0,
+          );
         })
         .map((r) => r.rowId),
-    [rows, projected, savedFunnelCents],
+    [rows, projected, savedPairCents, minimums],
   );
 
   const blocked = diff.invalidRows.length > 0 || belowFloor.length > 0;
@@ -341,7 +369,8 @@ export function CampaignControlsModal({
   /** One campaign's line, the same at every grain and under every funnel heading. */
   function renderRow(row: ControlRow) {
     const draft = drafts[row.rowId] ?? draftFor(row);
-    const key = row.scope?.def.key;
+    const key = row.scope ? pairKey(row.scope.def.key, row.scope.featureSlug) : null;
+    const minimumCents = channelMinimumCents(minimums, row.scope?.featureSlug);
     const floorHit = belowFloor.includes(row.rowId);
     const invalid = diff.invalidRows.includes(row.rowId);
     return (
@@ -414,9 +443,13 @@ export function CampaignControlsModal({
             Enter a whole number of dollars, or leave it empty to stop funding it.
           </p>
         )}
-        {floorHit && key && (
+        {floorHit && key && row.scope && minimumCents !== null && (
           <p className="mt-1.5 text-xs text-red-600">
-            {funnelBudgetTip(key, savedFunnelCents[key] ?? 0)}
+            {channelBudgetFloorMessage(
+              row.scope.channelName,
+              minimumCents,
+              savedPairCents[key] ?? 0,
+            )}
           </p>
         )}
         {failures[row.rowId] && (

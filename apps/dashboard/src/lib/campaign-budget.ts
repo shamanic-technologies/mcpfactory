@@ -20,9 +20,7 @@ import {
 } from "./acquisition-channels";
 import { offerScopedCents, type FunnelOfferBudgetRow } from "./funnel-channels";
 import {
-  FUNNEL_MIN_DAILY_BUDGET_USD,
   SALES_FUNNELS,
-  isGrandfatheredFunding,
   normalizeSalesFunnelKey,
   type SalesFunnelDef,
   type SalesFunnelKey,
@@ -93,16 +91,10 @@ export function campaignSavedCents(
   budgets: BrandFunnelBudgetSet | undefined,
 ): number {
   if (!budgets) return 0;
-  const pairCents =
-    budgets.channels === undefined
-      ? (budgets.funnels.find((f) => f.funnelKey === scope.def.key)?.dailyBudgetCents ?? 0)
-      : (budgets.channels.find(
-          (c) => c.funnelKey === scope.def.key && c.featureSlug === scope.featureSlug,
-        )?.dailyBudgetCents ?? 0);
   return offerScopedCents(
     scope.def.key,
     scope.featureSlug,
-    pairCents,
+    campaignPairCents(scope, budgets),
     budgets.offers,
     offerId,
   );
@@ -141,57 +133,25 @@ export function fmtDailyBudgetUsd(cents: number | null | undefined): string {
 }
 
 /**
- * What the whole FUNNEL would be funded at once one campaign's typed figure
- * lands, in whole dollars.
+ * The (funnel, channel) PAIR this campaign's ceiling belongs to, in cents,
+ * across EVERY offer funding it.
  *
- * The product minimum binds the funnel, not one campaign: a customer splitting
- * one funded funnel across two offers or two channels must not be refused for
- * each half being under a bar the whole clears. So the check and the clamp both
- * ask what the funnel TOTAL becomes, never what this campaign holds.
- *
- * Computed ONLY to check the form before it is written. billing serves the funnel
- * total and holds the same rule, and its 400 is what decides; nothing displayed
- * is derived from this.
+ * The grain the product minimum binds — see `channel-minimums.ts`. It is what a
+ * form is CHECKED against, while `campaignSavedCents` above is what the form
+ * EDITS: two offers selling one funnel on one channel are two campaigns funded
+ * separately, and the pair figure is their sum.
  */
-export function projectedFunnelTotalUsd(
-  savedFunnelCents: number,
-  savedOwnCents: number,
-  typedUsd: number,
+export function campaignPairCents(
+  scope: CampaignBudgetScope,
+  budgets: BrandFunnelBudgetSet | undefined,
 ): number {
-  const siblings = Math.max(0, savedFunnelCents - savedOwnCents);
-  return Math.round(siblings / 100) + Math.max(0, typedUsd);
-}
-
-/**
- * The smallest FUNDED figure this campaign may hold, in whole dollars — what a
- * typed value under the bar is put back to.
- *
- * Refusing a sub-floor figure and leaving it on screen makes the customer guess
- * what is allowed; naming the floor alone makes them do the subtraction the
- * siblings imply. So the field is restored to this and the surface says why,
- * with pause offered as the reversible way to stop instead.
- *
- * It is derived from the SAME rule `funnelBudgetBelowMinimum` enforces, in the
- * same two branches, so a clamped value can never itself be refused:
- *   - ordinarily the funnel total must reach its floor;
- *   - a funnel billing already funds UNDER its floor is grandfathered, so the
- *     bar is the figure it is funded at today — it may be kept or raised, never
- *     lowered while it stays under the floor.
- * The siblings (what the funnel carries beyond this campaign) are held constant,
- * so a campaign whose funnel already clears the bar without it may be funded at
- * any amount, and the minimum is zero.
- *
- * ZERO is never clamped by the caller: defunding is an ordinary state, and the
- * bar governs what may be NEWLY stated, not whether a customer may stop.
- */
-export function minimumCampaignBudgetUsd(
-  key: SalesFunnelKey,
-  savedFunnelCents: number,
-  savedOwnCents: number,
-): number {
-  const siblingsUsd = Math.round(Math.max(0, savedFunnelCents - savedOwnCents) / 100);
-  const barUsd = isGrandfatheredFunding(key, savedFunnelCents)
-    ? Math.round(savedFunnelCents / 100)
-    : FUNNEL_MIN_DAILY_BUDGET_USD[key];
-  return Math.max(0, barUsd - siblingsUsd);
+  if (!budgets) return 0;
+  if (budgets.channels === undefined) {
+    return budgets.funnels.find((f) => f.funnelKey === scope.def.key)?.dailyBudgetCents ?? 0;
+  }
+  return (
+    budgets.channels.find(
+      (c) => c.funnelKey === scope.def.key && c.featureSlug === scope.featureSlug,
+    )?.dailyBudgetCents ?? 0
+  );
 }

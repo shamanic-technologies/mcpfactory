@@ -249,23 +249,19 @@ export function funnelChannelBudgets(
   offerRows?: FunnelOfferBudgetRow[],
   offerId?: string,
 ): FunnelChannelBudget[] {
+  const pairs = funnelPairCents(funnelKey, offerable, rows, funnelTotalCents);
   if (rows === undefined) {
-    return offerable.map((channel, i) => ({
+    return offerable.map((channel) => ({
       channel,
-      savedCents: i === 0 ? funnelTotalCents : 0,
+      savedCents: pairs[channel.featureSlug] ?? 0,
     }));
   }
-  const byChannel = new Map(
-    rows
-      .filter((r) => namesFunnel(r.funnelKey, funnelKey))
-      .map((r) => [r.featureSlug, r.dailyBudgetCents]),
-  );
   return offerable.map((channel) => ({
     channel,
     savedCents: offerScopedCents(
       funnelKey,
       channel.featureSlug,
-      byChannel.get(channel.featureSlug) ?? 0,
+      pairs[channel.featureSlug] ?? 0,
       offerRows,
       offerId,
     ),
@@ -273,16 +269,40 @@ export function funnelChannelBudgets(
 }
 
 /**
- * The whole-dollar total a funnel is being funded at, across its channels.
+ * What billing funds each (funnel, channel) PAIR at, ACROSS EVERY OFFER.
  *
- * This is the number the product minimum binds, because a customer splitting one
- * funded funnel across two offers must not be refused for each half being under
- * a floor the whole clears. It is computed here ONLY to check a form before it
- * is written and to say what a save will add up to; the figure the card DISPLAYS
- * for a funnel is the one billing serves.
+ * The grain the product minimum binds — billing judges a funded pair on the sum
+ * of the offers funding it, so a customer splitting one funded pair in two must
+ * not be refused for each half being under a floor the whole clears. It is
+ * therefore the figure a form checks against, while `funnelChannelBudgets` above
+ * narrows the very same rows to the ONE offer a page edits.
+ *
+ * Same fallback as that narrowing, for the same reason: when billing serves no
+ * per-pair rows at all, the funnel's whole ceiling is attributed to its FIRST
+ * offerable channel, which is what that ceiling has always meant.
  */
-export function typedFunnelTotalUsd(usdByChannel: Record<string, number>): number {
-  return Object.values(usdByChannel).reduce((sum, usd) => sum + (usd > 0 ? usd : 0), 0);
+export function funnelPairCents(
+  funnelKey: SalesFunnelKey,
+  offerable: AcquisitionChannelDef[],
+  rows: { funnelKey: string; featureSlug: string; dailyBudgetCents: number }[] | undefined,
+  funnelTotalCents: number,
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (rows === undefined) {
+    offerable.forEach((channel, i) => {
+      out[channel.featureSlug] = i === 0 ? funnelTotalCents : 0;
+    });
+    return out;
+  }
+  const byChannel = new Map(
+    rows
+      .filter((r) => namesFunnel(r.funnelKey, funnelKey))
+      .map((r) => [r.featureSlug, r.dailyBudgetCents]),
+  );
+  for (const channel of offerable) {
+    out[channel.featureSlug] = byChannel.get(channel.featureSlug) ?? 0;
+  }
+  return out;
 }
 
 /**

@@ -19,17 +19,22 @@ import { useFeatures } from "@/lib/features-context";
 import {
   channelsForFunnel,
   funnelChannelBudgets,
+  funnelPairCents,
   offerFunnelTotalCents,
-  typedFunnelTotalUsd,
 } from "@/lib/funnel-channels";
 import { AcquisitionChannelMark } from "@/components/marks/acquisition-channel-mark";
+import { useChannelMinimums } from "@/lib/use-channel-minimums";
+import {
+  channelBudgetBelowMinimum,
+  channelBudgetFloorMessage,
+  channelBudgetHint,
+  channelMinimumCents,
+  projectedPairTotalUsd,
+} from "@/lib/channel-minimums";
 import {
   NOTHING_DECLARED,
   SALES_FUNNELS,
   buildFunnelPatch,
-  funnelBudgetBelowMinimum,
-  funnelBudgetFloorMessage,
-  funnelBudgetTip,
   funnelDestinationChips,
   funnelDraftFromBrand,
   funnelDraftFromDeclared,
@@ -211,6 +216,13 @@ export function BrandSalesFunnelsCard({
   // statement, carried on the feature list the app already fetches — so this
   // dedupes on the shared `["features"]` key rather than adding a read.
   const { features } = useFeatures();
+
+  // What a day of each channel costs to run — the floor a funded ceiling clears.
+  // features-service publishes it on the channel's own terms, and this reads it
+  // on the key the leg index already polls, so it costs no request. No floors is
+  // the honest reading while it settles: billing holds the same rule and its 400
+  // is what decides, so nothing here refuses money billing would accept.
+  const minimums = useChannelMinimums();
 
   const brand = brandData?.brand ?? null;
   const brandDomain = brand?.domain ?? null;
@@ -524,6 +536,20 @@ export function BrandSalesFunnelsCard({
     return parsed === null ? 0 : Math.max(0, Math.round(parsed));
   }
 
+  /**
+   * What billing funds each of this funnel's channels at ACROSS EVERY OFFER —
+   * the grain the channel's floor binds, so it is what a typed figure is checked
+   * against. The per-channel figures the form EDITS are this offer's own share.
+   */
+  function pairCentsFor(key: SalesFunnelKey): Record<string, number> {
+    return funnelPairCents(
+      key,
+      channelsForFunnel(key, features),
+      budgetData?.channels,
+      states[key].savedBudgetCents,
+    );
+  }
+
   /** What each of this funnel's channels is typed at, keyed on the feature slug. */
   function typedUsdByChannel(key: SalesFunnelKey): Record<string, number> {
     const out: Record<string, number> = {};
@@ -547,24 +573,38 @@ export function BrandSalesFunnelsCard({
       patch(def.key, { error: result.error });
       return;
     }
-    // Zero is legal — it is how a funnel is put down without forgetting how it
-    // sells. A FUNDED one below its floor is not: that budget cannot buy a
-    // single outcome, so the funnel would sit still and look broken instead.
+    // Zero is legal — it is how a channel is put down without forgetting how the
+    // funnel sells. A FUNDED one below its floor is not: that budget cannot buy a
+    // single outcome, so the channel would sit still and look broken instead.
     //
-    // What the brand is ALREADY funded at is part of the question. A funnel
-    // carried under its floor by the per-funnel attribution keeps that figure
-    // and may be raised; the gate would otherwise refuse the whole form, so
-    // editing a conversion rate on such a funnel was impossible.
+    // The floor is the CHANNEL's own published operating cost, so each channel is
+    // judged on its own money — a sibling channel's spend has nothing to say about
+    // whether this one can run. What it binds is the (funnel, channel) PAIR's total
+    // ACROSS OFFERS, which is billing's own grain: a customer splitting one funded
+    // pair across two offers must not be refused for each half being under a bar
+    // the whole clears. So the projection holds the sibling offers constant.
     //
-    // The floor binds the funnel TOTAL, never one channel: a customer splitting
-    // one funded funnel across two offers must not be refused for each half
-    // being under a bar the whole clears. billing holds the same rule and its
-    // 400 is what decides.
+    // What the brand is ALREADY funded at is part of the question. A pair carried
+    // under its floor keeps that figure and may be raised; the gate would otherwise
+    // refuse the whole form, so editing a conversion rate on such a funnel was
+    // impossible. billing holds the same rule against the same published figure and
+    // its 400 is what decides — a floor we could not read refuses nothing here.
     const usdByChannel = typedUsdByChannel(def.key);
-    const budgetUsd = typedFunnelTotalUsd(usdByChannel);
-    if (funnelBudgetBelowMinimum(def.key, budgetUsd, state.savedBudgetCents)) {
-      patch(def.key, { error: funnelBudgetFloorMessage(def.key, state.savedBudgetCents) });
-      return;
+    const pairCents = pairCentsFor(def.key);
+    for (const channel of channelsForFunnel(def.key, features)) {
+      const slug = channel.featureSlug;
+      const minimumCents = channelMinimumCents(minimums, slug);
+      if (minimumCents === null) continue;
+      const pair = pairCents[slug] ?? 0;
+      const projected = projectedPairTotalUsd(
+        pair,
+        state.savedCentsByChannel[slug] ?? 0,
+        usdByChannel[slug] ?? 0,
+      );
+      if (channelBudgetBelowMinimum(minimumCents, projected, pair)) {
+        patch(def.key, { error: channelBudgetFloorMessage(channel.name, minimumCents, pair) });
+        return;
+      }
     }
     const body = buildFunnelPatch(def, state.draft, state.saved);
     // An already-declared funnel with nothing changed has no write to make; an
@@ -623,6 +663,9 @@ export function BrandSalesFunnelsCard({
     // whether a ceiling EXISTS, never what is being spent: billing stores no
     // status, so this counts a paused channel exactly like a running one.
     const offerFundedCents = offerFunnelTotalCents(state.savedCentsByChannel);
+    // What billing funds each channel of this funnel at ACROSS EVERY OFFER — the
+    // grain the channel's floor binds, so it is what each row's own hint states.
+    const channelPairCents = pairCentsFor(def.key);
     // ...and what is actually spent today, which is the campaigns campaign-service
     // reports as RUNNING for this funnel of this offer. Narrowed with the same one
     // exported rule the funnels TABLE one level up reads, on the normalized funnel
@@ -898,19 +941,32 @@ export function BrandSalesFunnelsCard({
               <label className="mb-2 flex items-center gap-1 text-xs text-gray-500">
                 Daily budget per channel
                 <InfoTooltip
-                  tip={funnelBudgetTip(def.key, state.savedBudgetCents)}
+                  tip="The most this funnel may spend in a day, one ceiling per channel it sells through. Leave a channel empty to stop funding it, and nothing else about it is lost."
                   placement="top"
                 />
               </label>
               <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
-                {channelsForFunnel(def.key, features).map((channel) => (
+                {channelsForFunnel(def.key, features).map((channel) => {
+                  // The floor is the CHANNEL's own published operating cost, so each
+                  // row states its own rather than one figure standing for every
+                  // channel of the funnel. A channel whose terms we could not read
+                  // states nothing: the figure is the channel's to publish, and there
+                  // is nothing honest to write in its place.
+                  const hint = channelBudgetHint(
+                    channelMinimumCents(minimums, channel.featureSlug),
+                    channelPairCents[channel.featureSlug] ?? 0,
+                  );
+                  return (
                   <li
                     key={channel.featureSlug}
                     className="flex items-center gap-3 px-3 py-2.5"
                   >
                     <AcquisitionChannelMark def={channel} size="sm" />
-                    <span className="min-w-0 flex-1 truncate text-sm text-gray-700">
-                      {channel.name}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm text-gray-700">{channel.name}</span>
+                      {hint && (
+                        <span className="block truncate text-xs text-gray-400">{hint}</span>
+                      )}
                     </span>
                     <div className="relative w-32 shrink-0">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
@@ -939,7 +995,8 @@ export function BrandSalesFunnelsCard({
                       </span>
                     </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </div>
 

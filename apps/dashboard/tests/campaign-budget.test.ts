@@ -3,12 +3,10 @@ import {
   campaignBudgetCents,
   campaignBudgetScope,
   campaignSavedCents,
+  campaignPairCents,
   fmtDailyBudgetUsd,
-  minimumCampaignBudgetUsd,
-  projectedFunnelTotalUsd,
   type BrandFunnelBudgetSet,
 } from "../src/lib/campaign-budget";
-import { funnelBudgetBelowMinimum } from "../src/lib/sales-funnels";
 import { acquisitionChannelsFromFeatures } from "../src/lib/acquisition-channels";
 
 /** The channels the environment publishes, as the catalogue builds them. */
@@ -188,66 +186,51 @@ describe("fmtDailyBudgetUsd", () => {
   });
 });
 
-/**
- * The floor binds the FUNNEL, and a figure under it is put BACK to the smallest
- * one that clears rather than refused on screen. Refusing and leaving the typed
- * value there makes the customer guess what is allowed; naming the floor alone
- * makes them do the subtraction the siblings imply.
- */
-describe("the smallest funded figure a campaign may hold", () => {
-  it("is the funnel's floor when this campaign is the only thing funding it", () => {
-    // reply_meeting floors at $24; nothing else sells through it.
-    expect(minimumCampaignBudgetUsd("reply_meeting", 0, 0)).toBe(24);
-    expect(minimumCampaignBudgetUsd("reply_meeting", 5000, 5000)).toBe(24);
-    expect(minimumCampaignBudgetUsd("visit_signup", 0, 0)).toBe(1);
+describe("the (funnel, channel) PAIR a ceiling belongs to", () => {
+  // The grain the channel's floor binds: billing judges a funded pair on the sum
+  // of the offers funding it, so a form is CHECKED against this while it EDITS
+  // one offer's own share.
+  const scope = campaignBudgetScope(
+    { funnelKey: "sales_meetings_from_conversation", featureSlug: "sales-cold-email-outreach" },
+    CHANNELS,
+  )!;
+
+  it("reads the per-pair figure, which spans every offer", () => {
+    const budgets: BrandFunnelBudgetSet = {
+      funnels: [{ funnelKey: "reply_meeting", dailyBudgetCents: 5000 }],
+      channels: [
+        {
+          funnelKey: "reply_meeting",
+          featureSlug: "sales-cold-email-outreach",
+          dailyBudgetCents: 3000,
+        },
+      ],
+      offers: [
+        {
+          funnelKey: "reply_meeting",
+          featureSlug: "sales-cold-email-outreach",
+          offerId: "offer-a",
+          dailyBudgetCents: 1200,
+        },
+      ],
+    };
+    expect(campaignPairCents(scope, budgets)).toBe(3000);
+    // ...while this offer's own share is what the form edits.
+    expect(campaignSavedCents(scope, "offer-a", budgets)).toBe(1200);
   });
 
-  it("subtracts what the funnel's OTHER campaigns already fund", () => {
-    // The funnel holds $30, $10 of it this campaign's — so $20 comes from
-    // siblings and this campaign only has to put up $4 to keep the total at $24.
-    expect(minimumCampaignBudgetUsd("reply_meeting", 3000, 1000)).toBe(4);
+  it("falls back to the funnel figure when billing serves no per-pair rows", () => {
+    // An older billing meant one channel per funnel, which is exactly what the
+    // funnel figure has always stood for.
+    expect(
+      campaignPairCents(scope, {
+        funnels: [{ funnelKey: "reply_meeting", dailyBudgetCents: 2400 }],
+      }),
+    ).toBe(2400);
   });
 
-  it("is ZERO once the siblings clear the bar without this campaign", () => {
-    // The funnel stays over its floor whatever this campaign does, so any amount
-    // is legal and there is nothing to clamp to.
-    expect(minimumCampaignBudgetUsd("reply_meeting", 5000, 1000)).toBe(0);
-  });
-
-  it("is the grandfathered figure on a funnel billing funds UNDER its floor", () => {
-    // Live brands sit under their funnel's floor right now: the ceiling may be
-    // kept or raised, never lowered, so the bar is what it is funded at today —
-    // NOT the $24 it is not allowed to walk down to.
-    expect(minimumCampaignBudgetUsd("reply_meeting", 800, 800)).toBe(8);
-  });
-
-  it("never returns a figure its own rule would refuse", () => {
-    for (const [funnel, saved, own] of [
-      ["reply_meeting", 0, 0],
-      ["reply_meeting", 5000, 5000],
-      ["reply_meeting", 3000, 1000],
-      ["reply_meeting", 800, 800],
-      ["visit_form", 0, 0],
-      ["visit_meeting", 1200, 1200],
-    ] as const) {
-      const min = minimumCampaignBudgetUsd(funnel, saved, own);
-      if (min === 0) continue;
-      const projected = projectedFunnelTotalUsd(saved, own, min);
-      expect(funnelBudgetBelowMinimum(funnel, projected, saved)).toBe(false);
-    }
-  });
-});
-
-describe("what the whole funnel would be funded at", () => {
-  it("adds the typed figure to what this campaign's siblings hold", () => {
-    expect(projectedFunnelTotalUsd(3000, 1000, 40)).toBe(60);
-  });
-
-  it("holds the siblings constant when this campaign is defunded", () => {
-    expect(projectedFunnelTotalUsd(3000, 1000, 0)).toBe(20);
-  });
-
-  it("never reads a negative typed figure as a credit against the siblings", () => {
-    expect(projectedFunnelTotalUsd(3000, 1000, -5)).toBe(20);
+  it("reads a pair billing has no row for as unfunded, never unknown", () => {
+    expect(campaignPairCents(scope, { funnels: [], channels: [] })).toBe(0);
+    expect(campaignPairCents(scope, undefined)).toBe(0);
   });
 });
