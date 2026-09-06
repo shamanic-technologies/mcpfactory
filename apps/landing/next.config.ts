@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
   // @distribute/content, which every served page reads its copy from.
   output: "standalone",
   outputFileTracingRoot: path.resolve(process.cwd(), "../.."),
+  // `next dev` refuses a request whose `Origin` is not the dev server's own, which is
+  // every CORS-mode subresource on a clone host (`lab-<slug>.distribute.you`) — four of
+  // outrank's stylesheets read as 403 while serving perfectly to a plain request. The
+  // check does not exist in a production build; this only makes the clones openable
+  // locally. See src/proxy.ts.
+  allowedDevOrigins: ["*.distribute.you"],
+
   images: {
     remotePatterns: [
       {
