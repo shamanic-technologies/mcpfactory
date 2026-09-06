@@ -60,10 +60,40 @@ describe("the offer the page states", () => {
     expect(outsidePricing.toLowerCase()).not.toContain("coming soon");
   });
 
-  it("names the three customers from the notes with their real figures", () => {
-    for (const line of ["Doc Dinners", "Opsfolio", "Shockwave", "2.2", "4.2", "7.8"]) {
+  it("names the three customers with the figures features-service served on 2026-09-06", () => {
+    // Read off /brands/:id/revenue in prod, not off the whiteboard: ROI, cost per outcome and
+    // the funnel counts the live cards are seeded from.
+    for (const line of ["Doc Dinners", "Opsfolio", "Shockwave", "2.2", "9.3", "3.8", "12,307", "2,157", "2,875"]) {
       expect(html).toContain(line);
     }
+    expect((html.match(/data-live/g) ?? []).length).toBe(3);
+  });
+
+  it("quotes only people who said the words, and never a fabricated founder", () => {
+    for (const who of ["Ryan W.D. Parenti", "Andrew Becker", "Nazim Zidi", "Christian Lemke", "Katherine Fleishman", "Totoche"]) {
+      expect(html).toContain(who);
+    }
+    // The first cut carried an invented Shockwave quote; nobody there said it.
+    expect(html).not.toContain("somebody who asked for a call");
+    // Katherine is an expert, not an Opsfolio customer: her quote lives in the quotes grid only.
+    const proof = html.slice(html.indexOf('id="proof"'), html.indexOf('id="quotes"'));
+    expect(proof).not.toContain("Katherine");
+  });
+
+  it("prices the managed plan as $1,000 plus 10% of media, media at $600 a meeting", () => {
+    expect(html).toContain("Monthly paid acquisition budget");
+    expect(html).not.toContain("Monthly cold email budget");
+    expect(js).toContain("var AGENCY_FIXED = 1000;");
+    expect(js).toContain("var AGENCY_SHARE = 0.1;");
+    expect(js).toContain("var COST_PER_MEETING = 600;");
+    expect(html).toContain("Paid media budget 100% refunded");
+    expect(html).toContain("Agency fee excluded");
+  });
+
+  it("states the reply-handling feature and the channel breadth", () => {
+    expect(html).toContain("Answers interested leads ourselves, until the meeting is booked");
+    expect(html).toContain('id="channels"');
+    expect((html.match(/class="ch-logo"/g) ?? []).length).toBeGreaterThanOrEqual(8);
   });
 });
 
