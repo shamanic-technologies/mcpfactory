@@ -1,0 +1,8 @@
+/*
+ * ArrowBendDownLeft (phosphor-icons/ArrowBendDownLeft@0.0.57)
+ *
+ * Learn More: https://www.framer.com/asset-urls
+ */
+
+export * from "https://framerusercontent.com/modules/HIm5qAt1iqiDX28128VX/5P4LeL5M5uKDinqakzpc/ArrowBendDownLeft.js"
+export { default } from "https://framerusercontent.com/modules/HIm5qAt1iqiDX28128VX/5P4LeL5M5uKDinqakzpc/ArrowBendDownLeft.js"

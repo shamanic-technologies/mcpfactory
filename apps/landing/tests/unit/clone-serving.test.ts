@@ -23,6 +23,12 @@ import {
 // block is guarded on argv, so importing it runs nothing.
 import { diskPathFor, isAssetPath, referencesIn } from "../../scripts/clone-site.mjs";
 import {
+  EXTERNAL_DIR,
+  externalPathFor,
+  rewriteReferences,
+  shouldMirrorHost,
+} from "../../scripts/localise-clone.mjs";
+import {
   CLONE_HOST_PREFIX as SCRIPT_HOST_PREFIX,
   CLONE_HOST_SUFFIX as SCRIPT_HOST_SUFFIX,
 } from "../../scripts/clone-hosts.mjs";
@@ -194,6 +200,58 @@ describe("the capture script only queues assets", () => {
   });
 });
 
+describe("rapatriating a cross-origin asset", () => {
+  it("mirrors an asset host and leaves the trackers alone", () => {
+    expect(shouldMirrorHost("framerusercontent.com", "image/avif")).toBe(true);
+    expect(shouldMirrorHost("fonts.gstatic.com", "font/woff2")).toBe(true);
+    expect(shouldMirrorHost("app.framerstatic.com", "text/javascript")).toBe(true);
+
+    // Not the page: rewriting a beacon's endpoint onto our host would not make the clone
+    // more local, it would 404 in a way that reads as a broken capture.
+    expect(shouldMirrorHost("www.googletagmanager.com", "application/javascript")).toBe(false);
+    expect(shouldMirrorHost("connect.facebook.net", "application/x-javascript")).toBe(false);
+    expect(shouldMirrorHost("snap.licdn.com", "application/javascript")).toBe(false);
+    expect(shouldMirrorHost("player.vimeo.com", "text/html")).toBe(false);
+    expect(shouldMirrorHost("api.example.com", "application/json")).toBe(false);
+  });
+
+  it("REFUSES a blank host", () => {
+    // A response can carry no host (a data: or blob: url). An empty host in the rewrite
+    // replaces every `https://` in the clone: it broke `xmlns="http://www.w3.org/..."`,
+    // their own canonical, and the three analytics tags that had been left alone on
+    // purpose. Guarded at both ends.
+    expect(shouldMirrorHost("", "image/png")).toBe(false);
+    expect(shouldMirrorHost("localhost", "image/png")).toBe(false);
+    const text = 'xmlns="http://www.w3.org/2000/svg" src="https://cdn.example.com/a.png"';
+    expect(rewriteReferences(text, ["", "cdn.example.com"])).toBe(
+      `xmlns="http://www.w3.org/2000/svg" src="/${EXTERNAL_DIR}/cdn.example.com/a.png"`,
+    );
+  });
+
+  it("replaces the ORIGIN and never a path", () => {
+    // A bundle that concatenates an origin with a path still resolves.
+    expect(rewriteReferences('u="https://cdn.example.com"+p', ["cdn.example.com"])).toBe(
+      `u="/${EXTERNAL_DIR}/cdn.example.com"+p`,
+    );
+    expect(rewriteReferences("http://cdn.example.com/a", ["cdn.example.com"])).toBe(
+      `/${EXTERNAL_DIR}/cdn.example.com/a`,
+    );
+  });
+
+  it("does not let a shorter host claim a longer one's references", () => {
+    const text = "https://framer.com/a https://framerusercontent.com/b";
+    expect(rewriteReferences(text, ["framer.com", "framerusercontent.com"])).toBe(
+      `/${EXTERNAL_DIR}/framer.com/a /${EXTERNAL_DIR}/framerusercontent.com/b`,
+    );
+  });
+
+  it("stores a mirrored asset under its own host", () => {
+    expect(externalPathFor("cdn.example.com", "a/b.png")).toBe(
+      `/${EXTERNAL_DIR}/cdn.example.com/a/b.png`,
+    );
+  });
+});
+
 describe("contentTypeFor", () => {
   it("names the type a browser needs", () => {
     expect(contentTypeFor("a/index.html")).toBe("text/html; charset=utf-8");
@@ -243,6 +301,19 @@ describe("the catalogue matches what is on disk", () => {
   it("starts every clone as an unmodified copy", () => {
     // The whole point at t=0. A clone becomes ours deliberately, never by default.
     for (const clone of CLONES) expect(clone.brandised).toBe(false);
+  });
+
+  it("states which hosts a clone rapatriated, and mirrors them on disk", () => {
+    // Non-empty is the one sanctioned exception to leaving the bytes alone, so it is
+    // recorded rather than inferred — and the directory has to actually be there.
+    for (const clone of CLONES) {
+      expect(Array.isArray(clone.localisedHosts)).toBe(true);
+      for (const host of clone.localisedHosts) {
+        expect(host).toMatch(/^[a-z0-9.-]+\.[a-z]{2,}$/);
+        const dir = path.join(CLONES_DIR, clone.slug, EXTERNAL_DIR, host);
+        expect(existsSync(dir), `${clone.slug} claims ${host} but ${EXTERNAL_DIR}/${host} is missing`).toBe(true);
+      }
+    }
   });
 
   it("has files for every entry", () => {
