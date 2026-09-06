@@ -114,13 +114,13 @@ describe("Campaign Settings — is it running, and what may it spend", () => {
     expect(card).toContain("{summary && <p");
   });
 
-  it("puts a figure under the funnel's floor BACK to the smallest one allowed", () => {
+  it("puts a figure under the channel's floor BACK to the smallest one allowed", () => {
     // Refusing it and leaving the typed value on screen makes the customer guess
     // what is allowed; naming the floor alone makes them do the subtraction the
-    // funnel's other campaigns imply. On BLUR, never per keystroke: typing `1` on
+    // pair's other offers imply. On BLUR, never per keystroke: typing `1` on
     // the way to `10` must not jump to the floor under the cursor.
     expect(card).toContain("onBlur={clampToMinimum}");
-    expect(card).toContain("minimumCampaignBudgetUsd(funnelKey, savedFunnelCents, savedCents)");
+    expect(card).toContain("minimumChannelBudgetUsd(minimumCents, savedPairCents, savedCents)");
     expect(card).toContain("export function budgetClampMessage");
     expect(card).toContain("Pause the campaign instead if you want it to stop for now");
     // Zero is left alone — defunding is an ordinary state, not a refusal.
@@ -131,18 +131,24 @@ describe("Campaign Settings — is it running, and what may it spend", () => {
     expect(card).toContain("const nextTyped = clampToMinimum();");
   });
 
-  it("binds the floor to the FUNNEL total, through the shared helpers", () => {
-    // A customer splitting one funded funnel across two offers must not be
-    // refused for each half being under a bar the whole clears. billing holds the
-    // same rule and its 400 is what decides.
-    expect(card).toContain("funnelBudgetBelowMinimum(funnelKey, projected, savedFunnelCents)");
+  it("reads the floor off the CHANNEL's published terms, on the pair's total", () => {
+    // The floor is a property of the acquisition channel — cold email costs what
+    // cold email costs, whatever funnel the leads later travel — and it is read
+    // from that channel's own published operating cost rather than a table here.
+    // billing judges it on the (funnel, channel) pair's total across offers, so a
+    // customer splitting one funded pair in two is never refused for each half
+    // being under a bar the whole clears. Its 400 is what decides.
+    expect(card).toContain("channelMinimumCents(minimums, scope?.featureSlug)");
+    expect(card).toContain("campaignPairCents(scope, budgetData)");
+    expect(card).toContain("channelBudgetBelowMinimum(minimumCents, projected, savedPairCents)");
+    expect(card).not.toContain("FUNNEL_MIN_DAILY_BUDGET_USD");
     // The projection and the clamp read ONE rule, in the alias-free lib, so they
     // carry real unit tests and can never disagree about the same bar.
-    const budget = read("lib/campaign-budget.ts");
-    expect(budget).toContain("export function projectedFunnelTotalUsd");
-    expect(budget).toContain("export function minimumCampaignBudgetUsd");
-    expect(budget).toContain("savedFunnelCents - savedOwnCents");
-    expect(card).not.toContain("export function projectedFunnelTotalUsd");
+    const floors = read("lib/channel-minimums.ts");
+    expect(floors).toContain("export function projectedPairTotalUsd");
+    expect(floors).toContain("export function minimumChannelBudgetUsd");
+    expect(floors).toContain("savedPairCents - savedOwnCents");
+    expect(card).not.toContain("export function projectedPairTotalUsd");
   });
 
   it("states a campaign that names no funnel or channel instead of guessing one", () => {

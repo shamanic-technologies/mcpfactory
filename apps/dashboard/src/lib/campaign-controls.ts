@@ -307,8 +307,9 @@ export function buildControlRows(
  * arrow and a channel and left the reader to work out which funnel the money was
  * going into.
  *
- * The funnel is also the grain the FLOOR binds (`projectedFunnelTotalsUsd`), so
- * grouping puts the campaigns that share a minimum on screen together.
+ * The funnel is what a customer reads a set of campaigns under, so grouping puts
+ * the campaigns selling one funnel on screen together. The FLOOR is one grain
+ * finer — it is the channel's, judged per (funnel, channel) pair.
  *
  * Group order is FIRST APPEARANCE in the row order this module already sorted,
  * so a funnel with a running campaign leads and nothing reshuffles as toggles
@@ -573,37 +574,52 @@ export function controlsDiff(
 }
 
 /**
- * What each FUNNEL would be funded at once this form lands, in whole dollars.
+ * Which ceilings are judged together against one floor: the (funnel, channel)
+ * PAIR, billing's own `minimumGroupOf`.
  *
- * The product minimum binds the funnel, not one campaign — a customer splitting
- * one funded funnel across two offers or two channels must not be refused for
- * each half being under a bar the whole clears. This modal can edit SEVERAL rows
- * of one funnel at once, so projecting them one at a time would check each
- * against a total the form is simultaneously changing.
+ * Every channel states a floor of its own — its published daily operating cost —
+ * so each is judged on its own money, and neither a sibling channel's spend nor
+ * a sibling's floor has anything to say about whether this one can run.
+ */
+export function pairKey(funnelKey: string, featureSlug: string): string {
+  return `${funnelKey}\u0000${featureSlug}`;
+}
+
+/**
+ * What each (funnel, channel) PAIR would be funded at once this form lands, in
+ * whole dollars.
  *
- * Siblings the modal does not show (another offer's campaign on the same funnel)
- * are what billing's funnel figure carries beyond the rows here, so they are
+ * The floor binds the pair's TOTAL across offers, not one campaign — a customer
+ * splitting one funded pair across two offers must not be refused for each half
+ * being under a bar the whole clears. This modal can edit SEVERAL rows of one
+ * pair at once, so projecting them one at a time would check each against a
+ * total the form is simultaneously changing.
+ *
+ * Siblings the modal does not show (another offer's campaign on the same pair)
+ * are what billing's per-pair figure carries beyond the rows here, so they are
  * held constant.
  *
  * Computed ONLY to check the form before it is written. billing holds the same
  * rule and its 400 is what decides; nothing displayed is derived from this.
  */
-export function projectedFunnelTotalsUsd(
+export function projectedPairTotalsUsd(
   rows: ControlRow[],
   drafts: Record<string, ControlDraft>,
-  savedFunnelCents: Record<string, number>,
+  savedPairCents: Record<string, number>,
 ): Record<string, number> {
   const out: Record<string, number> = {};
   const seen = new Set<string>();
   for (const row of rows) {
     if (!row.scope) continue;
-    const key = row.scope.def.key;
+    const key = pairKey(row.scope.def.key, row.scope.featureSlug);
     if (!seen.has(key)) {
       seen.add(key);
       const inModal = rows
-        .filter((r) => r.scope?.def.key === key)
+        .filter(
+          (r) => r.scope && pairKey(r.scope.def.key, r.scope.featureSlug) === key,
+        )
         .reduce((sum, r) => sum + (r.savedCents > 0 ? r.savedCents : 0), 0);
-      const siblings = Math.max(0, (savedFunnelCents[key] ?? 0) - inModal);
+      const siblings = Math.max(0, (savedPairCents[key] ?? 0) - inModal);
       out[key] = Math.round(siblings / 100);
     }
     const typed = parseDailyBudgetUsd(drafts[row.rowId]?.budget ?? "");

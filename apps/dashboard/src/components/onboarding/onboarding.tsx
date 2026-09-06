@@ -64,7 +64,7 @@ import {
   createCheckoutSession,
   getBillingAccount,
   createCampaignWithoutBrandEnrichment,
-  getPublicChannelLegs,
+  getPublicChannels,
   saveBrandDailyBudget,
   stateBrandFunnelBudgets,
   salesObjectiveForOptimizationGoal,
@@ -106,11 +106,17 @@ import {
   readLandingUrlCookie,
 } from "@/lib/landing-url-cookie";
 import { displaySetupError } from "@/lib/onboarding-setup-error";
+import {
+  NO_CHANNEL_MINIMUMS,
+  channelBudgetBelowMinimum,
+  channelMinimumCents,
+  channelMinimumsFromWire,
+  fmtDailyFloorUsd,
+  type ChannelMinimums,
+} from "@/lib/channel-minimums";
 import { BrandLogo } from "@/components/brand-logo";
 import {
-  FUNNEL_MIN_DAILY_BUDGET_USD,
   SALES_FUNNELS,
-  funnelBudgetBelowMinimum,
   funnelRateFields,
   funnelDraftFromBrand,
   salesFunnelByKey,
@@ -1030,6 +1036,35 @@ export function Onboarding() {
   // in-flight checkout. It rides the TOP LEVEL of the pending-checkout blob instead,
   // which is version-independent, so it survives the Stripe round-trip.
   const [funnelBudgets, setFunnelBudgets] = useState<Record<string, string>>({});
+
+  // What a day of cold email costs to run — the floor every ceiling stated here
+  // must clear, read from that channel's own published terms rather than from a
+  // per-funnel table. Signup funds one channel: a funnel-grain ceiling names no
+  // channel, and billing resolves a funnel that funds none yet to cold email, so
+  // that is the channel these figures are judged against.
+  //
+  // Fetched imperatively because this flow holds no react-query provider of its
+  // own — it can create the org it runs in, so it opts out of the org-keyed one.
+  // NO floor is the honest reading while it settles or if it fails: billing holds
+  // the same rule against the same figure and its 400 is what decides, so nothing
+  // here refuses money billing would accept.
+  const [channelMinimums, setChannelMinimums] = useState<ChannelMinimums>(NO_CHANNEL_MINIMUMS);
+  useEffect(() => {
+    let live = true;
+    getPublicChannels()
+      .then((channels) => {
+        if (live) setChannelMinimums(channelMinimumsFromWire(channels));
+      })
+      .catch((err) => {
+        console.error("[dashboard] onboarding: could not read the channels' published terms", err);
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+  const launchFloorCents = channelMinimumCents(channelMinimums, SALES_FEATURE_SLUG);
+  /** The same floor in whole dollars, rounded UP so the seed can never be refused. */
+  const launchFloorUsd = launchFloorCents === null ? null : Math.ceil(launchFloorCents / 100);
   const [checkoutBudgetUsd, setCheckoutBudgetUsd] = useState<number | null>(() => restored?.checkoutBudgetUsd ?? null);
   const [audiencePrompt, setAudiencePrompt] = useState(() => restored?.audiencePrompt ?? "");
   const [audienceCandidates, setAudienceCandidates] = useState<AudienceCandidate[] | null>(() => restored?.audienceCandidates ?? null);
@@ -1969,7 +2004,7 @@ export function Onboarding() {
     // Best-effort by construction: the customer has already been charged by the time this
     // runs, so a catalogue read that fails must not strand the launch. A campaign that
     // states no leg is read exactly as every campaign created before the column existed.
-    const launchLeg = await getPublicChannelLegs()
+    const launchLeg = await getPublicChannels()
       .then((channels) => launchLegKey(channels, SALES_FEATURE_SLUG, salesFunnelByKey(normalizeSalesFunnelKey(launchFunnelKey))))
       .catch((err) => {
         console.error("[dashboard] launch: could not resolve the leg for this campaign", err);
@@ -2823,13 +2858,18 @@ export function Onboarding() {
     if (step !== "pricing" || !primaryFunnelKey) return;
     setFunnelBudgets((prev) => {
       if (Object.values(prev).some((v) => (parseLocaleNumberInput(v) ?? 0) > 0)) return prev;
-      const floor = FUNNEL_MIN_DAILY_BUDGET_USD[primaryFunnelKey as SalesFunnelKey];
       const recommended = budgetForCount(RECOMMENDED_OUTCOME_COUNT);
-      return { ...prev, [primaryFunnelKey]: String(Math.max(floor, recommended ?? floor)) };
+      // Nothing to seed with: neither a priced projection nor a published floor.
+      // An empty field is honest; a figure nobody computed is not.
+      if (recommended === null && launchFloorUsd === null) return prev;
+      const seed = recommended ?? launchFloorUsd ?? 0;
+      const floored = launchFloorUsd === null ? seed : Math.max(launchFloorUsd, seed);
+      return { ...prev, [primaryFunnelKey]: String(floored) };
     });
-    // `budgetForCount` reads the live projection; re-running as it warms is the
-    // point, and the untouched-set guard makes the repeat a no-op.
-  }, [step, primaryFunnelKey, pricingHydrationVersion]);
+    // `budgetForCount` reads the live projection and the floor lands a moment
+    // after mount; re-running as either warms is the point, and the untouched-set
+    // guard makes the repeat a no-op.
+  }, [step, primaryFunnelKey, pricingHydrationVersion, launchFloorUsd]);
 
   // ── Per-outcome economics for the budget cards ──────────────────
   // The outcome-optimized workflow's funnel projection (counts at PROJECTION_REF_BUDGET).
@@ -2891,9 +2931,9 @@ export function Onboarding() {
   function underfundedFunnels(): FunnelView[] {
     return selectedFunnels.filter((f) =>
       // Zero stored: signup is a brand stating its ceilings for the FIRST time,
-      // so the floor applies in full. The grandfather in `funnelBudgetBelowMinimum`
+      // so the floor applies in full. The grandfather in `channelBudgetBelowMinimum`
       // exists for brands billing already funds under it, which nobody here is.
-      funnelBudgetBelowMinimum(f.key as SalesFunnelKey, funnelBudgetUsd(f.key), 0),
+      channelBudgetBelowMinimum(launchFloorCents, funnelBudgetUsd(f.key), 0),
     );
   }
 
@@ -3900,8 +3940,7 @@ export function Onboarding() {
       <div className="space-y-3">
         {selectedFunnels.map((f) => {
           const usd = funnelBudgetUsd(f.key);
-          const floor = FUNNEL_MIN_DAILY_BUDGET_USD[f.key as SalesFunnelKey];
-          const under = funnelBudgetBelowMinimum(f.key as SalesFunnelKey, usd, 0);
+          const under = channelBudgetBelowMinimum(launchFloorCents, usd, 0);
           const count = usd > 0 ? countForBudget(usd) : null;
           return (
             <div
@@ -3938,9 +3977,9 @@ export function Onboarding() {
                 </div>
               </div>
               <div className="mt-2 flex items-center gap-1 pl-14 text-xs">
-                {under ? (
+                {under && launchFloorCents !== null ? (
                   <span className="text-red-600">
-                    This path starts at {fmtUsd0(floor)} a day.
+                    This path starts at {fmtDailyFloorUsd(launchFloorCents)} a day.
                     {!onePath && " Leave it at 0 to skip it for now."}
                   </span>
                 ) : count != null ? (
@@ -3948,10 +3987,13 @@ export function Onboarding() {
                     <span className="text-gray-500">{fmtCount(count)} {outcomeMeta.unit} / mo</span>
                     <InfoTooltip tip={ESTIMATE_TOOLTIP} placement="top" />
                   </>
-                ) : (
+                ) : launchFloorCents !== null ? (
                   <span className="text-gray-400">
-                    {onePath ? "From" : "Not funded. From"} {fmtUsd0(floor)} a day.
+                    {onePath ? "From" : "Not funded. From"} {fmtDailyFloorUsd(launchFloorCents)} a
+                    day.
                   </span>
+                ) : (
+                  !onePath && <span className="text-gray-400">Not funded.</span>
                 )}
               </div>
             </div>

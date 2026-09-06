@@ -109,9 +109,14 @@ describe("Onboarding audience feedback, outcome noun, budget source and ROI inpu
       // FIRST time, so the floor applies in full. The grandfather that lets a
       // live brand keep a ceiling carried under its floor has nobody to cover
       // here, and passing anything else would let signup state a sub-floor one.
-      expect(src).toContain(
-        "funnelBudgetBelowMinimum(f.key as SalesFunnelKey, funnelBudgetUsd(f.key), 0)",
-      );
+      //
+      // The floor itself is the CHANNEL's own published operating cost, read off
+      // `GET /public/channels`. Signup funds one channel — a funnel-grain ceiling
+      // names none, and billing resolves a funnel that funds none yet to cold
+      // email — so that is what these figures are judged against.
+      expect(src).toContain("channelBudgetBelowMinimum(launchFloorCents, funnelBudgetUsd(f.key), 0)");
+      expect(src).toContain("channelMinimumCents(channelMinimums, SALES_FEATURE_SLUG)");
+      expect(src).not.toContain("FUNNEL_MIN_DAILY_BUDGET_USD");
     });
 
     it("carries the funding across the Stripe round-trip, without a version bump", () => {

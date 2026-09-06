@@ -181,7 +181,7 @@ describe("the call sites read the campaign's own statement", () => {
   });
 
   it("is persisted, so the platform catalogue paints from disk like every other root", () => {
-    expect(read("lib/persist-cache.ts")).toContain('"publicChannelLegs"');
+    expect(read("lib/persist-cache.ts")).toContain('"publicChannels"');
   });
 });
 

@@ -93,7 +93,7 @@ export const SENSITIVE_QUERY_ROOTS = new Set(["apiKeys", "byokKeys", "keySources
  */
 export const PERSISTABLE_QUERY_ROOTS = new Set([
   // The platform leg catalogue — no org, no auth, one answer for every tenant.
-  "publicChannelLegs",
+  "publicChannels",
   // Tenant identity — the sidebar switcher's org label + Clerk avatar. Clerk is the
   // only source of an org's name and it hydrates asynchronously, so without a disk
   // snapshot the switcher reads "Dashboard" for the first second of every load.

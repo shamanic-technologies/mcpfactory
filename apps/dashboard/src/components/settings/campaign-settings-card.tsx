@@ -15,12 +15,18 @@ import { invalidateCampaignMoney } from "@/lib/write-invalidation";
 import { useAcquisitionChannels } from "@/lib/use-acquisition-channels";
 import {
   campaignBudgetScope,
+  campaignPairCents,
   campaignSavedCents,
-  minimumCampaignBudgetUsd,
-  projectedFunnelTotalUsd,
 } from "@/lib/campaign-budget";
+import { useChannelMinimums } from "@/lib/use-channel-minimums";
+import {
+  channelBudgetBelowMinimum,
+  channelMinimumCents,
+  fmtDailyFloorUsd,
+  minimumChannelBudgetUsd,
+  projectedPairTotalUsd,
+} from "@/lib/channel-minimums";
 import { controlWriteErrorMessage, isRunningStatus } from "@/lib/campaign-controls";
-import { FUNNEL_MIN_DAILY_BUDGET_USD, funnelBudgetBelowMinimum } from "@/lib/sales-funnels";
 import { SettingsSaveRow } from "@/components/settings/settings-save-row";
 import { Skeleton } from "@/components/skeleton";
 
@@ -119,9 +125,17 @@ export function CampaignSettingsCard({
   const channels = useAcquisitionChannels();
   const scope = campaign ? campaignBudgetScope(campaign, channels) : null;
   const savedCents = scope ? campaignSavedCents(scope, offerId, budgetData) : 0;
-  const savedFunnelCents = scope
-    ? (budgetData?.funnels.find((f) => f.funnelKey === scope.def.key)?.dailyBudgetCents ?? 0)
-    : 0;
+  // The (funnel, channel) PAIR across every offer — billing's own grain for the
+  // floor. This campaign's own ceiling is one offer's share of it, so a customer
+  // splitting a funded pair in two is never refused for each half being under a
+  // bar the whole clears.
+  const savedPairCents = scope ? campaignPairCents(scope, budgetData) : 0;
+  // The floor is the CHANNEL's own published daily operating cost — cold email
+  // costs what cold email costs, whatever funnel the leads later travel. Null
+  // while the catalogue is settling or for a channel it does not price, which
+  // states no floor here and leaves billing's 400 to decide.
+  const minimums = useChannelMinimums();
+  const minimumCents = channelMinimumCents(minimums, scope?.featureSlug);
   // campaign-service's own word, read through the SAME set the Campaigns table's
   // pill and the controls modal read. A second list of running-words is how two
   // surfaces come to disagree about whether one campaign is live.
@@ -173,12 +187,12 @@ export function CampaignSettingsCard({
   function clampToMinimum(): number | null {
     const typed = parseDailyBudgetUsd(value);
     if (!funnelKey || typed === null || typed <= 0) return typed;
-    const projected = projectedFunnelTotalUsd(savedFunnelCents, savedCents, typed);
-    if (!funnelBudgetBelowMinimum(funnelKey, projected, savedFunnelCents)) {
+    const projected = projectedPairTotalUsd(savedPairCents, savedCents, typed);
+    if (!channelBudgetBelowMinimum(minimumCents, projected, savedPairCents)) {
       setClamped(null);
       return typed;
     }
-    const min = minimumCampaignBudgetUsd(funnelKey, savedFunnelCents, savedCents);
+    const min = minimumChannelBudgetUsd(minimumCents, savedPairCents, savedCents);
     setValue(String(min));
     setClamped({ from: typed, to: min });
     // RETURNED as well as set: `setValue` does not land before this tick ends,
@@ -337,8 +351,12 @@ export function CampaignSettingsCard({
           <h3 className="mb-1 text-sm font-semibold text-gray-900">Daily budget</h3>
           <p className="mb-3 text-sm text-gray-500">
             The most this campaign may spend in a day, selling {scope.def.name} through{" "}
-            {scope.channelName}. From ${FUNNEL_MIN_DAILY_BUDGET_USD[scope.def.key]} a day. To stop
-            it for a while, pause it above rather than setting this to zero: pausing keeps the
+            {scope.channelName}.
+            {/* The floor is the channel's own published operating cost. A channel
+                whose terms we could not read states none rather than a figure
+                nobody chose for it — billing still holds one either way. */}
+            {minimumCents !== null && ` From ${fmtDailyFloorUsd(minimumCents)} a day.`} To stop it
+            for a while, pause it above rather than setting this to zero: pausing keeps the
             amount, and zero gives it up.
           </p>
           <div className="flex items-center gap-2">
